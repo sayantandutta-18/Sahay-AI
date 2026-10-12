@@ -17,6 +17,10 @@ import {
   Loader2,
   CheckCircle2,
   Info,
+  Mic,
+  MicOff,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import { sendChatMessage } from "@/lib/api";
 import { ChatSourceCitation } from "@/types";
@@ -55,11 +59,95 @@ export default function ChatPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  // Speech Recognition & Synthesis states
+  const [isListening, setIsListening] = useState(false);
+  const [speakingMsgId, setSpeakingMsgId] = useState<string | null>(null);
+  const recognitionRef = useRef<any>(null);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isLoading]);
+
+  // Handle Speech Recognition (Speech-to-Text)
+  const toggleListening = () => {
+    if (isListening) {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+      setIsListening(false);
+      return;
+    }
+
+    if (typeof window === "undefined") return;
+
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      setErrorMsg("Voice input is supported in Google Chrome, Microsoft Edge, and Safari.");
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.lang = language === "hi" ? "hi-IN" : language === "bn" ? "bn-IN" : "en-IN";
+      recognition.continuous = false;
+      recognition.interimResults = false;
+
+      recognition.onstart = () => {
+        setIsListening(true);
+        setErrorMsg(null);
+      };
+
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        if (transcript) {
+          setInput((prev) => (prev ? `${prev} ${transcript}` : transcript));
+        }
+        setIsListening(false);
+      };
+
+      recognition.onerror = () => {
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
+    } catch {
+      setIsListening(false);
+    }
+  };
+
+  // Handle Text-to-Speech (Read Aloud)
+  const toggleSpeech = (msgId: string, text: string) => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+      setErrorMsg("Text-to-speech audio playback is not supported by your browser.");
+      return;
+    }
+
+    if (speakingMsgId === msgId) {
+      window.speechSynthesis.cancel();
+      setSpeakingMsgId(null);
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = language === "hi" ? "hi-IN" : language === "bn" ? "bn-IN" : "en-IN";
+    utterance.rate = 0.95;
+
+    utterance.onend = () => setSpeakingMsgId(null);
+    utterance.onerror = () => setSpeakingMsgId(null);
+
+    setSpeakingMsgId(msgId);
+    window.speechSynthesis.speak(utterance);
+  };
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,7 +159,7 @@ export default function ChatPage() {
       id: `user-${Date.now()}`,
       sender: "user",
       text: userText,
-      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      timestamp: "Just now",
     };
 
     setMessages((prev) => [...prev, userMsg]);
@@ -88,7 +176,7 @@ export default function ChatPage() {
         intentDetected: response.intent_detected,
         confidenceLevel: response.confidence_level,
         deterministicAction: response.deterministic_action_taken,
-        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        timestamp: "Just now",
       };
       setMessages((prev) => [...prev, assistantMsg]);
     } catch (err: unknown) {
@@ -119,7 +207,7 @@ export default function ChatPage() {
               <Sparkles className="w-5 h-5 text-emerald-600" /> Sahay Grounded AI Assistant
             </h1>
             <p className="text-xs text-slate-500">
-              Grounded RAG retrieval over verified government documentation • English, हिंदी, বাংলা
+              Grounded RAG retrieval over verified government documentation • Voice enabled • English, हिंदी, বাংলা
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -143,7 +231,7 @@ export default function ChatPage() {
 
         {errorMsg && (
           <ErrorBanner
-            title="Assistant Response Error"
+            title="Assistant Notice"
             message={errorMsg}
             onDismiss={() => setErrorMsg(null)}
           />
@@ -169,29 +257,49 @@ export default function ChatPage() {
                 }`}
               >
                 {/* Assistant Metadata Badges */}
-                {m.sender === "assistant" && (m.intentDetected || m.confidenceLevel) && (
-                  <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-100 dark:border-slate-800 text-[10px]">
-                    {m.intentDetected && (
-                      <span className="font-mono px-1.5 py-0.5 rounded-sm bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-                        {m.intentDetected}
-                      </span>
-                    )}
-                    {m.confidenceLevel && (
-                      <span
-                        className={`px-1.5 py-0.5 rounded-sm font-medium ${
-                          m.confidenceLevel === "high"
-                            ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
-                            : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
-                        }`}
-                      >
-                        Confidence: {m.confidenceLevel}
-                      </span>
-                    )}
-                    {m.deterministicAction && (
-                      <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
-                        <CheckCircle2 className="w-3 h-3" /> Deterministic
-                      </span>
-                    )}
+                {m.sender === "assistant" && (
+                  <div className="flex items-center justify-between mb-2 pb-2 border-b border-slate-100 dark:border-slate-800 text-[10px]">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      {m.intentDetected && (
+                        <span className="font-mono px-1.5 py-0.5 rounded-sm bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                          {m.intentDetected}
+                        </span>
+                      )}
+                      {m.confidenceLevel && (
+                        <span
+                          className={`px-1.5 py-0.5 rounded-sm font-medium ${
+                            m.confidenceLevel === "high"
+                              ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400"
+                              : "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400"
+                          }`}
+                        >
+                          Confidence: {m.confidenceLevel}
+                        </span>
+                      )}
+                      {m.deterministicAction && (
+                        <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
+                          <CheckCircle2 className="w-3 h-3" /> Deterministic
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Audio Read-Aloud Button */}
+                    <button
+                      type="button"
+                      onClick={() => toggleSpeech(m.id, m.text)}
+                      className={`p-1 rounded-md transition-colors ${
+                        speakingMsgId === m.id
+                          ? "bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300"
+                          : "text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                      }`}
+                      title={speakingMsgId === m.id ? "Stop audio read-aloud" : "Listen to answer read aloud"}
+                    >
+                      {speakingMsgId === m.id ? (
+                        <VolumeX className="w-3.5 h-3.5 text-emerald-600 animate-pulse" />
+                      ) : (
+                        <Volume2 className="w-3.5 h-3.5" />
+                      )}
+                    </button>
                   </div>
                 )}
 
@@ -279,8 +387,25 @@ export default function ChatPage() {
           </div>
 
           <form onSubmit={handleSend} className="flex gap-2">
+            <button
+              type="button"
+              onClick={toggleListening}
+              className={`p-2.5 rounded-xl border transition-colors flex items-center justify-center ${
+                isListening
+                  ? "bg-rose-500 text-white border-rose-500 animate-pulse"
+                  : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-50"
+              }`}
+              title={isListening ? "Listening... click to stop" : "Speak voice query in Hindi, Bengali or English"}
+            >
+              {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+            </button>
+
             <Input
-              placeholder="Ask about schemes, eligibility, loans, required documents, or EMI..."
+              placeholder={
+                isListening
+                  ? "Listening to your voice..."
+                  : "Ask about schemes, eligibility, loans, required documents, or EMI..."
+              }
               value={input}
               onChange={(e) => setInput(e.target.value)}
               disabled={isLoading}

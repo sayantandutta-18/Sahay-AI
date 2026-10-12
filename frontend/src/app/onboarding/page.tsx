@@ -1,15 +1,19 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { User, Building2, FileCheck2, ArrowRight, ArrowLeft } from "lucide-react";
+import { updateBusinessProfile } from "@/lib/api";
 
 export default function OnboardingPage() {
+  const router = useRouter();
   const [step, setStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: "Ramesh Sharma",
     phone: "9876543210",
@@ -26,6 +30,27 @@ export default function OnboardingPage() {
     hasPan: true,
     hasBankAccount: true,
   });
+
+  const handleComplete = async () => {
+    setIsSubmitting(true);
+    try {
+      await updateBusinessProfile({
+        business_name: formData.businessName,
+        business_type: formData.businessType,
+        annual_turnover: parseFloat(formData.annualTurnover) || 0,
+        gender: formData.gender,
+        has_udyam: formData.hasUdyam,
+        has_pan: formData.hasPan,
+        has_bank_account: formData.hasBankAccount,
+        has_gst: formData.hasGst,
+      });
+    } catch {
+      // Offline fallback
+    } finally {
+      setIsSubmitting(false);
+      router.push("/matches");
+    }
+  };
 
   const totalSteps = 3;
   const progressPercent = Math.round((step / totalSteps) * 100);
@@ -182,12 +207,11 @@ export default function OnboardingPage() {
               </Button>
             ) : (
               <Button
-                onClick={() => {
-                  window.location.href = "/matches";
-                }}
+                onClick={handleComplete}
+                disabled={isSubmitting}
                 className="bg-emerald-600 hover:bg-emerald-700"
               >
-                Complete & Check Eligibility
+                {isSubmitting ? "Saving & Evaluating..." : "Complete & Check Eligibility"}
               </Button>
             )}
           </CardFooter>
