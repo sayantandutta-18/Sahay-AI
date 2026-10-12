@@ -10,10 +10,13 @@ from app.services.ai_service import answer_grounded_chat
 from app.services.user_service import get_user_by_id
 from app.core.security import decode_access_token
 
+from app.core.rate_limit import InMemoryRateLimiter
+
 router = APIRouter(prefix="/chat", tags=["AI Assistant (RAG)"])
+chat_rate_limiter = InMemoryRateLimiter(times=60, seconds=60)
 
 
-@router.post("", response_model=ChatResponse)
+@router.post("", response_model=ChatResponse, dependencies=[Depends(chat_rate_limiter)])
 def grounded_chat(
     request: ChatRequest,
     credentials=Depends(security_scheme),

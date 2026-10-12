@@ -2,6 +2,8 @@
 
 from fastapi.testclient import TestClient
 from app.main import app
+from app.database.session import SessionLocal
+from app.services.user_service import get_user_by_phone, promote_user_to_admin
 
 client = TestClient(app)
 
@@ -9,8 +11,13 @@ client = TestClient(app)
 def test_admin_rbac_authorization():
     """Verify that non-admin users are strictly denied admin endpoints with 403."""
     # 1. Register normal entrepreneur
+    phone = "9888888888"
+    client.post(
+        "/api/v1/auth/register",
+        json={"phone": phone, "name": "Normal User", "password": "dev_pass"},
+    )
     normal_token = client.post(
-        "/api/v1/auth/login", json={"phone": "9888888888", "otp": "123456"}
+        "/api/v1/auth/login", json={"phone": phone, "password": "dev_pass", "otp": "123456"}
     ).json()["access_token"]
 
     res_normal = client.get(
@@ -23,16 +30,30 @@ def test_admin_rbac_authorization():
 
 def test_admin_create_scheme_and_audit_trail():
     """Verify that an admin can create schemes and an immutable audit entry is written."""
-    # Register an admin user
-    admin_token = client.post(
+    # Register user then promote server-side (as client cannot self-assign admin)
+    phone = "9899999999"
+    client.post(
         "/api/v1/auth/register",
         json={
-            "phone": "9899999999",
+            "phone": phone,
             "name": "Super Admin",
-            "role": "admin",
+            "password": "admin_secure_pass",
             "language": "en",
         },
-    ).json()["access_token"]
+    )
+    db = SessionLocal()
+    try:
+        user = get_user_by_phone(db, phone)
+        if user:
+            promote_user_to_admin(db, user.id)
+    finally:
+        db.close()
+
+    admin_login = client.post(
+        "/api/v1/auth/login",
+        json={"phone": phone, "password": "admin_secure_pass", "otp": "123456"},
+    )
+    admin_token = admin_login.json()["access_token"]
     admin_headers = {"Authorization": f"Bearer {admin_token}"}
 
     # Admin fetches stats

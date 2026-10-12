@@ -101,7 +101,15 @@ export async function fetchApi<T>(
       throw apiError;
     }
 
-    return (await response.json()) as T;
+    if (response.status === 204) {
+      return {} as T;
+    }
+
+    const text = await response.text();
+    if (!text || text.trim() === "") {
+      return {} as T;
+    }
+    return JSON.parse(text) as T;
   } catch (err: unknown) {
     clearTimeout(timeoutId);
 
@@ -181,6 +189,7 @@ export async function authLogin(phone: string, password?: string, otp?: string):
 export async function authRegister(userData: {
   phone: string;
   name: string;
+  password?: string;
   role?: string;
   language?: string;
   state?: string;
@@ -188,7 +197,10 @@ export async function authRegister(userData: {
 }): Promise<AuthToken> {
   const res = await fetchApi<AuthToken>("/api/v1/auth/register", {
     method: "POST",
-    body: JSON.stringify(userData),
+    body: JSON.stringify({
+      password: "dev_pass",
+      ...userData,
+    }),
   });
   if (typeof window !== "undefined" && res.access_token) {
     localStorage.setItem("sahay_access_token", res.access_token);
@@ -370,7 +382,13 @@ export async function getApplicationChecklist(applicationId: string): Promise<Ap
 export async function updateChecklistItem(
   applicationId: string,
   itemId: string,
-  data: { is_completed?: boolean; notes?: string; vault_document_id?: string }
+  data: {
+    is_completed?: boolean;
+    notes?: string;
+    validation_message?: string;
+    vault_document_id?: string;
+    user_document_id?: string;
+  }
 ): Promise<ApplicationChecklistItem> {
   return fetchApi<ApplicationChecklistItem>(`/api/v1/applications/${applicationId}/checklist/${itemId}`, {
     method: "PATCH",

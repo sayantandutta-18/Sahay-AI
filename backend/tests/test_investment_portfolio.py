@@ -8,7 +8,9 @@ client = TestClient(app)
 
 def test_financial_risk_profile_lifecycle():
     """Verify deterministic risk scoring and suitability categories."""
-    login_res = client.post("/api/v1/auth/login", json={"phone": "9812300001", "otp": "123456"})
+    phone = "9812300001"
+    client.post("/api/v1/auth/register", json={"phone": phone, "name": "Investor 1", "password": "dev_pass"})
+    login_res = client.post("/api/v1/auth/login", json={"phone": phone, "password": "dev_pass"})
     token = login_res.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
@@ -55,7 +57,9 @@ def test_market_data_adapter_verified_quotes():
 
 def test_watchlist_management():
     """Verify adding, listing, and removing watchlist assets."""
-    login_res = client.post("/api/v1/auth/login", json={"phone": "9812300002", "otp": "123456"})
+    phone = "9812300002"
+    client.post("/api/v1/auth/register", json={"phone": phone, "name": "Investor 2", "password": "dev_pass"})
+    login_res = client.post("/api/v1/auth/login", json={"phone": phone, "password": "dev_pass"})
     token = login_res.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
@@ -80,7 +84,9 @@ def test_watchlist_management():
 
 def test_paper_trading_order_and_deterministic_pnl():
     """Verify paper trading order execution, weighted average price, and deterministic P&L math."""
-    login_res = client.post("/api/v1/auth/login", json={"phone": "9812300003", "otp": "123456"})
+    phone = "9812300003"
+    client.post("/api/v1/auth/register", json={"phone": phone, "name": "Investor 3", "password": "dev_pass"})
+    login_res = client.post("/api/v1/auth/login", json={"phone": phone, "password": "dev_pass"})
     token = login_res.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 

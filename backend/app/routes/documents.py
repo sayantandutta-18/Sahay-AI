@@ -120,13 +120,16 @@ def update_document(
     db: Session = Depends(get_db),
 ):
     """Update document display label, purpose, application link or expiry."""
-    doc = update_document_metadata(db, document_id, current_user.id, update_in)
-    if not doc:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Document not found or unauthorized",
-        )
-    return UserDocumentResponse.model_validate(doc)
+    try:
+        doc = update_document_metadata(db, document_id, current_user.id, update_in)
+        if not doc:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Document not found or unauthorized",
+            )
+        return UserDocumentResponse.model_validate(doc)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.delete("/{document_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -152,5 +155,8 @@ def record_document(
     db: Session = Depends(get_db),
 ):
     """Record metadata directly for an existing document."""
-    doc = record_document_upload(db, current_user.id, doc_in)
-    return UserDocumentResponse.model_validate(doc)
+    try:
+        doc = record_document_upload(db, current_user.id, doc_in)
+        return UserDocumentResponse.model_validate(doc)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))

@@ -25,7 +25,8 @@ def test_list_academy_courses_and_lessons():
 def test_quiz_grading_and_progress_tracking():
     """Verify deterministic quiz scoring and user progress persistence."""
     # Register test user
-    login_res = client.post("/api/v1/auth/login", json={"phone": "9812345678", "otp": "123456"})
+    client.post("/api/v1/auth/register", json={"phone": "9812345678", "name": "Student", "password": "dev_pass"})
+    login_res = client.post("/api/v1/auth/login", json={"phone": "9812345678", "password": "dev_pass"})
     token = login_res.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 

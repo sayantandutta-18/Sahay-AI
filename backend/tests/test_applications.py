@@ -8,9 +8,10 @@ client = TestClient(app)
 
 def test_application_lifecycle_and_consent():
     """Test full application flow: start, checklist update, document attach, and consent."""
-    # 1. Login user
+    # 1. Register and login user
     phone = "9855555555"
-    token = client.post("/api/v1/auth/login", json={"phone": phone, "otp": "123456"}).json()["access_token"]
+    client.post("/api/v1/auth/register", json={"phone": phone, "name": "App User", "password": "dev_pass"})
+    token = client.post("/api/v1/auth/login", json={"phone": phone, "password": "dev_pass"}).json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 
     # 2. Get verified scheme ID
@@ -82,8 +83,10 @@ def test_application_lifecycle_and_consent():
 
 def test_application_tenant_isolation():
     """Ensure User A cannot view User B's applications."""
-    token_a = client.post("/api/v1/auth/login", json={"phone": "9866666666", "otp": "123456"}).json()["access_token"]
-    token_b = client.post("/api/v1/auth/login", json={"phone": "9877777777", "otp": "123456"}).json()["access_token"]
+    client.post("/api/v1/auth/register", json={"phone": "9866666666", "name": "App A", "password": "dev_pass"})
+    client.post("/api/v1/auth/register", json={"phone": "9877777777", "name": "App B", "password": "dev_pass"})
+    token_a = client.post("/api/v1/auth/login", json={"phone": "9866666666", "password": "dev_pass"}).json()["access_token"]
+    token_b = client.post("/api/v1/auth/login", json={"phone": "9877777777", "password": "dev_pass"}).json()["access_token"]
 
     schemes = client.get("/api/v1/schemes").json()
     scheme_id = schemes[0]["id"]

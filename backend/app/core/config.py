@@ -42,6 +42,18 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 1 day
 
+    @field_validator("JWT_SECRET_KEY")
+    @classmethod
+    def validate_jwt_secret(cls, v: str, info) -> str:
+        env = info.data.get("ENVIRONMENT", "development")
+        debug = info.data.get("DEBUG", True)
+        if env == "production" or not debug:
+            if not v or v == "sahay_development_secret_key_at_least_32_characters_long":
+                raise ValueError("JWT_SECRET_KEY must be securely set in environment for production.")
+            if len(v) < 32:
+                raise ValueError("JWT_SECRET_KEY must be at least 32 characters in production.")
+        return v
+
     # LLM Settings (for RAG / AI Chat)
     LLM_PROVIDER: str = "mock"
     LLM_API_KEY: str = ""

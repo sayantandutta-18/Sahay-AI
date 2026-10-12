@@ -41,7 +41,8 @@ def list_audit_trail(
     db: Session = Depends(get_db),
 ):
     """Retrieve immutable audit ledger records."""
-    logs = get_audit_logs(db, limit=limit)
+    safe_limit = min(max(1, limit), 200)
+    logs = get_audit_logs(db, limit=safe_limit)
     return [AuditLogResponse.model_validate(l) for l in logs]
 
 

@@ -12,10 +12,12 @@ from app.services.user_service import (
     get_user_by_phone,
 )
 from app.core.security import create_access_token, decode_access_token
+from app.core.rate_limit import InMemoryRateLimiter
 from app.models.user import User
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 security_scheme = HTTPBearer(auto_error=False)
+auth_rate_limiter = InMemoryRateLimiter(times=30, seconds=60)
 
 
 def get_current_user(
@@ -48,7 +50,12 @@ def get_current_user(
     return user
 
 
-@router.post("/register", response_model=Token, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/register",
+    response_model=Token,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(auth_rate_limiter)],
+)
 def register(user_in: UserCreate, db: Session = Depends(get_db)):
     """Register a new entrepreneur account."""
     existing = get_user_by_phone(db, user_in.phone)
@@ -62,7 +69,11 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
     return Token(access_token=token_str, user=UserResponse.model_validate(user))
 
 
-@router.post("/login", response_model=Token)
+@router.post(
+    "/login",
+    response_model=Token,
+    dependencies=[Depends(auth_rate_limiter)],
+)
 def login(login_in: UserLogin, db: Session = Depends(get_db)):
     """Login via phone & password or development OTP verification."""
     user = authenticate_user(db, login_in.phone, password=login_in.password, otp=login_in.otp)

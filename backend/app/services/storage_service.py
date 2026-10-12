@@ -44,13 +44,9 @@ class StorageService:
                 break
 
         if not detected_mime:
-            # Check reported type fallback if valid prefix or acceptable format
-            if reported_content_type in ["application/pdf", "image/jpeg", "image/png"]:
-                detected_mime = reported_content_type
-            else:
-                raise ValueError(
-                    "Invalid file format. Only verified PDF, JPEG, and PNG documents are accepted."
-                )
+            raise ValueError(
+                "Invalid file format. File magic bytes do not match verified PDF (%PDF), JPEG, or PNG headers."
+            )
 
         return detected_mime
 
@@ -77,8 +73,10 @@ class StorageService:
         user_dir.mkdir(parents=True, exist_ok=True)
         file_path = user_dir / f"{opaque_id}_{safe_name}"
 
-        # Ensure no path traversal
-        if not str(file_path.resolve()).startswith(str(self.base_dir.resolve())):
+        # Ensure no path traversal using Path.is_relative_to()
+        resolved_base = self.base_dir.resolve()
+        resolved_file = file_path.resolve()
+        if not resolved_file.is_relative_to(resolved_base):
             raise ValueError("Illegal path traversal detected.")
 
         with open(file_path, "wb") as f:
@@ -86,7 +84,7 @@ class StorageService:
 
         return (
             storage_key,
-            str(file_path.resolve()),
+            str(resolved_file),
             file_size,
             checksum_sha256,
             detected_mime,
@@ -94,8 +92,9 @@ class StorageService:
 
     def get_file_path(self, storage_key: str) -> Optional[Path]:
         """Resolve and verify existence of file path for a storage key."""
+        resolved_base = self.base_dir.resolve()
         target_path = (self.base_dir / storage_key).resolve()
-        if not str(target_path).startswith(str(self.base_dir.resolve())):
+        if not target_path.is_relative_to(resolved_base):
             return None
         if not target_path.exists() or not target_path.is_file():
             return None

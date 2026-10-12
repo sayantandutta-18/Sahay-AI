@@ -1,5 +1,7 @@
 """Application lifecycle, checklist state machine, document vault, and consent service."""
 
+import os
+import uuid
 from datetime import datetime, timezone
 from typing import List, Optional, Dict, Set
 from sqlalchemy.orm import Session
@@ -240,12 +242,24 @@ def update_checklist_item(
 
     if update_in.is_completed is not None:
         item.is_completed = update_in.is_completed
-    if update_in.user_document_id is not None:
-        item.user_document_id = update_in.user_document_id
+
+    doc_id = update_in.user_document_id or update_in.vault_document_id
+    if doc_id is not None:
+        # Enforce server-side ownership check: document must exist and belong to user
+        doc = get_document_by_id(db, doc_id, user_id)
+        if not doc:
+            raise ValueError("Attached document not found or unauthorized")
+        item.user_document_id = doc.id
         item.is_completed = True
-        item.validation_message = "Attached and verified from Document Vault"
-    if update_in.validation_message is not None:
+        item.validation_message = (
+            update_in.validation_message
+            or update_in.notes
+            or f"Attached {doc.file_name} from Document Vault"
+        )
+    elif update_in.validation_message is not None:
         item.validation_message = update_in.validation_message
+    elif update_in.notes is not None:
+        item.validation_message = update_in.notes
 
     db.add(item)
 
@@ -290,6 +304,11 @@ def save_vault_document(
     expiry_date: Optional[str] = None,
 ) -> UserDocument:
     """Store document binary through storage abstraction and register PostgreSQL metadata."""
+    if application_id:
+        app = get_application_by_id(db, application_id, user_id)
+        if not app:
+            raise ValueError("Application not found or unauthorized")
+
     storage_key, storage_path, file_size, checksum_sha256, detected_mime = storage_service.save_file(
         user_id=user_id,
         content=file_bytes,
@@ -309,7 +328,7 @@ def save_vault_document(
         checksum_sha256=checksum_sha256,
         storage_path=storage_path,
         storage_key=storage_key,
-        verification_status="verified",
+        verification_status="pending",
         expiry_date=expiry_date,
         is_deleted=False,
     )
@@ -333,7 +352,17 @@ def save_vault_document(
 def record_document_upload(
     db: Session, user_id: str, doc_in: UserDocumentCreate
 ) -> UserDocument:
-    """Legacy helper for registering document metadata directly."""
+    """Helper for registering document metadata with server-enforced keys and validation."""
+    if doc_in.application_id:
+        app = get_application_by_id(db, doc_in.application_id, user_id)
+        if not app:
+            raise ValueError("Application not found or unauthorized")
+
+    safe_name = os.path.basename(doc_in.file_name).replace(" ", "_")
+    opaque_id = uuid.uuid4().hex
+    safe_storage_key = f"{user_id}/{opaque_id}_{safe_name}"
+    safe_storage_path = str((storage_service.base_dir / safe_storage_key).resolve())
+
     doc = UserDocument(
         user_id=user_id,
         application_id=doc_in.application_id,
@@ -344,9 +373,9 @@ def record_document_upload(
         file_size_bytes=doc_in.file_size_bytes,
         mime_type=doc_in.mime_type or "application/pdf",
         checksum_sha256=doc_in.checksum_sha256 or "",
-        storage_path=doc_in.storage_path or f"vault/{user_id}/{doc_in.file_name}",
-        storage_key=doc_in.storage_key or f"{user_id}/{doc_in.file_name}",
-        verification_status="verified",
+        storage_path=safe_storage_path,
+        storage_key=safe_storage_key,
+        verification_status="pending",
         expiry_date=doc_in.expiry_date,
         is_deleted=False,
     )
@@ -389,12 +418,19 @@ def update_document_metadata(
     if not doc:
         return None
 
+    if update_in.application_id is not None:
+        if update_in.application_id:
+            app = get_application_by_id(db, update_in.application_id, user_id)
+            if not app:
+                raise ValueError("Application not found or unauthorized")
+            doc.application_id = app.id
+        else:
+            doc.application_id = None
+
     if update_in.display_label is not None:
         doc.display_label = update_in.display_label
     if update_in.purpose is not None:
         doc.purpose = update_in.purpose
-    if update_in.application_id is not None:
-        doc.application_id = update_in.application_id
     if update_in.expiry_date is not None:
         doc.expiry_date = update_in.expiry_date
 
@@ -471,7 +507,7 @@ def grant_data_sharing_consent(
 def revoke_data_sharing_consent(
     db: Session, consent_id: str, user_id: str
 ) -> Optional[DataSharingConsent]:
-    """Revoke previously granted lender consent."""
+    """Revoke previously granted lender consent and sync application status."""
     consent = (
         db.query(DataSharingConsent)
         .filter(DataSharingConsent.id == consent_id, DataSharingConsent.user_id == user_id)
@@ -483,6 +519,24 @@ def revoke_data_sharing_consent(
     consent.is_revoked = True
     consent.revoked_at = datetime.now(timezone.utc)
     db.add(consent)
+
+    # Sync application consent status: if no active consents remain, set lender_consent_granted to False
+    remaining_active = (
+        db.query(DataSharingConsent)
+        .filter(
+            DataSharingConsent.application_id == consent.application_id,
+            DataSharingConsent.user_id == user_id,
+            DataSharingConsent.is_revoked == False,
+            DataSharingConsent.id != consent.id,
+        )
+        .count()
+    )
+    if remaining_active == 0:
+        app = get_application_by_id(db, consent.application_id, user_id)
+        if app:
+            app.lender_consent_granted = False
+            db.add(app)
+
     db.commit()
     db.refresh(consent)
 

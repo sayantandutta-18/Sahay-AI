@@ -11,6 +11,8 @@ backend/*.db
 .pytest_cache/
 .coverage
 htmlcov/
+vault_storage/
+backend/vault_storage/
 
 # Node / Next.js
 node_modules/

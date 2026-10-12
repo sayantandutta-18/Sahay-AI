@@ -3,6 +3,8 @@
 import io
 from fastapi.testclient import TestClient
 from app.main import app
+from app.database.session import SessionLocal
+from app.services.user_service import get_user_by_phone, promote_user_to_admin
 
 client = TestClient(app)
 
@@ -12,9 +14,18 @@ def get_auth_token(phone: str = "9811122233", role: str = "entrepreneur") -> tup
     # Ensure user exists
     client.post(
         "/api/v1/auth/register",
-        json={"phone": phone, "name": f"User {phone}", "role": role},
+        json={"phone": phone, "name": f"User {phone}", "password": "dev_pass"},
     )
-    res = client.post("/api/v1/auth/login", json={"phone": phone, "otp": "123456"})
+    if role == "admin":
+        db = SessionLocal()
+        try:
+            u = get_user_by_phone(db, phone)
+            if u:
+                promote_user_to_admin(db, u.id)
+        finally:
+            db.close()
+
+    res = client.post("/api/v1/auth/login", json={"phone": phone, "password": "dev_pass", "otp": "123456"})
     token = res.json()["access_token"]
     return token, {"Authorization": f"Bearer {token}"}
 

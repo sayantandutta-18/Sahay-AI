@@ -13,8 +13,6 @@ class UserDocumentBase(BaseModel):
     purpose: Optional[str] = "scheme_verification"
     mime_type: Optional[str] = "application/pdf"
     checksum_sha256: Optional[str] = ""
-    storage_path: Optional[str] = ""
-    storage_key: Optional[str] = ""
     expiry_date: Optional[str] = None
 
 
@@ -35,6 +33,8 @@ class UserDocumentResponse(UserDocumentBase):
     application_id: Optional[str] = None
     verification_status: str
     rejection_reason: str
+    storage_path: Optional[str] = ""
+    storage_key: Optional[str] = ""
     is_deleted: bool = False
     created_at: datetime
     updated_at: Optional[datetime] = None
@@ -72,7 +72,9 @@ class ApplicationChecklistItemResponse(BaseModel):
 class ChecklistItemUpdate(BaseModel):
     is_completed: Optional[bool] = None
     user_document_id: Optional[str] = None
+    vault_document_id: Optional[str] = None
     validation_message: Optional[str] = None
+    notes: Optional[str] = None
 
 
 class DataSharingConsentCreate(BaseModel):

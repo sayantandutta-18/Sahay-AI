@@ -15,6 +15,8 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
 RUN npm run build
+# Prune development dependencies to keep production image lightweight
+RUN npm prune --production
 
 FROM node:20-alpine AS runner
 WORKDIR /app

@@ -9,6 +9,7 @@ from app.database.base import Base
 import app.models  # Ensure all SQLAlchemy models are registered
 from app.services.scheme_service import seed_verified_schemes_if_empty
 from app.services.academy_service import seed_academy_content_if_empty
+from app.services.user_service import seed_default_admin_if_empty
 from app.routes.health import router as health_router
 from app.routes.api import api_router
 
@@ -18,6 +19,7 @@ async def lifespan(app: FastAPI):
     """Application lifespan: initialize database tables and seed verified knowledge base."""
     Base.metadata.create_all(bind=engine)
     with SessionLocal() as db:
+        seed_default_admin_if_empty(db)
         seed_verified_schemes_if_empty(db)
         seed_academy_content_if_empty(db)
     yield
@@ -34,10 +36,18 @@ app = FastAPI(
 )
 
 # CORS Middleware setup
+cors_origins = (
+    settings.CORS_ORIGINS
+    if isinstance(settings.CORS_ORIGINS, list)
+    else [o.strip() for o in str(settings.CORS_ORIGINS).split(",") if o.strip()]
+)
+if not cors_origins:
+    cors_origins = ["http://localhost:3000", "http://127.0.0.1:3000"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS if isinstance(settings.CORS_ORIGINS, list) else ["*"],
-    allow_credentials=True,
+    allow_origins=cors_origins,
+    allow_credentials="*" not in cors_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )

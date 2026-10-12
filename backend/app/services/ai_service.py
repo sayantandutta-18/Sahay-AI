@@ -1,9 +1,10 @@
-"""Grounded AI Assistant service with RAG over verified Sahay knowledge."""
-
-import re
+import json
+import logging
+import urllib.request
 from datetime import datetime, timezone
 from typing import Optional, List, Dict, Any
 from sqlalchemy.orm import Session
+from app.core.config import settings
 from app.models.user import User
 from app.models.scheme import Scheme
 from app.schemas.chat import ChatRequest, ChatResponse, ChatSourceCitation
@@ -15,6 +16,67 @@ from app.services.financial_service import (
     calculate_emergency_fund,
     calculate_risk_indicator,
 )
+
+logger = logging.getLogger(__name__)
+
+
+def call_llm_service(prompt: str, system_prompt: str = "") -> Optional[str]:
+    """Pluggable LLM invocation helper.
+
+    When LLM_PROVIDER and LLM_API_KEY are configured, dispatches an external
+    API call with strict timeouts. Returns None on failure or if provider is mock,
+    ensuring deterministic replies are preserved.
+    """
+    if not settings.LLM_API_KEY or settings.LLM_PROVIDER in ["mock", "none", ""]:
+        return None
+
+    try:
+        if settings.LLM_PROVIDER.lower() == "gemini":
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{settings.LLM_MODEL}:generateContent?key={settings.LLM_API_KEY}"
+            payload = {
+                "contents": [{"parts": [{"text": f"{system_prompt}\n\nUser Question:\n{prompt}"}]}]
+            }
+            req = urllib.request.Request(
+                url,
+                data=json.dumps(payload).encode("utf-8"),
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                candidates = data.get("candidates", [])
+                if candidates:
+                    parts = candidates[0].get("content", {}).get("parts", [])
+                    if parts and "text" in parts[0]:
+                        return parts[0]["text"].strip()
+        elif settings.LLM_PROVIDER.lower() == "openai":
+            url = "https://api.openai.com/v1/chat/completions"
+            payload = {
+                "model": settings.LLM_MODEL or "gpt-4o-mini",
+                "messages": [
+                    {"role": "system", "content": system_prompt or "You are Sahay AI, an MSME advisory assistant."},
+                    {"role": "user", "content": prompt},
+                ],
+                "temperature": 0.2,
+            }
+            req = urllib.request.Request(
+                url,
+                data=json.dumps(payload).encode("utf-8"),
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {settings.LLM_API_KEY}",
+                },
+                method="POST",
+            )
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                choices = data.get("choices", [])
+                if choices:
+                    return choices[0].get("message", {}).get("content", "").strip()
+    except Exception as exc:
+        logger.warning("Pluggable LLM invocation failed or timed out: %s", exc)
+        return None
+    return None
 
 
 def detect_chat_intent(message: str) -> str:
@@ -110,40 +172,44 @@ def answer_grounded_chat(
 
     # Intent 2: Scheme Inquiry
     elif intent == "SCHEME_INQUIRY":
-        msg_lower = request.message.lower()
-        stop_words = {"scheme", "yojana", "programme", "about", "tell", "what", "can", "you", "for", "the", "in", "is"}
+        if not schemes:
+            reply = "No active verified schemes currently registered in Sahay's directory."
+        else:
+            msg_lower = request.message.lower()
+            stop_words = {"scheme", "yojana", "programme", "about", "tell", "what", "can", "you", "for", "the", "in", "is"}
 
-        def calculate_scheme_relevance(s: Scheme) -> int:
-            score = 0
-            if s.slug.lower() in msg_lower:
-                score += 50
-            if "pmegp" in msg_lower and "pmegp" in s.slug.lower():
-                score += 100
-            if "mudra" in msg_lower and "mudra" in s.slug.lower():
-                score += 100
-            if "banglashree" in msg_lower and "banglashree" in s.slug.lower():
-                score += 100
-            for token in s.name.lower().split():
-                if token not in stop_words and len(token) > 2 and token in msg_lower:
-                    score += 10
-            return score
+            def calculate_scheme_relevance(s: Scheme) -> int:
+                score = 0
+                if s.slug.lower() in msg_lower:
+                    score += 50
+                if "pmegp" in msg_lower and "pmegp" in s.slug.lower():
+                    score += 100
+                if "mudra" in msg_lower and "mudra" in s.slug.lower():
+                    score += 100
+                if "banglashree" in msg_lower and "banglashree" in s.slug.lower():
+                    score += 100
+                for token in s.name.lower().split():
+                    if token not in stop_words and len(token) > 2 and token in msg_lower:
+                        score += 10
+                    return score
 
-        scored_schemes = sorted(schemes, key=calculate_scheme_relevance, reverse=True)
-        target = scored_schemes[0] if scored_schemes else schemes[0]
+            scored_schemes = sorted(schemes, key=calculate_scheme_relevance, reverse=True)
+            target = scored_schemes[0]
+            last_verified = target.last_verified_at or datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
-        reply = (
-            f"{target.name}: Provided by {target.provider}. "
-            f"Type: {target.scheme_type.title()}. {target.detailed_benefits} "
-            f"Maximum project/credit ceiling is ₹{target.max_amount:,.0f}."
-        )
-        sources.append(
-            ChatSourceCitation(
-                title=target.name,
-                url=target.official_url,
-                provider=target.provider,
-                last_verified_at=target.last_verified_at,
+            reply = (
+                f"{target.name}: Provided by {target.provider}. "
+                f"Type: {target.scheme_type.title()}. {target.detailed_benefits} "
+                f"Maximum project/credit ceiling is ₹{target.max_amount:,.0f}."
             )
-        )
+            sources.append(
+                ChatSourceCitation(
+                    title=target.name,
+                    url=target.official_url,
+                    provider=target.provider,
+                    last_verified_at=last_verified,
+                )
+            )
 
     # Intent 3: Document Guidance
     elif intent == "DOCUMENT_GUIDANCE":
@@ -175,8 +241,23 @@ def answer_grounded_chat(
     # Intent 5: Financial Intelligence & Digital Twin
     elif intent == "FINANCIAL_INTELLIGENCE":
         deterministic_action = "EVALUATED_BY_FINANCIAL_TWIN_ENGINE"
-        user_id = current_user.id if current_user else "guest-preview"
-        record = get_or_create_financial_record(db, user_id)
+        if current_user:
+            record = get_or_create_financial_record(db, current_user.id)
+        else:
+            from app.models.financial import FinancialRecord
+            record = FinancialRecord(
+                id="transient-preview",
+                user_id="preview",
+                monthly_income=65000.0,
+                monthly_expenses=38000.0,
+                total_savings=140000.0,
+                emergency_fund_target=200000.0,
+                monthly_debt_obligations=12000.0,
+                total_debt=250000.0,
+                credit_score=720,
+                credit_score_status="good",
+                last_credit_check_date=datetime.now(timezone.utc),
+            )
         health = calculate_financial_health(record)
         emergency = calculate_emergency_fund(record)
         risk = calculate_risk_indicator(record)

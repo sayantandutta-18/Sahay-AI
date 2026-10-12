@@ -13,17 +13,45 @@ import { Sparkles, Phone, Lock, ArrowRight } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [phone, setPhone] = useState("9876543210");
-  const [otp, setOtp] = useState("123456");
-  const [step, setStep] = useState<"phone" | "otp">("phone");
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [otp, setOtp] = useState("");
+  const [mode, setMode] = useState<"password" | "otp">("password");
+  const [otpSent, setOtpSent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const handlePasswordLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (phone.length < 10) {
+      setError("Please enter a valid 10-digit mobile number.");
+      return;
+    }
+    if (!password) {
+      setError("Please enter your password.");
+      return;
+    }
+    setIsLoading(true);
+    setError(null);
+    try {
+      await authLogin(phone, password);
+      router.push("/dashboard");
+    } catch (err) {
+      setError(
+        err && typeof err === "object" && "message" in err
+          ? String((err as { message: unknown }).message)
+          : "Authentication failed. Please verify your credentials."
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSendOtp = (e: React.FormEvent) => {
     e.preventDefault();
     if (phone.length >= 10) {
       setError(null);
-      setStep("otp");
+      setOtpSent(true);
     } else {
       setError("Please enter a valid 10-digit mobile number.");
     }
@@ -31,6 +59,10 @@ export default function LoginPage() {
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!otp) {
+      setError("Please enter the verification code.");
+      return;
+    }
     setIsLoading(true);
     setError(null);
     try {
@@ -40,7 +72,7 @@ export default function LoginPage() {
       setError(
         err && typeof err === "object" && "message" in err
           ? String((err as { message: unknown }).message)
-          : "Authentication failed. Ensure backend is running."
+          : "OTP verification failed. Please try again."
       );
     } finally {
       setIsLoading(false);
@@ -70,15 +102,62 @@ export default function LoginPage() {
               />
             )}
 
-            {step === "phone" ? (
-              <form onSubmit={handleSendOtp} className="space-y-4">
+            <div className="flex rounded-lg bg-slate-100 dark:bg-slate-800 p-1 mb-4 text-xs font-medium">
+              <button
+                type="button"
+                onClick={() => { setMode("password"); setOtpSent(false); setError(null); }}
+                className={`flex-1 py-1.5 rounded-md transition-colors ${
+                  mode === "password"
+                    ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-sm"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                }`}
+              >
+                Password Login
+              </button>
+              <button
+                type="button"
+                onClick={() => { setMode("otp"); setError(null); }}
+                className={`flex-1 py-1.5 rounded-md transition-colors ${
+                  mode === "otp"
+                    ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-sm"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                }`}
+              >
+                OTP Login
+              </button>
+            </div>
+
+            {mode === "password" ? (
+              <form onSubmit={handlePasswordLogin} className="space-y-4">
                 <Input
-                  label="Phone Number"
-                  placeholder="e.g. 9876543210"
+                  label="Mobile Number"
+                  placeholder="Enter 10-digit mobile number"
                   leftIcon={<Phone className="w-4 h-4" />}
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  helperText="Development bypass: any 10-digit phone number works."
+                  required
+                />
+                <Input
+                  label="Password"
+                  type="password"
+                  placeholder="Enter your password"
+                  leftIcon={<Lock className="w-4 h-4" />}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+                <Button type="submit" className="w-full" isLoading={isLoading} rightIcon={<ArrowRight className="w-4 h-4" />}>
+                  Sign In
+                </Button>
+              </form>
+            ) : !otpSent ? (
+              <form onSubmit={handleSendOtp} className="space-y-4">
+                <Input
+                  label="Mobile Number"
+                  placeholder="Enter 10-digit mobile number"
+                  leftIcon={<Phone className="w-4 h-4" />}
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
                   required
                 />
                 <Button type="submit" className="w-full" rightIcon={<ArrowRight className="w-4 h-4" />}>
@@ -89,11 +168,11 @@ export default function LoginPage() {
               <form onSubmit={handleVerifyOtp} className="space-y-4">
                 <Input
                   label="Enter 6-Digit OTP"
-                  placeholder="123456"
+                  placeholder="Enter received OTP"
                   leftIcon={<Lock className="w-4 h-4" />}
                   value={otp}
                   onChange={(e) => setOtp(e.target.value)}
-                  helperText={`Test passcode 123456 sent to +91 ${phone}`}
+                  helperText={`Passcode verification for +91 ${phone}`}
                   required
                 />
                 <Button type="submit" className="w-full" isLoading={isLoading}>
@@ -102,10 +181,10 @@ export default function LoginPage() {
                 <div className="text-center">
                   <button
                     type="button"
-                    onClick={() => setStep("phone")}
+                    onClick={() => { setOtpSent(false); setOtp(""); }}
                     className="text-xs text-emerald-600 hover:underline cursor-pointer"
                   >
-                    Change phone number
+                    Change mobile number
                   </button>
                 </div>
               </form>

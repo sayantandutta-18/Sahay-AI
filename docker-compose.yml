@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   db:
     image: pgvector/pgvector:pg16
@@ -7,10 +5,10 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: sahay
-      POSTGRES_PASSWORD: sahay_dev_secret
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sahay_secure_local_dev_secret}
       POSTGRES_DB: sahay_db
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -24,7 +22,7 @@ services:
     container_name: sahay_redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     volumes:
       - redis_data:/data
 
@@ -40,11 +38,12 @@ services:
       redis:
         condition: service_started
     environment:
-      - DATABASE_URL=postgresql+psycopg://sahay:sahay_dev_secret@db:5432/sahay_db
+      - DATABASE_URL=postgresql+psycopg://sahay:${POSTGRES_PASSWORD:-sahay_secure_local_dev_secret}@db:5432/sahay_db
       - REDIS_URL=redis://redis:6379/0
       - CORS_ORIGINS=http://localhost:3000
       - ENVIRONMENT=development
       - DEBUG=True
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-sahay_docker_composed_secure_jwt_key_32_chars_min}
     ports:
       - "8000:8000"
 

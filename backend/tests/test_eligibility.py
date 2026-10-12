@@ -86,9 +86,10 @@ def test_eligibility_check_eligible_with_soft_bonus():
 
 def test_user_matches_endpoint_integration():
     """Test authenticated /eligibility/my-matches endpoint using profile."""
-    # 1. Login user
+    # 1. Register and login user
     phone = "9844444444"
-    login_res = client.post("/api/v1/auth/login", json={"phone": phone, "otp": "123456"})
+    client.post("/api/v1/auth/register", json={"phone": phone, "name": "Matches User", "password": "dev_pass"})
+    login_res = client.post("/api/v1/auth/login", json={"phone": phone, "password": "dev_pass"})
     token = login_res.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 

@@ -9,9 +9,10 @@ client = TestClient(app)
 def test_profile_lifecycle_and_completion_percentage():
     """Test getting, updating profile and verifying deterministic completion score."""
     # Register test user
+    client.post("/api/v1/auth/register", json={"phone": "9811111111", "name": "Profile Owner", "password": "dev_pass"})
     login_res = client.post(
         "/api/v1/auth/login",
-        json={"phone": "9811111111", "otp": "123456"},
+        json={"phone": "9811111111", "password": "dev_pass"},
     )
     token = login_res.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
@@ -49,13 +50,15 @@ def test_profile_lifecycle_and_completion_percentage():
 def test_user_data_isolation():
     """Verify that User A cannot read or overwrite User B's data."""
     # User A
+    client.post("/api/v1/auth/register", json={"phone": "9822222222", "name": "User Alpha", "password": "dev_pass"})
     token_a = client.post(
-        "/api/v1/auth/login", json={"phone": "9822222222", "otp": "123456"}
+        "/api/v1/auth/login", json={"phone": "9822222222", "password": "dev_pass"}
     ).json()["access_token"]
 
     # User B
+    client.post("/api/v1/auth/register", json={"phone": "9833333333", "name": "User Beta", "password": "dev_pass"})
     token_b = client.post(
-        "/api/v1/auth/login", json={"phone": "9833333333", "otp": "123456"}
+        "/api/v1/auth/login", json={"phone": "9833333333", "password": "dev_pass"}
     ).json()["access_token"]
 
     # User A sets their business name

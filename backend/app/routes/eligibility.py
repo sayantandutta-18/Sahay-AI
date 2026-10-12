@@ -13,10 +13,17 @@ from app.schemas.eligibility import (
 from app.services.profile_service import get_profile_by_user_id
 from app.services.eligibility_service import evaluate_all_schemes_for_profile
 
+from app.core.rate_limit import InMemoryRateLimiter
+
 router = APIRouter(prefix="/eligibility", tags=["Eligibility Engine"])
+eligibility_rate_limiter = InMemoryRateLimiter(times=60, seconds=60)
 
 
-@router.post("/check", response_model=EligibilitySummaryResponse)
+@router.post(
+    "/check",
+    response_model=EligibilitySummaryResponse,
+    dependencies=[Depends(eligibility_rate_limiter)],
+)
 def check_eligibility_criteria(
     criteria: Optional[EligibilityCheckRequest] = None,
     db: Session = Depends(get_db),

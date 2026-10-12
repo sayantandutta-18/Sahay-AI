@@ -46,9 +46,15 @@ def test_register_duplicate_phone():
 def test_login_and_access_protected_me():
     """Test login flow and protected /auth/me verification."""
     phone = "9800000003"
+    reg_res = client.post(
+        "/api/v1/auth/register",
+        json={"phone": phone, "name": "Registered Entrepreneur", "password": "secure_password_123"},
+    )
+    assert reg_res.status_code == 201
+
     login_res = client.post(
         "/api/v1/auth/login",
-        json={"phone": phone, "otp": "123456"},
+        json={"phone": phone, "password": "secure_password_123"},
     )
     assert login_res.status_code == 200
     token = login_res.json()["access_token"]
