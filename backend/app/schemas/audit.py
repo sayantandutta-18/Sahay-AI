@@ -9,11 +9,14 @@ class AuditLogResponse(BaseModel):
     id: str
     user_id: str
     user_email: str
+    actor_role: str = "user"
     action: str
     resource_type: str
     resource_id: str
+    outcome: str = "SUCCESS"
     details: str
     ip_address: str
+    correlation_id: str = ""
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

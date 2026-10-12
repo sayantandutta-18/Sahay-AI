@@ -34,6 +34,12 @@ class Scheme(Base):
     )  # Comma-separated: "manufacturing,services"
     official_url: Mapped[str] = mapped_column(String(500), nullable=False)
     last_verified_at: Mapped[str] = mapped_column(String(30), nullable=False)  # ISO Date YYYY-MM-DD
+    language_coverage: Mapped[str] = mapped_column(
+        String(100), default="en,hi,bn", nullable=False
+    )
+    publication_status: Mapped[str] = mapped_column(
+        String(30), default="published", nullable=False
+    )  # draft, published, archived
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
     created_at: Mapped[datetime] = mapped_column(

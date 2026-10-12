@@ -1,32 +1,84 @@
-"""Application lifecycle, document checklist state, and granular consent service."""
+"""Application lifecycle, checklist state machine, document vault, and consent service."""
 
 from datetime import datetime, timezone
-from typing import List, Optional
+from typing import List, Optional, Dict, Set
 from sqlalchemy.orm import Session
-from app.models.application import Application, UserDocument, DataSharingConsent
+from app.models.application import (
+    Application,
+    ApplicationStatusHistory,
+    ApplicationChecklistItem,
+    UserDocument,
+    DataSharingConsent,
+)
 from app.models.scheme import Scheme
 from app.schemas.application import (
     ApplicationCreate,
     ApplicationStatusUpdate,
+    ChecklistItemUpdate,
     UserDocumentCreate,
+    UserDocumentUpdate,
     DataSharingConsentCreate,
 )
+from app.services.storage_service import storage_service
+from app.services.audit_service import log_audit_event
+
+# Allowed application lifecycle status transitions
+VALID_STATUSES: Set[str] = {
+    "draft",
+    "documents_needed",
+    "ready_to_submit",
+    "submitted",
+    "in_review",
+    "action_required",
+    "approved",
+    "rejected",
+    "withdrawn",
+    "in_progress",
+}
+
+STATUS_PROGRESS_MAP: Dict[str, int] = {
+    "draft": 10,
+    "documents_needed": 25,
+    "in_progress": 25,
+    "ready_to_submit": 50,
+    "submitted": 80,
+    "in_review": 85,
+    "action_required": 60,
+    "approved": 100,
+    "rejected": 100,
+    "withdrawn": 0,
+}
+
+# Permitted state transitions (or backwards revisions)
+ALLOWED_TRANSITIONS: Dict[str, Set[str]] = {
+    "draft": {"documents_needed", "ready_to_submit", "submitted", "in_progress", "withdrawn"},
+    "documents_needed": {"ready_to_submit", "submitted", "draft", "in_progress", "withdrawn"},
+    "in_progress": {"documents_needed", "ready_to_submit", "submitted", "withdrawn"},
+    "ready_to_submit": {"submitted", "documents_needed", "in_progress", "withdrawn"},
+    "submitted": {"in_review", "action_required", "withdrawn"},
+    "in_review": {"action_required", "approved", "rejected", "withdrawn"},
+    "action_required": {"in_review", "ready_to_submit", "documents_needed", "withdrawn"},
+    "approved": set(),
+    "rejected": set(),
+    "withdrawn": set(),
+}
 
 
-def get_user_applications(db: Session, user_id: str) -> List[Application]:
-    """Retrieve all scheme applications belonging to a user."""
-    return (
-        db.query(Application)
-        .filter(Application.user_id == user_id)
-        .order_by(Application.created_at.desc())
-        .all()
-    )
+
+def get_user_applications(
+    db: Session, user_id: str, status_filter: Optional[str] = None
+) -> List[Application]:
+    """Retrieve all scheme applications belonging to a user, optionally filtered by status."""
+    query = db.query(Application).filter(Application.user_id == user_id)
+    if status_filter:
+        query = query.filter(Application.status == status_filter)
+    return query.order_by(Application.created_at.desc()).all()
 
 
 def get_application_by_id(
     db: Session, application_id: str, user_id: str
 ) -> Optional[Application]:
-    """Retrieve single application ensuring tenant authorization."""
+    """Retrieve single application ensuring user ownership."""
     return (
         db.query(Application)
         .filter(Application.id == application_id, Application.user_id == user_id)
@@ -37,7 +89,7 @@ def get_application_by_id(
 def create_application(
     db: Session, user_id: str, app_in: ApplicationCreate
 ) -> Application:
-    """Initialize a new scheme application with default checklist progress."""
+    """Initialize a new scheme application and seed required checklist items."""
     scheme = db.query(Scheme).filter(Scheme.id == app_in.scheme_id).first()
     if not scheme:
         raise ValueError(f"Scheme with ID '{app_in.scheme_id}' does not exist")
@@ -51,14 +103,46 @@ def create_application(
     if existing:
         return existing
 
+    has_mandatory_docs = any(d.mandatory for d in scheme.documents) if scheme.documents else False
+    initial_status = "documents_needed" if has_mandatory_docs else "ready_to_submit"
+    initial_progress = STATUS_PROGRESS_MAP[initial_status]
+
     app = Application(
         user_id=user_id,
         scheme_id=app_in.scheme_id,
-        status="in_progress",
-        progress_percentage=25,
+        status=initial_status,
+        progress_percentage=initial_progress,
+        due_date=app_in.due_date,
+        next_action="Upload required checklist documents" if has_mandatory_docs else "Review and submit application",
         notes=app_in.notes or "",
     )
     db.add(app)
+    db.flush()
+
+    # Seed checklist items from scheme document requirements
+    if scheme.documents:
+        for doc_req in scheme.documents:
+            chk = ApplicationChecklistItem(
+                application_id=app.id,
+                title=doc_req.title,
+                document_type=doc_req.document_type,
+                is_mandatory=doc_req.mandatory,
+                is_completed=False,
+                validation_message="Pending verification",
+            )
+            db.add(chk)
+
+    # Initial status history record
+    history = ApplicationStatusHistory(
+        application_id=app.id,
+        from_status="none",
+        to_status=initial_status,
+        actor_id=user_id,
+        actor_role="entrepreneur",
+        change_reason="Application created",
+    )
+    db.add(history)
+
     db.commit()
     db.refresh(app)
     return app
@@ -69,43 +153,202 @@ def update_application_status(
     application_id: str,
     user_id: str,
     update_in: ApplicationStatusUpdate,
+    actor_role: str = "entrepreneur",
 ) -> Optional[Application]:
-    """Update application progression state."""
+    """Validate and execute application lifecycle status transition."""
     app = get_application_by_id(db, application_id, user_id)
     if not app:
         return None
 
-    app.status = update_in.status
-    if update_in.notes is not None:
-        app.notes = update_in.notes
+    target_status = update_in.status.lower()
+    if target_status not in VALID_STATUSES:
+        raise ValueError(f"Invalid status '{target_status}'. Allowed: {', '.join(VALID_STATUSES)}")
 
-    if update_in.status == "submitted" and not app.submitted_at:
-        app.submitted_at = datetime.now(timezone.utc)
-        app.progress_percentage = 80
-    elif update_in.status == "approved":
-        app.progress_percentage = 100
-    elif update_in.status == "rejected":
-        app.progress_percentage = 100
+    # Check transition validity if not already in that status
+    if app.status != target_status:
+        allowed = ALLOWED_TRANSITIONS.get(app.status, set())
+        if target_status not in allowed:
+            raise ValueError(
+                f"Invalid status transition from '{app.status}' to '{target_status}'"
+            )
 
-    db.add(app)
-    db.commit()
-    db.refresh(app)
+        from_status = app.status
+        app.status = target_status
+        app.progress_percentage = STATUS_PROGRESS_MAP.get(target_status, app.progress_percentage)
+
+        if target_status == "submitted" and not app.submitted_at:
+            app.submitted_at = datetime.now(timezone.utc)
+            app.next_action = "Under formal administrative review"
+
+        if update_in.next_action:
+            app.next_action = update_in.next_action
+        if update_in.due_date:
+            app.due_date = update_in.due_date
+        if update_in.notes is not None:
+            app.notes = update_in.notes
+
+        # Record status history audit
+        history = ApplicationStatusHistory(
+            application_id=app.id,
+            from_status=from_status,
+            to_status=target_status,
+            actor_id=user_id,
+            actor_role=actor_role,
+            change_reason=update_in.change_reason or "Status update",
+        )
+        db.add(history)
+
+        db.add(app)
+        db.commit()
+        db.refresh(app)
+
     return app
+
+
+def get_application_checklist(
+    db: Session, application_id: str, user_id: str
+) -> List[ApplicationChecklistItem]:
+    """Retrieve checklist items for authorized application."""
+    app = get_application_by_id(db, application_id, user_id)
+    if not app:
+        raise ValueError("Application not found or unauthorized")
+    return app.checklist_items
+
+
+def update_checklist_item(
+    db: Session,
+    application_id: str,
+    checklist_item_id: str,
+    user_id: str,
+    update_in: ChecklistItemUpdate,
+) -> ApplicationChecklistItem:
+    """Toggle completion or attach verified vault document to checklist item."""
+    app = get_application_by_id(db, application_id, user_id)
+    if not app:
+        raise ValueError("Application not found or unauthorized")
+
+    item = (
+        db.query(ApplicationChecklistItem)
+        .filter(
+            ApplicationChecklistItem.id == checklist_item_id,
+            ApplicationChecklistItem.application_id == application_id,
+        )
+        .first()
+    )
+    if not item:
+        raise ValueError("Checklist item not found")
+
+    if update_in.is_completed is not None:
+        item.is_completed = update_in.is_completed
+    if update_in.user_document_id is not None:
+        item.user_document_id = update_in.user_document_id
+        item.is_completed = True
+        item.validation_message = "Attached and verified from Document Vault"
+    if update_in.validation_message is not None:
+        item.validation_message = update_in.validation_message
+
+    db.add(item)
+
+    # Recalculate application status and progress
+    all_mandatory = [c for c in app.checklist_items if c.is_mandatory]
+    all_mandatory_done = all(c.is_completed for c in all_mandatory)
+    if all_mandatory_done and app.status == "documents_needed":
+        app.status = "ready_to_submit"
+        app.progress_percentage = STATUS_PROGRESS_MAP["ready_to_submit"]
+        app.next_action = "All mandatory checklist items ready. Click Submit."
+        db.add(app)
+
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+def get_application_history(
+    db: Session, application_id: str, user_id: str
+) -> List[ApplicationStatusHistory]:
+    """Retrieve immutable status history ledger for application."""
+    app = get_application_by_id(db, application_id, user_id)
+    if not app:
+        raise ValueError("Application not found or unauthorized")
+    return app.status_history
+
+
+# ========================================================
+# Document Vault Services
+# ========================================================
+
+def save_vault_document(
+    db: Session,
+    user_id: str,
+    file_bytes: bytes,
+    original_filename: str,
+    reported_mime: str,
+    document_type: str,
+    purpose: str = "scheme_verification",
+    display_label: str = "",
+    application_id: Optional[str] = None,
+    expiry_date: Optional[str] = None,
+) -> UserDocument:
+    """Store document binary through storage abstraction and register PostgreSQL metadata."""
+    storage_key, storage_path, file_size, checksum_sha256, detected_mime = storage_service.save_file(
+        user_id=user_id,
+        content=file_bytes,
+        original_filename=original_filename,
+        reported_content_type=reported_mime,
+    )
+
+    doc = UserDocument(
+        user_id=user_id,
+        application_id=application_id,
+        document_type=document_type,
+        display_label=display_label or original_filename,
+        purpose=purpose,
+        file_name=original_filename,
+        file_size_bytes=file_size,
+        mime_type=detected_mime,
+        checksum_sha256=checksum_sha256,
+        storage_path=storage_path,
+        storage_key=storage_key,
+        verification_status="verified",
+        expiry_date=expiry_date,
+        is_deleted=False,
+    )
+    db.add(doc)
+    db.commit()
+    db.refresh(doc)
+
+    # Log audit event
+    log_audit_event(
+        db=db,
+        user_id=user_id,
+        action="DOCUMENT_UPLOADED",
+        resource_type="document",
+        resource_id=doc.id,
+        details=f"Uploaded {original_filename} ({detected_mime}, {file_size} bytes, SHA-256: {checksum_sha256[:8]}...)",
+    )
+
+    return doc
 
 
 def record_document_upload(
     db: Session, user_id: str, doc_in: UserDocumentCreate
 ) -> UserDocument:
-    """Store uploaded document metadata and attach to application if provided."""
+    """Legacy helper for registering document metadata directly."""
     doc = UserDocument(
         user_id=user_id,
         application_id=doc_in.application_id,
         document_type=doc_in.document_type,
+        display_label=doc_in.display_label or doc_in.file_name,
+        purpose=doc_in.purpose or "scheme_verification",
         file_name=doc_in.file_name,
         file_size_bytes=doc_in.file_size_bytes,
+        mime_type=doc_in.mime_type or "application/pdf",
+        checksum_sha256=doc_in.checksum_sha256 or "",
         storage_path=doc_in.storage_path or f"vault/{user_id}/{doc_in.file_name}",
+        storage_key=doc_in.storage_key or f"{user_id}/{doc_in.file_name}",
         verification_status="verified",
         expiry_date=doc_in.expiry_date,
+        is_deleted=False,
     )
     db.add(doc)
     db.commit()
@@ -114,19 +357,87 @@ def record_document_upload(
 
 
 def get_user_documents(db: Session, user_id: str) -> List[UserDocument]:
-    """Retrieve all uploaded documents for user's vault."""
+    """Retrieve all non-deleted uploaded documents for user's vault."""
     return (
         db.query(UserDocument)
-        .filter(UserDocument.user_id == user_id)
+        .filter(UserDocument.user_id == user_id, UserDocument.is_deleted == False)
         .order_by(UserDocument.created_at.desc())
         .all()
     )
 
 
+def get_document_by_id(
+    db: Session, document_id: str, user_id: str
+) -> Optional[UserDocument]:
+    """Retrieve document ensuring ownership and active state."""
+    return (
+        db.query(UserDocument)
+        .filter(
+            UserDocument.id == document_id,
+            UserDocument.user_id == user_id,
+            UserDocument.is_deleted == False,
+        )
+        .first()
+    )
+
+
+def update_document_metadata(
+    db: Session, document_id: str, user_id: str, update_in: UserDocumentUpdate
+) -> Optional[UserDocument]:
+    """Update document label, purpose, application link or expiry date."""
+    doc = get_document_by_id(db, document_id, user_id)
+    if not doc:
+        return None
+
+    if update_in.display_label is not None:
+        doc.display_label = update_in.display_label
+    if update_in.purpose is not None:
+        doc.purpose = update_in.purpose
+    if update_in.application_id is not None:
+        doc.application_id = update_in.application_id
+    if update_in.expiry_date is not None:
+        doc.expiry_date = update_in.expiry_date
+
+    db.add(doc)
+    db.commit()
+    db.refresh(doc)
+    return doc
+
+
+def delete_vault_document(
+    db: Session, document_id: str, user_id: str
+) -> bool:
+    """Soft delete document record and purge binary from storage."""
+    doc = get_document_by_id(db, document_id, user_id)
+    if not doc:
+        return False
+
+    doc.is_deleted = True
+    if doc.storage_key:
+        storage_service.delete_file(doc.storage_key)
+
+    db.add(doc)
+    db.commit()
+
+    log_audit_event(
+        db=db,
+        user_id=user_id,
+        action="DOCUMENT_DELETED",
+        resource_type="document",
+        resource_id=document_id,
+        details=f"Deleted document {doc.file_name}",
+    )
+    return True
+
+
+# ========================================================
+# Consent Services
+# ========================================================
+
 def grant_data_sharing_consent(
     db: Session, user_id: str, consent_in: DataSharingConsentCreate
 ) -> DataSharingConsent:
-    """Record granular, revocable consent before transmitting data to lender."""
+    """Record granular, revocable consent before transmitting data to partner."""
     app = get_application_by_id(db, consent_in.application_id, user_id)
     if not app:
         raise ValueError("Application not found or unauthorized")
@@ -145,6 +456,15 @@ def grant_data_sharing_consent(
     db.add(app)
     db.commit()
     db.refresh(consent)
+
+    log_audit_event(
+        db=db,
+        user_id=user_id,
+        action="CONSENT_GRANTED",
+        resource_type="consent",
+        resource_id=consent.id,
+        details=f"Granted data sharing consent to {consent_in.partner_name}",
+    )
     return consent
 
 
@@ -165,4 +485,13 @@ def revoke_data_sharing_consent(
     db.add(consent)
     db.commit()
     db.refresh(consent)
+
+    log_audit_event(
+        db=db,
+        user_id=user_id,
+        action="CONSENT_REVOKED",
+        resource_type="consent",
+        resource_id=consent.id,
+        details=f"Revoked data sharing consent for {consent.partner_name}",
+    )
     return consent

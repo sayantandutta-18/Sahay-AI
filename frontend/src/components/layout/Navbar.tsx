@@ -1,15 +1,28 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Sparkles, Globe, Menu, X, ShieldCheck } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
+import { SupportedLanguage, getStoredLanguage, setStoredLanguage } from "@/lib/i18n";
 
 export const Navbar: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [selectedLang, setSelectedLang] = useState<"en" | "hi" | "bn">("en");
+  const [selectedLang, setSelectedLang] = useState<SupportedLanguage>("en");
 
-  const languages: { code: "en" | "hi" | "bn"; label: string }[] = [
+  useEffect(() => {
+    setSelectedLang(getStoredLanguage());
+    const onLangChange = () => setSelectedLang(getStoredLanguage());
+    window.addEventListener("languagechange", onLangChange);
+    return () => window.removeEventListener("languagechange", onLangChange);
+  }, []);
+
+  const handleLangChange = (code: SupportedLanguage) => {
+    setSelectedLang(code);
+    setStoredLanguage(code);
+  };
+
+  const languages: { code: SupportedLanguage; label: string }[] = [
     { code: "en", label: "English" },
     { code: "hi", label: "हिंदी" },
     { code: "bn", label: "বাংলা" },
@@ -45,7 +58,7 @@ export const Navbar: React.FC = () => {
             {languages.map((lang) => (
               <button
                 key={lang.code}
-                onClick={() => setSelectedLang(lang.code)}
+                onClick={() => handleLangChange(lang.code)}
                 className={`px-2 py-1 rounded-md font-medium transition-colors cursor-pointer ${
                   selectedLang === lang.code
                     ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs"

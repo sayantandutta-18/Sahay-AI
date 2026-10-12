@@ -17,6 +17,7 @@ import {
   PieChart,
   ShieldCheck,
   Sparkles,
+  Cpu,
 } from "lucide-react";
 
 interface NavItem {
@@ -47,6 +48,7 @@ const navSections: { section: string; items: NavItem[] }[] = [
   {
     section: "Intelligence & Business",
     items: [
+      { name: "Financial Digital Twin", href: "/twin", icon: Cpu, tag: "AI Twin" },
       { name: "AI Assistant (RAG)", href: "/chat", icon: MessageSquare },
       { name: "Business Advisor", href: "/business", icon: Calculator },
       { name: "Market Academy", href: "/academy", icon: GraduationCap },

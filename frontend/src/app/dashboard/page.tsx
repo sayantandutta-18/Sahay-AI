@@ -16,6 +16,7 @@ import {
   Calculator,
   ArrowRight,
   ShieldAlert,
+  Cpu,
 } from "lucide-react";
 
 export default function DashboardPage() {
@@ -194,6 +195,31 @@ export default function DashboardPage() {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Valmont AI Financial Digital Twin Banner */}
+        <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-transparent p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0">
+              <Cpu className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                  Valmont AI Financial Digital Twin
+                </h3>
+                <Badge variant="brand" size="sm">Stress Testing</Badge>
+              </div>
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 max-w-2xl">
+                Simulate business decisions before committing: model equipment loans, emergency reserve depletion, and revenue shocks with the 5-stage workflow (Analyze → Simulate → Predict → Assess Risk → Decide).
+              </p>
+            </div>
+          </div>
+          <Link href="/twin">
+            <Button size="sm" rightIcon={<ArrowRight className="w-4 h-4" />}>
+              Launch Digital Twin
+            </Button>
+          </Link>
         </div>
 
         {/* Compliance & Safety Guarantee Notice */}

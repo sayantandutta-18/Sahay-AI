@@ -9,12 +9,22 @@ from app.models.scheme import Scheme
 from app.schemas.chat import ChatRequest, ChatResponse, ChatSourceCitation
 from app.services.eligibility_service import evaluate_all_schemes_for_profile
 from app.services.profile_service import get_profile_by_user_id
+from app.services.financial_service import (
+    get_or_create_financial_record,
+    calculate_financial_health,
+    calculate_emergency_fund,
+    calculate_risk_indicator,
+)
 
 
 def detect_chat_intent(message: str) -> str:
     """Classify user intent using deterministic keyword pattern matching."""
     text = message.lower()
 
+    if any(k in text for k in ["runway", "emergency fund", "credit score", "twin", "what-if", "what if", "financial health", "dti", "debt-to-income", "জরুরি তহবিল", "ক্রেডিট স্কোর"]):
+        return "FINANCIAL_INTELLIGENCE"
+    if any(k in text for k in ["fraud", "suspicious", "scam", "unauthorized", "জালিয়াতি", "धोखाधड़ी"]):
+        return "FRAUD_SECURITY"
     if any(k in text for k in ["eligible", "eligibility", "match", "qualify", "যোগ্য", "पात्र"]):
         return "ELIGIBILITY_CHECK"
     if any(k in text for k in ["document", "certificate", "paper", "udyam", "pan", "দস্তাবেজ", "কাগজ", "दस्तावेज"]):
@@ -162,7 +172,52 @@ def answer_grounded_chat(
         )
         deterministic_action = "ROUTED_TO_BUSINESS_TOOLS"
 
-    # Intent 5: General with Uncertainty Guard
+    # Intent 5: Financial Intelligence & Digital Twin
+    elif intent == "FINANCIAL_INTELLIGENCE":
+        deterministic_action = "EVALUATED_BY_FINANCIAL_TWIN_ENGINE"
+        user_id = current_user.id if current_user else "guest-preview"
+        record = get_or_create_financial_record(db, user_id)
+        health = calculate_financial_health(record)
+        emergency = calculate_emergency_fund(record)
+        risk = calculate_risk_indicator(record)
+
+        reply = (
+            f"Based on Sahay's deterministic Financial Digital Twin analysis: "
+            f"1. Health Grade: {health.health_grade} (Net Monthly Surplus: ₹{health.net_cash_flow:,.0f}). "
+            f"2. Debt-to-Income (DTI): {round(health.debt_to_income_ratio * 100, 1)}% ({'Manageable' if health.debt_to_income_ratio <= 0.35 else 'Elevated'}). "
+            f"3. Emergency Runway: {emergency.current_runway_months} months of essential operations ({emergency.status.title()} status). "
+            f"4. Composite Risk Indicator: {risk.overall_risk_score}/100 ({risk.risk_level} Risk). "
+            f"Key Next Action: {emergency.actionable_plan[0] if emergency.actionable_plan else 'Maintain cash flow reserves.'}"
+        )
+        sources.append(
+            ChatSourceCitation(
+                title="Sahay Financial Digital Twin & Stress Testing Engine",
+                url="https://sahay.local/twin",
+                provider="Sahay Financial Intelligence (Valmont Engine)",
+                last_verified_at=datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+            )
+        )
+
+    # Intent 6: Fraud & Transaction Security
+    elif intent == "FRAUD_SECURITY":
+        deterministic_action = "SCANNED_BY_FRAUD_PREVENTION_RULES"
+        reply = (
+            "Sahay provides automated rule-based fraud detection for enterprise ledgers: "
+            "1. High-velocity transfer alerts (>3 large debits within 24h), "
+            "2. Single transaction spike warnings (>₹2,50,000 threshold), "
+            "3. Suspicious keyword patterns (lottery, wire prize, OTP verification), and "
+            "4. Immediate duplicate debit detection. Never share banking OTPs, UPI PINs, or password credentials."
+        )
+        sources.append(
+            ChatSourceCitation(
+                title="RBI Cyber Security & Consumer Financial Protection Framework",
+                url="https://rbi.org.in",
+                provider="Reserve Bank of India",
+                last_verified_at="2026-03-01",
+            )
+        )
+
+    # Intent 7: General with Uncertainty Guard
     else:
         confidence = "medium"
         reply = (

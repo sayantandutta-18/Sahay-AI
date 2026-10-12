@@ -45,11 +45,30 @@ class SchemeBase(BaseModel):
     target_sectors: str = Field(default="ALL")
     official_url: str
     last_verified_at: str
+    language_coverage: str = Field(default="en,hi,bn")
+    publication_status: str = Field(default="published", description="draft, published, archived")
     is_active: bool = True
 
 
 class SchemeCreate(SchemeBase):
     pass
+
+
+class SchemeUpdate(BaseModel):
+    name: Optional[str] = None
+    provider: Optional[str] = None
+    scheme_type: Optional[str] = None
+    short_description: Optional[str] = None
+    detailed_benefits: Optional[str] = None
+    max_amount: Optional[float] = None
+    interest_subsidy_pct: Optional[float] = None
+    states_served: Optional[str] = None
+    target_sectors: Optional[str] = None
+    official_url: Optional[str] = None
+    last_verified_at: Optional[str] = None
+    language_coverage: Optional[str] = None
+    publication_status: Optional[str] = None
+    is_active: Optional[bool] = None
 
 
 class SchemeResponse(SchemeBase):

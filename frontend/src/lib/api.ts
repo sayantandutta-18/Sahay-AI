@@ -29,6 +29,15 @@ import {
   WatchlistItemResponse,
   PaperHoldingResponse,
   PaperPortfolioSummaryResponse,
+  ApplicationChecklistItem,
+  ApplicationStatusHistory,
+  FinancialHealthSummary,
+  EmergencyFundAnalysis,
+  IncomeLossSimulationResult,
+  WhatIfSimulationResult,
+  CreditScoreExplainerResult,
+  FinancialRiskIndicatorResult,
+  DigitalTwinWorkflowResult,
 } from "@/types";
 
 const API_BASE_URL =
@@ -309,6 +318,70 @@ export async function getUserDocuments(): Promise<UserDocumentResponse[]> {
   return fetchApi<UserDocumentResponse[]>("/api/v1/documents");
 }
 
+export async function uploadDocument(
+  file: File,
+  documentType: string,
+  applicationId?: string
+): Promise<UserDocumentResponse> {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("document_type", documentType);
+  if (applicationId) {
+    formData.append("application_id", applicationId);
+  }
+  return fetchApi<UserDocumentResponse>("/api/v1/documents/upload", {
+    method: "POST",
+    body: formData,
+  });
+}
+
+export async function downloadDocument(documentId: string, filename?: string): Promise<void> {
+  const token = typeof window !== "undefined" ? localStorage.getItem("sahay_access_token") : null;
+  const headers = new Headers();
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+  const url = `${API_BASE_URL}/api/v1/documents/${documentId}/download`;
+  const response = await fetch(url, { headers });
+  if (!response.ok) {
+    throw new Error(`Download failed with status ${response.status}`);
+  }
+  const blob = await response.blob();
+  const downloadUrl = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = downloadUrl;
+  a.download = filename || `document_${documentId}.pdf`;
+  document.body.appendChild(a);
+  a.click();
+  window.URL.revokeObjectURL(downloadUrl);
+  a.remove();
+}
+
+export async function deleteDocument(documentId: string): Promise<{ deleted: boolean }> {
+  return fetchApi<{ deleted: boolean }>(`/api/v1/documents/${documentId}`, {
+    method: "DELETE",
+  });
+}
+
+export async function getApplicationChecklist(applicationId: string): Promise<ApplicationChecklistItem[]> {
+  return fetchApi<ApplicationChecklistItem[]>(`/api/v1/applications/${applicationId}/checklist`);
+}
+
+export async function updateChecklistItem(
+  applicationId: string,
+  itemId: string,
+  data: { is_completed?: boolean; notes?: string; vault_document_id?: string }
+): Promise<ApplicationChecklistItem> {
+  return fetchApi<ApplicationChecklistItem>(`/api/v1/applications/${applicationId}/checklist/${itemId}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function getApplicationHistory(applicationId: string): Promise<ApplicationStatusHistory[]> {
+  return fetchApi<ApplicationStatusHistory[]>(`/api/v1/applications/${applicationId}/history`);
+}
+
 export async function recordDocumentUpload(data: {
   application_id?: string;
   document_type: string;
@@ -483,6 +556,58 @@ export async function executePaperOrder(
       transaction_type: transactionType,
       quantity,
     }),
+  });
+}
+
+// ==========================================
+// Phase 2: Financial Intelligence & Digital Twin APIs
+// ==========================================
+
+export async function getFinancialHealth(): Promise<FinancialHealthSummary> {
+  return fetchApi<FinancialHealthSummary>("/api/v1/financial/health");
+}
+
+export async function getEmergencyFundAnalysis(): Promise<EmergencyFundAnalysis> {
+  return fetchApi<EmergencyFundAnalysis>("/api/v1/financial/emergency-fund");
+}
+
+export async function simulateIncomeLoss(reductionPct: number = 50): Promise<IncomeLossSimulationResult> {
+  return fetchApi<IncomeLossSimulationResult>("/api/v1/financial/simulate/income-loss", {
+    method: "POST",
+    body: JSON.stringify({ income_reduction_pct: reductionPct }),
+  });
+}
+
+export async function simulateWhatIfScenario(scenario: {
+  scenario_type: string;
+  additional_monthly_debt?: number;
+  revenue_change_pct?: number;
+  expense_change_pct?: number;
+  description?: string;
+}): Promise<WhatIfSimulationResult> {
+  return fetchApi<WhatIfSimulationResult>("/api/v1/financial/simulate/what-if", {
+    method: "POST",
+    body: JSON.stringify(scenario),
+  });
+}
+
+export async function getCreditScoreExplainer(): Promise<CreditScoreExplainerResult> {
+  return fetchApi<CreditScoreExplainerResult>("/api/v1/financial/credit-explainer");
+}
+
+export async function getFinancialRiskIndicator(): Promise<FinancialRiskIndicatorResult> {
+  return fetchApi<FinancialRiskIndicatorResult>("/api/v1/financial/risk-indicator");
+}
+
+export async function runDigitalTwinWorkflow(scenarioData?: {
+  scenario_type?: string;
+  additional_monthly_debt?: number;
+  revenue_change_pct?: number;
+  expense_change_pct?: number;
+}): Promise<DigitalTwinWorkflowResult> {
+  return fetchApi<DigitalTwinWorkflowResult>("/api/v1/financial/twin/workflow", {
+    method: "POST",
+    body: JSON.stringify(scenarioData || { scenario_type: "new_loan", additional_monthly_debt: 5000 }),
   });
 }
 

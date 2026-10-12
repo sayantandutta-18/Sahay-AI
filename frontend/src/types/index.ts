@@ -169,12 +169,36 @@ export interface UserDocumentResponse {
   created_at: string;
 }
 
+export interface ApplicationChecklistItem {
+  id: string;
+  application_id: string;
+  requirement_id?: string | null;
+  title: string;
+  description: string;
+  mandatory: boolean;
+  is_completed: boolean;
+  vault_document_id?: string | null;
+  notes?: string | null;
+  completed_at?: string | null;
+}
+
+export interface ApplicationStatusHistory {
+  id: string;
+  application_id: string;
+  previous_status?: string | null;
+  new_status: string;
+  actor_id?: string | null;
+  actor_role: string;
+  notes?: string | null;
+  created_at: string;
+}
+
 export interface ApplicationResponse {
   id: string;
   user_id: string;
   scheme_id: string;
   scheme_name?: string | null;
-  status: "not_started" | "in_progress" | "submitted" | "under_review" | "approved" | "rejected" | string;
+  status: "not_started" | "in_progress" | "documents_needed" | "submitted" | "under_review" | "approved" | "rejected" | string;
   progress_percentage: number;
   lender_consent_granted: boolean;
   consent_granted_at?: string | null;
@@ -184,6 +208,124 @@ export interface ApplicationResponse {
   updated_at: string;
   documents: UserDocumentResponse[];
   consents: DataSharingConsentResponse[];
+  checklist_items?: ApplicationChecklistItem[];
+}
+
+// Phase 2 Financial Intelligence Types
+export interface FinancialHealthSummary {
+  monthly_income: number;
+  monthly_expenses: number;
+  monthly_debt_emi: number;
+  net_cash_flow: number;
+  debt_to_income_ratio: number;
+  savings_rate_pct: number;
+  emergency_fund_months: number;
+  health_grade: "A" | "B" | "C" | "D" | string;
+  key_strengths: string[];
+  risk_flags: string[];
+}
+
+export interface EmergencyFundAnalysis {
+  essential_monthly_expenses: number;
+  liquid_savings: number;
+  current_runway_months: number;
+  recommended_target_amount: number;
+  shortfall_or_surplus: number;
+  status: "critical" | "warning" | "adequate" | "robust" | string;
+  actionable_plan: string[];
+}
+
+export interface MonthTrajectory {
+  month: number;
+  starting_balance: number;
+  income: number;
+  expenses: number;
+  ending_balance: number;
+  runway_status: "solvent" | "exhausted" | string;
+}
+
+export interface IncomeLossSimulationResult {
+  income_reduction_pct: number;
+  months_until_exhaustion: number;
+  monthly_burn_rate: number;
+  austere_monthly_expenses: number;
+  runway_with_austerity_months: number;
+  trajectory: MonthTrajectory[];
+}
+
+export interface WhatIfSimulationResult {
+  scenario_type: "new_loan" | "revenue_shock" | "expense_inflation" | "custom" | string;
+  scenario_description: string;
+  baseline: {
+    net_cash_flow: number;
+    debt_to_income_ratio: number;
+    runway_months: number;
+    risk_score: number;
+  };
+  simulated: {
+    net_cash_flow: number;
+    debt_to_income_ratio: number;
+    runway_months: number;
+    risk_score: number;
+  };
+  deltas: {
+    cash_flow_delta: number;
+    dti_delta: number;
+    risk_delta: number;
+  };
+  recommendation: string;
+  verdict: "safe" | "caution" | "critical" | string;
+}
+
+export interface CreditFactor {
+  factor: string;
+  weight_pct: number;
+  status: "excellent" | "good" | "needs_attention" | "critical" | string;
+  impact: string;
+  recommendation: string;
+}
+
+export interface CreditScoreExplainerResult {
+  estimated_score: number;
+  score_band: "Excellent" | "Good" | "Fair" | "Needs Improvement" | string;
+  factors: CreditFactor[];
+  compliance_disclaimer: string;
+}
+
+export interface RiskDimension {
+  dimension: string;
+  score: number;
+  weight: number;
+  assessment: string;
+}
+
+export interface FinancialRiskIndicatorResult {
+  overall_risk_score: number;
+  risk_level: "Low" | "Moderate" | "Elevated" | "High" | string;
+  dimensions: RiskDimension[];
+  top_vulnerabilities: string[];
+  mitigation_steps: string[];
+  compliance_disclaimer: string;
+}
+
+export interface FraudAlert {
+  id: string;
+  severity: "low" | "medium" | "high" | string;
+  title: string;
+  description: string;
+  suggested_action: string;
+}
+
+export interface DigitalTwinWorkflowResult {
+  analysis: FinancialHealthSummary;
+  emergency_fund: EmergencyFundAnalysis;
+  risk_indicator: FinancialRiskIndicatorResult;
+  simulation: WhatIfSimulationResult;
+  decision: {
+    action: "PROCEED" | "PROCEED_WITH_CAUTION" | "DO_NOT_PROCEED" | string;
+    summary: string;
+    checklist: string[];
+  };
 }
 
 // Business Advisor Results
