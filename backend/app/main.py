@@ -8,6 +8,7 @@ from app.database.session import engine, SessionLocal
 from app.database.base import Base
 import app.models  # Ensure all SQLAlchemy models are registered
 from app.services.scheme_service import seed_verified_schemes_if_empty
+from app.services.academy_service import seed_academy_content_if_empty
 from app.routes.health import router as health_router
 from app.routes.api import api_router
 
@@ -18,6 +19,7 @@ async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
     with SessionLocal() as db:
         seed_verified_schemes_if_empty(db)
+        seed_academy_content_if_empty(db)
     yield
 
 

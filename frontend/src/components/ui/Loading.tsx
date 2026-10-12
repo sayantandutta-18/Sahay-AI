@@ -26,6 +26,15 @@ export const Spinner: React.FC<SpinnerProps> = ({
   );
 };
 
+export interface LoadingProps extends SpinnerProps {
+  text?: string;
+}
+
+export const Loading: React.FC<LoadingProps> = ({ text, label, ...props }) => {
+  return <Spinner label={text || label} {...props} />;
+};
+
+
 export const Skeleton: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
   className = "",
   ...props

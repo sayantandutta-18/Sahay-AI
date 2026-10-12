@@ -19,6 +19,16 @@ import {
   CashFlowCalculationResult,
   AdminStats,
   AuditLogItem,
+  ChatResponse,
+  CourseResponse,
+  LessonResponse,
+  QuizSubmissionResponse,
+  FinancialProfileBase,
+  FinancialProfileResponse,
+  MarketQuoteResponse,
+  WatchlistItemResponse,
+  PaperHoldingResponse,
+  PaperPortfolioSummaryResponse,
 } from "@/types";
 
 const API_BASE_URL =
@@ -361,4 +371,120 @@ export async function getAdminAuditLogs(limit: number = 50): Promise<AuditLogIte
   return fetchApi<AuditLogItem[]>(`/api/v1/admin/audit-logs?limit=${limit}`);
 }
 
+// ==========================================
+// Grounded AI Assistant (RAG) APIs
+// ==========================================
+
+export async function sendChatMessage(
+  message: string,
+  conversationId?: string,
+  languagePreference: string = "en"
+): Promise<ChatResponse> {
+  return fetchApi<ChatResponse>("/api/v1/chat", {
+    method: "POST",
+    body: JSON.stringify({
+      message,
+      conversation_id: conversationId,
+      language_preference: languagePreference,
+    }),
+  });
+}
+
+// ==========================================
+// Stock Market Academy APIs
+// ==========================================
+
+export async function getAcademyCourses(): Promise<CourseResponse[]> {
+  return fetchApi<CourseResponse[]>("/api/v1/academy/courses");
+}
+
+export async function getAcademyLessons(courseId: string): Promise<LessonResponse[]> {
+  return fetchApi<LessonResponse[]>(`/api/v1/academy/courses/${courseId}/lessons`);
+}
+
+export async function submitQuizAnswer(
+  lessonId: string,
+  selectedOptionIndex: number
+): Promise<QuizSubmissionResponse> {
+  return fetchApi<QuizSubmissionResponse>("/api/v1/academy/quiz", {
+    method: "POST",
+    body: JSON.stringify({
+      lesson_id: lessonId,
+      selected_option_index: selectedOptionIndex,
+    }),
+  });
+}
+
+// ==========================================
+// Investment Profile & Market Data APIs
+// ==========================================
+
+export async function getInvestmentProfile(): Promise<FinancialProfileResponse> {
+  return fetchApi<FinancialProfileResponse>("/api/v1/investment/profile");
+}
+
+export async function updateInvestmentProfile(
+  data: Partial<FinancialProfileBase>
+): Promise<FinancialProfileResponse> {
+  return fetchApi<FinancialProfileResponse>("/api/v1/investment/profile", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function getMarketBenchmarks(): Promise<MarketQuoteResponse[]> {
+  return fetchApi<MarketQuoteResponse[]>("/api/v1/investment/benchmarks");
+}
+
+// ==========================================
+// Watchlist & Paper Portfolio APIs
+// ==========================================
+
+export async function getWatchlist(): Promise<WatchlistItemResponse[]> {
+  return fetchApi<WatchlistItemResponse[]>("/api/v1/portfolio/watchlist");
+}
+
+export async function addToWatchlist(
+  ticker: string,
+  name?: string,
+  assetClass: string = "etf",
+  exchange: string = "NSE"
+): Promise<WatchlistItemResponse> {
+  return fetchApi<WatchlistItemResponse>("/api/v1/portfolio/watchlist", {
+    method: "POST",
+    body: JSON.stringify({
+      ticker,
+      name,
+      asset_class: assetClass,
+      exchange,
+    }),
+  });
+}
+
+export async function removeFromWatchlist(ticker: string): Promise<void> {
+  await fetchApi<void>(`/api/v1/portfolio/watchlist/${ticker}`, {
+    method: "DELETE",
+  });
+}
+
+export async function getPaperPortfolio(): Promise<PaperPortfolioSummaryResponse> {
+  return fetchApi<PaperPortfolioSummaryResponse>("/api/v1/portfolio");
+}
+
+export async function executePaperOrder(
+  ticker: string,
+  transactionType: "BUY" | "SELL",
+  quantity: number
+): Promise<PaperHoldingResponse> {
+  return fetchApi<PaperHoldingResponse>("/api/v1/portfolio/order", {
+    method: "POST",
+    body: JSON.stringify({
+      ticker,
+      transaction_type: transactionType,
+      quantity,
+    }),
+  });
+}
+
 export { API_BASE_URL };
+

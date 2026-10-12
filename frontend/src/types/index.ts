@@ -244,3 +244,130 @@ export interface AdminStats {
   total_audit_events: number;
   timestamp: string;
 }
+
+// Grounded AI Assistant & RAG
+export interface ChatSourceCitation {
+  title: string;
+  url?: string | null;
+  provider?: string | null;
+  last_verified_at?: string | null;
+}
+
+export interface ChatRequest {
+  message: string;
+  conversation_id?: string | null;
+  language_preference?: string;
+}
+
+export interface ChatResponse {
+  reply: string;
+  intent_detected: string;
+  sources: ChatSourceCitation[];
+  deterministic_action_taken?: string | null;
+  confidence_level: "high" | "medium" | "uncertain" | string;
+  compliance_disclaimer: string;
+}
+
+// Stock Market Academy
+export interface LessonResponse {
+  id: string;
+  course_id: string;
+  title: string;
+  slug: string;
+  content: string;
+  quiz_question: string;
+  quiz_options: string[];
+  order_index: number;
+  is_completed: boolean;
+  score: number;
+}
+
+export interface CourseResponse {
+  id: string;
+  title: string;
+  slug: string;
+  level: "beginner" | "intermediate" | "advanced" | string;
+  description: string;
+  order_index: number;
+  lessons_count: number;
+  completed_lessons_count: number;
+  is_locked: boolean;
+}
+
+export interface QuizSubmissionResponse {
+  lesson_id: string;
+  is_correct: boolean;
+  correct_option_index: number;
+  explanation: string;
+  score_awarded: number;
+}
+
+// Investment Risk Profile
+export interface FinancialProfileBase {
+  investment_goal: string;
+  monthly_investible_surplus: number;
+  time_horizon_years: number;
+  risk_tolerance: "conservative" | "moderate" | "aggressive" | "capital_preservation" | string;
+  market_experience: "beginner" | "intermediate" | "advanced" | string;
+  liquidity_needs: "high" | "medium" | "low" | string;
+  disclosures_acknowledged?: boolean;
+}
+
+export interface FinancialProfileResponse extends FinancialProfileBase {
+  id: string;
+  user_id: string;
+  calculated_risk_score: number;
+  risk_category: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// Market Data & Paper Portfolio
+export interface MarketQuoteResponse {
+  ticker: string;
+  name: string;
+  current_price: number;
+  currency: string;
+  exchange: string;
+  asset_class: string;
+  last_updated_at: string;
+  is_stale: boolean;
+  provider: string;
+}
+
+export interface WatchlistItemResponse {
+  id: string;
+  ticker: string;
+  name: string;
+  asset_class: string;
+  exchange: string;
+  current_price: number;
+  created_at: string;
+}
+
+export interface PaperHoldingResponse {
+  id: string;
+  ticker: string;
+  name: string;
+  asset_class: string;
+  quantity: number;
+  average_buy_price: number;
+  current_price: number;
+  total_invested: number;
+  current_value: number;
+  unrealized_pnl: number;
+  pnl_percentage: number;
+  allocation_percentage: number;
+}
+
+export interface PaperPortfolioSummaryResponse {
+  total_invested: number;
+  current_value: number;
+  total_pnl: number;
+  pnl_percentage: number;
+  holdings_count: number;
+  as_of_timestamp: string;
+  holdings: PaperHoldingResponse[];
+  compliance_notice: string;
+}
+
