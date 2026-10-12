@@ -3,7 +3,15 @@
  * Centralized, typed HTTP client communicating with FastAPI backend.
  */
 
-import { HealthResponse, ApiError } from "@/types";
+import {
+  HealthResponse,
+  ApiError,
+  User,
+  AuthToken,
+  BusinessProfile,
+  Scheme,
+  EligibilitySummaryResponse,
+} from "@/types";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") || "http://localhost:8000";
@@ -125,6 +133,117 @@ export async function checkApiConnectivity(): Promise<{
       error: errorMsg,
     };
   }
+}
+
+// ==========================================
+// Authentication APIs
+// ==========================================
+
+export async function authLogin(phone: string, password?: string, otp?: string): Promise<AuthToken> {
+  const res = await fetchApi<AuthToken>("/api/v1/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ phone, password: password || "dev_pass", otp }),
+  });
+  if (typeof window !== "undefined" && res.access_token) {
+    localStorage.setItem("sahay_access_token", res.access_token);
+    localStorage.setItem("sahay_user", JSON.stringify(res.user));
+  }
+  return res;
+}
+
+export async function authRegister(userData: {
+  phone: string;
+  name: string;
+  role?: string;
+  language?: string;
+  state?: string;
+  district?: string;
+}): Promise<AuthToken> {
+  const res = await fetchApi<AuthToken>("/api/v1/auth/register", {
+    method: "POST",
+    body: JSON.stringify(userData),
+  });
+  if (typeof window !== "undefined" && res.access_token) {
+    localStorage.setItem("sahay_access_token", res.access_token);
+    localStorage.setItem("sahay_user", JSON.stringify(res.user));
+  }
+  return res;
+}
+
+export async function authMe(): Promise<User> {
+  return fetchApi<User>("/api/v1/auth/me");
+}
+
+export function authLogout(): void {
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("sahay_access_token");
+    localStorage.removeItem("sahay_user");
+  }
+}
+
+// ==========================================
+// Business Profile APIs
+// ==========================================
+
+export async function getBusinessProfile(): Promise<BusinessProfile> {
+  return fetchApi<BusinessProfile>("/api/v1/business-profile");
+}
+
+export async function updateBusinessProfile(
+  data: Partial<BusinessProfile>
+): Promise<BusinessProfile> {
+  return fetchApi<BusinessProfile>("/api/v1/business-profile", {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}
+
+// ==========================================
+// Government Schemes APIs
+// ==========================================
+
+export async function getSchemes(params?: {
+  scheme_type?: string;
+  state?: string;
+  search?: string;
+}): Promise<Scheme[]> {
+  const searchParams = new URLSearchParams();
+  if (params?.scheme_type && params.scheme_type !== "all") {
+    searchParams.append("scheme_type", params.scheme_type);
+  }
+  if (params?.state && params.state !== "ALL") {
+    searchParams.append("state", params.state);
+  }
+  if (params?.search) {
+    searchParams.append("search", params.search);
+  }
+  const query = searchParams.toString() ? `?${searchParams.toString()}` : "";
+  return fetchApi<Scheme[]>(`/api/v1/schemes${query}`);
+}
+
+export async function getSchemeById(schemeId: string): Promise<Scheme> {
+  return fetchApi<Scheme>(`/api/v1/schemes/${schemeId}`);
+}
+
+export async function getSchemeBySlug(slug: string): Promise<Scheme> {
+  return fetchApi<Scheme>(`/api/v1/schemes/slug/${slug}`);
+}
+
+// ==========================================
+// Deterministic Eligibility APIs
+// ==========================================
+
+export async function checkEligibility(
+  criteria: Record<string, unknown>
+): Promise<EligibilitySummaryResponse> {
+  return fetchApi<EligibilitySummaryResponse>("/api/v1/eligibility/check", {
+    method: "POST",
+    body: JSON.stringify(criteria),
+  });
+}
+
+export async function getMyMatches(): Promise<EligibilitySummaryResponse> {
+  return fetchApi<EligibilitySummaryResponse>("/api/v1/eligibility/my-matches");
 }
 
 export { API_BASE_URL };

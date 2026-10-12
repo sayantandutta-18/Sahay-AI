@@ -1,77 +1,67 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { CardSkeleton } from "@/components/ui/Loading";
+import { ErrorBanner } from "@/components/ui/ErrorBanner";
+import { Empty } from "@/components/ui/Empty";
+import { checkEligibility, getMyMatches } from "@/lib/api";
+import { EligibilitySummaryResponse } from "@/types";
 import {
   CheckCircle,
   AlertTriangle,
   Lightbulb,
   ArrowRight,
   ShieldAlert,
+  RefreshCw,
 } from "lucide-react";
 
-const evaluatedMatches = [
-  {
-    schemeId: "pmegp",
-    schemeName: "Prime Minister Employment Generation Programme (PMEGP)",
-    isEligible: true,
-    matchScore: 94,
-    passedRules: [
-      "Age >= 18 years",
-      "Sector: Manufacturing / Agro-Handicrafts is covered",
-      "Location: West Bengal (eligible state)",
-      "Project cost within ₹50 Lakhs limit",
-    ],
-    missingRequirements: [
-      "EDP (Entrepreneurship Development Programme) 10-day training certificate",
-      "Detailed Project Appraisal Report (DPR)",
-    ],
-    nearMissPath:
-      "Complete the free 10-day online EDP training at msmetraining.gov.in to unlock instant bank forwarding.",
-    ruleVersion: "v1.4.2",
-  },
-  {
-    schemeId: "mudra-tarun",
-    schemeName: "Pradhan Mantri MUDRA Yojana (Tarun)",
-    isEligible: true,
-    matchScore: 88,
-    passedRules: [
-      "Micro-enterprise classification confirmed via Udyam",
-      "Active bank savings/current account verified",
-      "No default recorded on existing formal credit",
-    ],
-    missingRequirements: [
-      "Latest 6-month continuous bank statement with GST reconciliations",
-    ],
-    nearMissPath: "Upload bank statement with verifiable digital stamp or DigiLocker pull.",
-    ruleVersion: "v1.2.0",
-  },
-  {
-    schemeId: "cgtmse",
-    schemeName: "CGTMSE Guarantee Fund",
-    isEligible: false,
-    matchScore: 62,
-    passedRules: [
-      "Manufacturing micro enterprise",
-      "Proprietor PAN verified",
-    ],
-    failedRules: [
-      "Requires audited financials or 12-month commercial operations (currently 9 months)",
-    ],
-    missingRequirements: [
-      "3 more months of registered business operational history",
-    ],
-    nearMissPath:
-      "Wait 90 days or apply for MUDRA Kishor / Tarun first which requires zero previous operational duration.",
-    ruleVersion: "v2.1.0",
-  },
-];
-
 export default function MatchesPage() {
+  const [data, setData] = useState<EligibilitySummaryResponse | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadMatches = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      // Attempt to load personalized matches if logged in, otherwise default criteria
+      let result: EligibilitySummaryResponse;
+      try {
+        result = await getMyMatches();
+      } catch {
+        // Fallback to evaluating against standard entrepreneur parameters
+        result = await checkEligibility({
+          state: "West Bengal",
+          business_type: "manufacturing",
+          category: "micro",
+          annual_turnover: 850000.0,
+          gender: "female",
+          has_udyam: true,
+          has_pan: true,
+          has_bank_account: true,
+        });
+      }
+      setData(result);
+    } catch (err) {
+      setError(
+        err && typeof err === "object" && "message" in err
+          ? String((err as { message: unknown }).message)
+          : "Could not evaluate scheme eligibility against backend engine."
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadMatches();
+  }, []);
+
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -84,9 +74,20 @@ export default function MatchesPage() {
               Evaluated strictly against verified eligibility rules. Rules versioned and auditable.
             </p>
           </div>
-          <Link href="/schemes">
-            <Button variant="outline" size="sm">Browse Full Library</Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={loadMatches}
+              disabled={isLoading}
+              leftIcon={<RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`} />}
+            >
+              Re-evaluate
+            </Button>
+            <Link href="/schemes">
+              <Button size="sm">Browse Full Library</Button>
+            </Link>
+          </div>
         </div>
 
         {/* Warning banner */}
@@ -97,77 +98,114 @@ export default function MatchesPage() {
           </div>
         </div>
 
-        {/* Match cards */}
-        <div className="space-y-4">
-          {evaluatedMatches.map((m) => (
-            <Card key={m.schemeId} hover>
-              <CardHeader>
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                  <div>
-                    <CardTitle className="text-base">{m.schemeName}</CardTitle>
-                    <p className="text-[11px] text-slate-400 font-mono mt-0.5">
-                      Evaluated by Rule Set {m.ruleVersion}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={m.isEligible ? "success" : "warning"} size="md">
-                      {m.isEligible ? `Eligible (${m.matchScore}% Match)` : `Near Match (${m.matchScore}%)`}
-                    </Badge>
-                  </div>
-                </div>
-              </CardHeader>
+        {error && (
+          <ErrorBanner
+            title="Eligibility Evaluation Error"
+            message={error}
+            onRetry={loadMatches}
+          />
+        )}
 
-              <CardContent className="space-y-4">
-                {/* Passed criteria */}
-                <div>
-                  <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-1.5">
-                    <CheckCircle className="w-4 h-4 text-emerald-600" /> Met Criteria ({m.passedRules.length})
-                  </p>
-                  <ul className="space-y-1 pl-5 list-disc text-xs text-slate-600 dark:text-slate-400">
-                    {m.passedRules.map((rule, idx) => (
-                      <li key={idx}>{rule}</li>
-                    ))}
-                  </ul>
-                </div>
+        {isLoading ? (
+          <div className="space-y-4">
+            <CardSkeleton />
+            <CardSkeleton />
+            <CardSkeleton />
+          </div>
+        ) : !data || data.matches.length === 0 ? (
+          <Empty
+            title="No Scheme Rules Available"
+            description="The system could not locate any active verified scheme rule sets."
+            actionLabel="Try Again"
+            onAction={loadMatches}
+          />
+        ) : (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between text-xs text-slate-500 pb-1">
+              <span>
+                Found <strong className="text-slate-800 dark:text-slate-200">{data.eligible_count} Eligible</strong> and{" "}
+                <strong className="text-slate-800 dark:text-slate-200">{data.near_match_count} Near Matches</strong> across {data.evaluated_schemes_count} verified schemes
+              </span>
+              <span className="font-mono text-[11px] text-emerald-600">{data.rule_authority}</span>
+            </div>
 
-                {/* Missing requirements */}
-                {m.missingRequirements.length > 0 && (
-                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-                    <p className="text-xs font-semibold text-rose-700 dark:text-rose-400 mb-2 flex items-center gap-1.5">
-                      <AlertTriangle className="w-4 h-4 text-rose-600" /> Pending Requirements ({m.missingRequirements.length})
-                    </p>
-                    <ul className="space-y-1 pl-5 list-disc text-xs text-slate-600 dark:text-slate-400">
-                      {m.missingRequirements.map((req, idx) => (
-                        <li key={idx}>{req}</li>
-                      ))}
-                    </ul>
+            {data.matches.map((m) => (
+              <Card key={m.scheme_id} hover>
+                <CardHeader>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div>
+                      <CardTitle className="text-base">{m.scheme_name}</CardTitle>
+                      <p className="text-[11px] text-slate-400 font-mono mt-0.5">
+                        {m.provider} • Rule Version {m.rule_version}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={m.is_eligible ? "success" : "warning"} size="md">
+                        {m.is_eligible ? `Eligible (${m.match_score}% Fit)` : `Near Match (${m.match_score}%)`}
+                      </Badge>
+                    </div>
                   </div>
-                )}
+                </CardHeader>
 
-                {/* Near miss / unlock path */}
-                {m.nearMissPath && (
-                  <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/40 text-xs">
-                    <p className="font-semibold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5 mb-1">
-                      <Lightbulb className="w-4 h-4 text-emerald-600" /> Recommended Action to Unlock
-                    </p>
-                    <p className="text-slate-600 dark:text-slate-400">{m.nearMissPath}</p>
-                  </div>
-                )}
-              </CardContent>
+                <CardContent className="space-y-4">
+                  {/* Passed criteria */}
+                  {m.passed_hard_rules && m.passed_hard_rules.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-1.5">
+                        <CheckCircle className="w-4 h-4 text-emerald-600" /> Met Criteria ({m.passed_hard_rules.length})
+                      </p>
+                      <ul className="space-y-1 pl-5 list-disc text-xs text-slate-600 dark:text-slate-400">
+                        {m.passed_hard_rules.map((rule, idx) => (
+                          <li key={idx}>{rule}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
 
-              <CardFooter>
-                <div className="text-xs text-slate-400">
-                  Authority: Sahay Deterministic Engine
-                </div>
-                <Link href="/applications">
-                  <Button size="sm" rightIcon={<ArrowRight className="w-3.5 h-3.5" />}>
-                    Start Application Checklist
-                  </Button>
-                </Link>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
+                  {/* Failed criteria */}
+                  {m.failed_hard_rules && m.failed_hard_rules.length > 0 && (
+                    <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+                      <p className="text-xs font-semibold text-rose-700 dark:text-rose-400 mb-2 flex items-center gap-1.5">
+                        <AlertTriangle className="w-4 h-4 text-rose-600" /> Unmet Criteria ({m.failed_hard_rules.length})
+                      </p>
+                      <ul className="space-y-1 pl-5 list-disc text-xs text-slate-600 dark:text-slate-400">
+                        {m.failed_hard_rules.map((req, idx) => (
+                          <li key={idx}>{req}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Near miss / unlock path */}
+                  {m.near_miss_unlock_path && (
+                    <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/40 text-xs">
+                      <p className="font-semibold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5 mb-1">
+                        <Lightbulb className="w-4 h-4 text-emerald-600" /> Action to Unlock / Enhance Fit
+                      </p>
+                      <p className="text-slate-600 dark:text-slate-400">{m.near_miss_unlock_path}</p>
+                    </div>
+                  )}
+                </CardContent>
+
+                <CardFooter>
+                  <a
+                    href={m.official_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-slate-500 hover:text-emerald-600 underline"
+                  >
+                    Official Portal
+                  </a>
+                  <Link href="/applications">
+                    <Button size="sm" rightIcon={<ArrowRight className="w-3.5 h-3.5" />}>
+                      Start Application Checklist
+                    </Button>
+                  </Link>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
     </AppLayout>
   );

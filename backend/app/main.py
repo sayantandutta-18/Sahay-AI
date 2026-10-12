@@ -1,10 +1,25 @@
 """FastAPI application entrypoint for Sahay."""
 
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
+from app.database.session import engine, SessionLocal
+from app.database.base import Base
+import app.models  # Ensure all SQLAlchemy models are registered
+from app.services.scheme_service import seed_verified_schemes_if_empty
 from app.routes.health import router as health_router
 from app.routes.api import api_router
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan: initialize database tables and seed verified knowledge base."""
+    Base.metadata.create_all(bind=engine)
+    with SessionLocal() as db:
+        seed_verified_schemes_if_empty(db)
+    yield
+
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -13,6 +28,7 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json",
+    lifespan=lifespan,
 )
 
 # CORS Middleware setup
