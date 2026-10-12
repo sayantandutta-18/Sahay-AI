@@ -143,32 +143,104 @@ export interface EligibilitySummaryResponse {
   matches: SchemeMatchResult[];
 }
 
-// Applications & Documents
-export type ApplicationStatus =
-  | "not_started"
-  | "in_progress"
-  | "submitted"
-  | "under_review"
-  | "approved"
-  | "rejected";
-
-export interface ApplicationRecord {
+// Applications, Documents & Consents
+export interface DataSharingConsentResponse {
   id: string;
-  schemeId: string;
-  schemeName: string;
-  status: ApplicationStatus;
-  progressPercentage: number;
-  submittedAt?: string;
-  lastUpdatedAt: string;
-  notes?: string;
+  user_id: string;
+  application_id: string;
+  partner_name: string;
+  shared_fields: string;
+  is_revoked: boolean;
+  granted_at: string;
+  revoked_at?: string | null;
 }
 
-export interface UserDocument {
+export interface UserDocumentResponse {
   id: string;
-  userId: string;
-  documentType: string;
-  fileName: string;
-  verified: boolean;
-  uploadedAt: string;
-  expiryDate?: string;
+  user_id: string;
+  application_id?: string | null;
+  document_type: string;
+  file_name: string;
+  file_size_bytes: number;
+  storage_path: string;
+  verification_status: "pending" | "verified" | "rejected" | string;
+  rejection_reason: string;
+  expiry_date?: string | null;
+  created_at: string;
+}
+
+export interface ApplicationResponse {
+  id: string;
+  user_id: string;
+  scheme_id: string;
+  scheme_name?: string | null;
+  status: "not_started" | "in_progress" | "submitted" | "under_review" | "approved" | "rejected" | string;
+  progress_percentage: number;
+  lender_consent_granted: boolean;
+  consent_granted_at?: string | null;
+  submitted_at?: string | null;
+  notes: string;
+  created_at: string;
+  updated_at: string;
+  documents: UserDocumentResponse[];
+  consents: DataSharingConsentResponse[];
+}
+
+// Business Advisor Results
+export interface EmiCalculationResult {
+  principal: number;
+  annual_interest_rate: number;
+  tenure_months: number;
+  monthly_emi: number;
+  total_interest: number;
+  total_payment: number;
+  principal_percentage: number;
+  interest_percentage: number;
+  authority: string;
+}
+
+export interface PricingCalculationResult {
+  unit_total_cost: number;
+  suggested_selling_price: number;
+  gross_profit_per_unit: number;
+  markup_percentage: number;
+  target_margin_percentage: number;
+  monthly_break_even_units: number;
+  authority: string;
+}
+
+export interface CashFlowCalculationResult {
+  monthly_revenue: number;
+  monthly_expense: number;
+  existing_debt_emi: number;
+  net_operating_income: number;
+  net_surplus_after_debt: number;
+  annual_projected_surplus: number;
+  operating_margin_percentage: number;
+  debt_service_coverage_ratio: number;
+  business_health_grade: string;
+  recommendation: string;
+  authority: string;
+}
+
+// Admin & Audit
+export interface AuditLogItem {
+  id: string;
+  user_id: string;
+  user_email: string;
+  action: string;
+  resource_type: string;
+  resource_id: string;
+  details: string;
+  ip_address: string;
+  created_at: string;
+}
+
+export interface AdminStats {
+  total_users: number;
+  total_schemes: number;
+  total_applications: number;
+  total_verified_documents: number;
+  total_audit_events: number;
+  timestamp: string;
 }

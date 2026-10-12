@@ -11,6 +11,14 @@ import {
   BusinessProfile,
   Scheme,
   EligibilitySummaryResponse,
+  ApplicationResponse,
+  UserDocumentResponse,
+  DataSharingConsentResponse,
+  EmiCalculationResult,
+  PricingCalculationResult,
+  CashFlowCalculationResult,
+  AdminStats,
+  AuditLogItem,
 } from "@/types";
 
 const API_BASE_URL =
@@ -244,6 +252,113 @@ export async function checkEligibility(
 
 export async function getMyMatches(): Promise<EligibilitySummaryResponse> {
   return fetchApi<EligibilitySummaryResponse>("/api/v1/eligibility/my-matches");
+}
+
+// ==========================================
+// Applications & Documents APIs
+// ==========================================
+
+export async function getApplications(): Promise<ApplicationResponse[]> {
+  return fetchApi<ApplicationResponse[]>("/api/v1/applications");
+}
+
+export async function createApplication(schemeId: string, notes?: string): Promise<ApplicationResponse> {
+  return fetchApi<ApplicationResponse>("/api/v1/applications", {
+    method: "POST",
+    body: JSON.stringify({ scheme_id: schemeId, notes: notes || "" }),
+  });
+}
+
+export async function updateApplicationStatus(
+  applicationId: string,
+  status: string,
+  notes?: string
+): Promise<ApplicationResponse> {
+  return fetchApi<ApplicationResponse>(`/api/v1/applications/${applicationId}/status`, {
+    method: "PATCH",
+    body: JSON.stringify({ status, notes }),
+  });
+}
+
+export async function grantConsent(
+  applicationId: string,
+  partnerName: string,
+  sharedFields: string
+): Promise<DataSharingConsentResponse> {
+  return fetchApi<DataSharingConsentResponse>("/api/v1/applications/consent", {
+    method: "POST",
+    body: JSON.stringify({
+      application_id: applicationId,
+      partner_name: partnerName,
+      shared_fields: sharedFields,
+    }),
+  });
+}
+
+export async function getUserDocuments(): Promise<UserDocumentResponse[]> {
+  return fetchApi<UserDocumentResponse[]>("/api/v1/documents");
+}
+
+export async function recordDocumentUpload(data: {
+  application_id?: string;
+  document_type: string;
+  file_name: string;
+  file_size_bytes?: number;
+}): Promise<UserDocumentResponse> {
+  return fetchApi<UserDocumentResponse>("/api/v1/documents", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+// ==========================================
+// Deterministic Business Advisor APIs
+// ==========================================
+
+export async function calculateEmi(data: {
+  principal: number;
+  annual_interest_rate: number;
+  tenure_months: number;
+}): Promise<EmiCalculationResult> {
+  return fetchApi<EmiCalculationResult>("/api/v1/business/emi", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function calculatePricing(data: {
+  unit_cost: number;
+  target_margin_pct: number;
+  packaging_logistics_cost?: number;
+  fixed_overhead_monthly?: number;
+}): Promise<PricingCalculationResult> {
+  return fetchApi<PricingCalculationResult>("/api/v1/business/pricing", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function calculateCashFlow(data: {
+  monthly_revenue: number;
+  monthly_expense: number;
+  existing_debt_emi?: number;
+}): Promise<CashFlowCalculationResult> {
+  return fetchApi<CashFlowCalculationResult>("/api/v1/business/cash-flow", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+// ==========================================
+// Admin & Audit APIs
+// ==========================================
+
+export async function getAdminStats(): Promise<AdminStats> {
+  return fetchApi<AdminStats>("/api/v1/admin/stats");
+}
+
+export async function getAdminAuditLogs(limit: number = 50): Promise<AuditLogItem[]> {
+  return fetchApi<AuditLogItem[]>(`/api/v1/admin/audit-logs?limit=${limit}`);
 }
 
 export { API_BASE_URL };

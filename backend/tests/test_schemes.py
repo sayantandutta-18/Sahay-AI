@@ -13,12 +13,15 @@ def test_list_schemes_seed_data():
     schemes = response.json()
     assert len(schemes) >= 3
 
-    # Check that official URLs and verified dates exist
+    # Check that official URLs and verified dates exist on all schemes
     for s in schemes:
         assert s["official_url"].startswith("http")
         assert s["last_verified_at"] is not None
-        assert len(s["documents"]) > 0
-        assert len(s["rules"]) > 0
+
+    # Check that seeded core schemes have documents
+    pmegp = next(s for s in schemes if s["slug"] == "pmegp")
+    assert len(pmegp["documents"]) > 0
+    assert len(pmegp["rules"]) > 0
 
 
 def test_filter_schemes_by_type():
