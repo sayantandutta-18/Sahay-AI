@@ -38,6 +38,12 @@ import {
   CreditScoreExplainerResult,
   FinancialRiskIndicatorResult,
   DigitalTwinWorkflowResult,
+  CandleBar,
+  CandlestickAnalysisResponse,
+  InstrumentCandleSummary,
+  SmartExpenseAnalysisResponse,
+  FinancialRecommendationItem,
+  FraudAlert,
 } from "@/types";
 
 const API_BASE_URL =
@@ -214,6 +220,7 @@ export async function authRegister(userData: {
 export async function authMe(): Promise<User> {
   return fetchApi<User>("/api/v1/auth/me");
 }
+export const getCurrentUser = authMe;
 
 export function authLogout(): void {
   if (typeof window !== "undefined") {
@@ -661,6 +668,84 @@ export async function runDigitalTwinWorkflow(scenarioData?: {
   return fetchApi<DigitalTwinWorkflowResult>("/api/v1/financial/twin/workflow", {
     method: "POST",
     body: JSON.stringify(scenarioData || { scenario_type: "new_loan", additional_monthly_debt: 5000 }),
+  });
+}
+
+export async function getSmartExpenseAnalysis(): Promise<SmartExpenseAnalysisResponse> {
+  return fetchApi<SmartExpenseAnalysisResponse>("/api/v1/financial/smart-expenses");
+}
+
+export async function updateTransactionCategory(
+  transactionId: string,
+  category: string,
+  isEssential: boolean = true
+): Promise<unknown> {
+  return fetchApi(`/api/v1/financial/transactions/${transactionId}/category`, {
+    method: "PUT",
+    body: JSON.stringify({ category, is_essential: isEssential }),
+  });
+}
+
+export async function getFinancialRecommendations(): Promise<FinancialRecommendationItem[]> {
+  return fetchApi<FinancialRecommendationItem[]>("/api/v1/financial/recommendations");
+}
+
+export async function submitRecommendationFeedback(
+  recommendationId: string,
+  action: "dismiss" | "helpful",
+  notes?: string
+): Promise<{ status: string; message: string }> {
+  return fetchApi<{ status: string; message: string }>(
+    `/api/v1/financial/recommendations/${recommendationId}/feedback`,
+    {
+      method: "POST",
+      body: JSON.stringify({ action, feedback_notes: notes }),
+    }
+  );
+}
+
+export async function updateFraudAlertStatus(
+  transactionId: string,
+  status: "reviewing" | "dismissed" | "user_confirmed",
+  notes?: string
+): Promise<{ status: string; review_state: string }> {
+  return fetchApi<{ status: string; review_state: string }>(
+    `/api/v1/financial/fraud-alerts/${transactionId}/status`,
+    {
+      method: "PUT",
+      body: JSON.stringify({ status, notes }),
+    }
+  );
+}
+
+export async function getFraudAlerts(): Promise<FraudAlert[]> {
+  return fetchApi<FraudAlert[]>("/api/v1/financial/fraud-alerts");
+}
+
+// ==========================================
+// Candlestick Pattern Intelligence APIs
+// ==========================================
+
+export async function getCandlestickInstruments(): Promise<InstrumentCandleSummary[]> {
+  return fetchApi<InstrumentCandleSummary[]>("/api/v1/candlestick/instruments");
+}
+
+export async function getCandlestickAnalysis(
+  ticker: string,
+  timeframe: string = "1D"
+): Promise<CandlestickAnalysisResponse> {
+  return fetchApi<CandlestickAnalysisResponse>(
+    `/api/v1/candlestick/analysis/${encodeURIComponent(ticker)}?timeframe=${encodeURIComponent(timeframe)}`
+  );
+}
+
+export async function analyzeCustomCandles(payload: {
+  ticker?: string;
+  candles: CandleBar[];
+}): Promise<CandlestickAnalysisResponse> {
+  return fetchApi<CandlestickAnalysisResponse>("/api/v1/candlestick/analyze-custom", {
+    method: "POST",
+    body: JSON.stringify(payload),
   });
 }
 

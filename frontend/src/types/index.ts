@@ -7,6 +7,9 @@ export interface DatabaseHealth {
   status: "connected" | "disconnected";
   url?: string;
   error?: string;
+  dialect?: string;
+  table_count?: number;
+  latency_ms?: number;
 }
 
 export interface HealthResponse {
@@ -327,6 +330,60 @@ export interface FraudAlert {
   title: string;
   description: string;
   suggested_action: string;
+  review_status?: "new" | "reviewing" | "dismissed" | "user_confirmed" | string;
+}
+
+export interface ExpenseCategoryStat {
+  category: string;
+  amount: number;
+  percentage: number;
+  count: number;
+  is_essential: boolean;
+}
+
+export interface RecurringExpenseItem {
+  vendor_name: string;
+  estimated_monthly: number;
+  category: string;
+  frequency: string;
+}
+
+export interface DuplicateCandidate {
+  tx_id_1: string;
+  tx_id_2: string;
+  vendor: string;
+  amount: number;
+  date_difference_hours: number;
+  explanation: string;
+}
+
+export interface SavingsSuggestion {
+  suggestion_id: string;
+  title: string;
+  category: string;
+  potential_monthly_savings: number;
+  reasoning: string;
+  is_applied: boolean;
+}
+
+export interface SmartExpenseAnalysisResponse {
+  total_expenses: number;
+  category_breakdown: ExpenseCategoryStat[];
+  recurring_expenses: RecurringExpenseItem[];
+  duplicate_candidates: DuplicateCandidate[];
+  savings_suggestions: SavingsSuggestion[];
+  uncertainty_notice: string;
+}
+
+export interface FinancialRecommendationItem {
+  id: string;
+  category: string;
+  title: string;
+  impact_amount: number;
+  confidence_level: "High" | "Moderate" | "Low" | string;
+  reason_evidence: string;
+  action_link?: string | null;
+  is_dismissed: boolean;
 }
 
 export interface DigitalTwinWorkflowResult {
@@ -525,4 +582,83 @@ export interface PaperPortfolioSummaryResponse {
   holdings: PaperHoldingResponse[];
   compliance_notice: string;
 }
+
+// ==========================================
+// Candlestick Pattern Analysis & Technical Intelligence
+// ==========================================
+
+export interface CandleBar {
+  timestamp: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+  change: number;
+  change_percent: number;
+  color: "green" | "red" | "neutral";
+}
+
+export interface CandlestickPatternMatch {
+  pattern_id: string;
+  pattern_name: string;
+  japanese_name?: string;
+  pattern_type: "bullish_reversal" | "bearish_reversal" | "bullish_continuation" | "bearish_continuation" | "indecision";
+  sentiment: "bullish" | "bearish" | "neutral";
+  reliability: "High" | "Moderate" | "Low";
+  reliability_score: number;
+  trigger_candle_index: number;
+  trigger_candle_date: string;
+  description: string;
+  implication: string;
+  confirmation_needed: boolean;
+  suggested_stop_loss?: number;
+  suggested_target?: number;
+}
+
+export interface TechnicalIndicators {
+  current_price: number;
+  sma_20?: number;
+  sma_50?: number;
+  rsi_14?: number;
+  atr_14?: number;
+  trend: "uptrend" | "downtrend" | "sideways";
+  trend_strength: "strong" | "moderate" | "weak";
+  nearest_support: number;
+  nearest_resistance: number;
+}
+
+export interface SentimentSummary {
+  overall: "strongly_bullish" | "mildly_bullish" | "neutral" | "mildly_bearish" | "strongly_bearish";
+  score: number;
+  bullish_pattern_count: number;
+  bearish_pattern_count: number;
+  neutral_pattern_count: number;
+  actionable_signal: "ACCUMULATE / WATCH BUY" | "REDUCE / CAUTION" | "WAIT FOR CONFIRMATION" | "NEUTRAL RANGE";
+}
+
+export interface CandlestickAnalysisResponse {
+  ticker: string;
+  instrument_name: string;
+  exchange: string;
+  timeframe: string;
+  candles: CandleBar[];
+  detected_patterns: CandlestickPatternMatch[];
+  recent_patterns: CandlestickPatternMatch[];
+  technical_indicators: TechnicalIndicators;
+  sentiment: SentimentSummary;
+  educational_takeaway: string;
+  disclaimer: string;
+}
+
+export interface InstrumentCandleSummary {
+  ticker: string;
+  name: string;
+  exchange: string;
+  current_price: number;
+  change_24h_percent: number;
+  latest_pattern?: string;
+  sentiment: string;
+}
+
 

@@ -52,7 +52,7 @@ const navSections: { section: string; items: NavItem[] }[] = [
       { name: "AI Assistant (RAG)", href: "/chat", icon: MessageSquare },
       { name: "Business Advisor", href: "/business", icon: Calculator },
       { name: "Market Academy", href: "/academy", icon: GraduationCap },
-      { name: "Stock Research", href: "/stocks", icon: TrendingUp },
+      { name: "Candlestick & Markets", href: "/stocks", icon: TrendingUp, tag: "Charts" },
       { name: "Paper Portfolio", href: "/portfolio", icon: PieChart },
     ],
   },

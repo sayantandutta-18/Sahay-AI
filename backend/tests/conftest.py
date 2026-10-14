@@ -1,4 +1,8 @@
-"""Pytest configuration and test database fixtures."""
+import os
+from pathlib import Path
+
+_TEST_DB_PATH = Path(__file__).resolve().parent.parent / "sahay_test.db"
+os.environ["DATABASE_URL"] = f"sqlite:///{_TEST_DB_PATH.as_posix()}"
 
 import pytest
 from app.database.session import engine, SessionLocal
@@ -10,7 +14,7 @@ from app.services.academy_service import seed_academy_content_if_empty
 
 @pytest.fixture(autouse=True, scope="session")
 def setup_test_database():
-    """Ensure clean tables and verified initial scheme records exist before running tests."""
+    """Ensure clean tables and verified initial scheme records exist before running tests in isolated test db."""
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     with SessionLocal() as db:
@@ -19,3 +23,9 @@ def setup_test_database():
     yield
     # Teardown
     Base.metadata.drop_all(bind=engine)
+    engine.dispose()
+    if _TEST_DB_PATH.exists():
+        try:
+            _TEST_DB_PATH.unlink()
+        except Exception:
+            pass

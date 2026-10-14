@@ -17,6 +17,9 @@ def get_health() -> HealthResponse:
         status=db_result.get("status", "disconnected"),
         url=db_result.get("url"),
         error=db_result.get("error"),
+        dialect=db_result.get("dialect"),
+        table_count=db_result.get("table_count"),
+        latency_ms=db_result.get("latency_ms"),
     )
 
     overall_status = "healthy" if db_health.status == "connected" else "degraded"

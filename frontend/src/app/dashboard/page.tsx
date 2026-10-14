@@ -1,12 +1,19 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { HealthIndicator } from "@/components/ui/HealthIndicator";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import {
+  getCurrentUser,
+  getBusinessProfile,
+  getApplications,
+  getUserDocuments,
+  authDemoLogin,
+} from "@/lib/api";
 import {
   ScrollText,
   FileText,
@@ -17,9 +24,42 @@ import {
   ArrowRight,
   ShieldAlert,
   Cpu,
+  LogIn,
 } from "lucide-react";
 
 export default function DashboardPage() {
+  const [user, setUser] = useState<{ name?: string; state?: string; district?: string } | null>(null);
+  const [profile, setProfile] = useState<{ business_name?: string } | null>(null);
+  const [applicationCount, setApplicationCount] = useState<number | null>(null);
+  const [pendingCount, setPendingCount] = useState<number | null>(null);
+  const [documentCount, setDocumentCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    async function loadDashboardData() {
+      try {
+        if (typeof window !== "undefined" && !localStorage.getItem("sahay_access_token")) {
+          try {
+            await authDemoLogin();
+          } catch {
+            // Ignore
+          }
+        }
+        const u = await getCurrentUser();
+        setUser(u);
+        const p = await getBusinessProfile();
+        setProfile(p);
+        const apps = await getApplications();
+        setApplicationCount(apps.length);
+        setPendingCount(apps.filter((a) => !["approved", "rejected", "withdrawn"].includes(a.status)).length);
+        const docs = await getUserDocuments();
+        setDocumentCount(docs.length);
+      } catch {
+        // Fallback for demo/unauthenticated mode
+      }
+    }
+    loadDashboardData();
+  }, []);
+
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -30,10 +70,17 @@ export default function DashboardPage() {
               Enterprise Dashboard
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Welcome back, Ramesh Sharma • Sharma Agro Handicrafts (Kolkata, WB)
+              Welcome back, {user?.name || "Ramesh Sharma"} • {profile?.business_name || "Sharma Agro Handicrafts"} ({user?.district || "Kolkata"}, {user?.state || "WB"})
             </p>
           </div>
           <div className="flex items-center gap-2">
+            {!user && (
+              <Link href="/login">
+                <Button size="sm" variant="outline" leftIcon={<LogIn className="w-4 h-4" />}>
+                  Sign In
+                </Button>
+              </Link>
+            )}
             <Link href="/matches">
               <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700">
                 Run Scheme Matcher
@@ -66,29 +113,33 @@ export default function DashboardPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-slate-500 font-medium">Applications</p>
-                <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">2 Pending</h3>
+                <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
+                  {applicationCount !== null ? `${pendingCount ?? applicationCount} Active` : "2 Pending"}
+                </h3>
               </div>
               <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400 flex items-center justify-center">
                 <FileText className="w-5 h-5" />
               </div>
             </div>
             <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-3 font-medium">
-              1 Document awaiting verification
+              {applicationCount !== null ? `${applicationCount} total submitted/in-progress` : "1 Document awaiting verification"}
             </p>
           </Card>
 
           <Card hover>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-slate-500 font-medium">Documents Uploaded</p>
-                <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">5 Verified</h3>
+                <p className="text-xs text-slate-500 font-medium">Document Vault</p>
+                <h3 className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
+                  {documentCount !== null ? `${documentCount} Files` : "5 Verified"}
+                </h3>
               </div>
               <div className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-950 text-sky-600 dark:text-sky-400 flex items-center justify-center">
                 <CheckCircle2 className="w-5 h-5" />
               </div>
             </div>
             <p className="text-[11px] text-slate-500 mt-3">
-              Udyam, PAN, Bank Statements valid
+              {documentCount !== null ? "Encrypted with SHA-256 integrity" : "Udyam, PAN, Bank Statements valid"}
             </p>
           </Card>
 
@@ -197,7 +248,7 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        {/* Valmont AI Financial Digital Twin Banner */}
+        {/* Sahay-AI Financial Digital Twin Banner */}
         <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 via-teal-500/5 to-transparent p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-start gap-3.5">
             <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0">
@@ -206,7 +257,7 @@ export default function DashboardPage() {
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                  Valmont AI Financial Digital Twin
+                  Sahay-AI Financial Digital Twin
                 </h3>
                 <Badge variant="brand" size="sm">Stress Testing</Badge>
               </div>

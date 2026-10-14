@@ -9,17 +9,20 @@ from app.database.base import Base
 import app.models  # Ensure all SQLAlchemy models are registered
 from app.services.scheme_service import seed_verified_schemes_if_empty
 from app.services.academy_service import seed_academy_content_if_empty
-from app.services.user_service import seed_default_admin_if_empty
+from app.services.user_service import seed_default_admin_if_empty, seed_demo_user_if_empty
+from app.database.schema_sync import reconcile_database_schema
 from app.routes.health import router as health_router
 from app.routes.api import api_router
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application lifespan: initialize database tables and seed verified knowledge base."""
+    """Application lifespan: initialize database tables, reconcile schema columns, and seed verified knowledge base."""
     Base.metadata.create_all(bind=engine)
+    reconcile_database_schema(engine, Base.metadata)
     with SessionLocal() as db:
         seed_default_admin_if_empty(db)
+        seed_demo_user_if_empty(db)
         seed_verified_schemes_if_empty(db)
         seed_academy_content_if_empty(db)
     yield

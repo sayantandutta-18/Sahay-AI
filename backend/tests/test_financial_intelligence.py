@@ -1,4 +1,4 @@
-"""Valmont-inspired Financial Intelligence, Fraud Detection, and Digital Twin tests."""
+"""Sahay-AI Financial Intelligence, Fraud Detection, and Digital Twin tests."""
 
 import pytest
 from fastapi.testclient import TestClient
@@ -128,7 +128,7 @@ def test_explainable_risk_indicator(auth_headers):
 
 
 def test_digital_twin_workflow(auth_headers):
-    """Verify full Valmont workflow: Analyze -> Simulate -> Predict -> Assess Risk -> Decide."""
+    """Verify full Sahay-AI workflow: Analyze -> Simulate -> Predict -> Assess Risk -> Decide."""
     res = client.post(
         "/api/v1/financial/twin/workflow",
         json={

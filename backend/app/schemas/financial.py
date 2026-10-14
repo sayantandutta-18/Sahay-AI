@@ -104,6 +104,9 @@ class FraudAlert(BaseModel):
     title: str
     description: str
     suggested_action: str
+    status: str = "new"  # new, reviewing, dismissed, user_confirmed
+    amount: Optional[float] = None
+    created_at: Optional[str] = None
 
 
 class DigitalTwinDecision(BaseModel):
@@ -129,6 +132,11 @@ class TransactionCreateRequest(BaseModel):
     vendor_name: Optional[str] = None
 
 
+class TransactionCategoryUpdateRequest(BaseModel):
+    category: str = Field(..., max_length=50)
+    is_essential: Optional[bool] = None
+
+
 class TransactionResponse(BaseModel):
     id: str
     title: str
@@ -140,3 +148,81 @@ class TransactionResponse(BaseModel):
     is_flagged_fraud: bool
     fraud_reason: Optional[str]
     created_at: str
+
+
+# ==========================================
+# Checkpoint 8: Smart Expense & Savings Analysis
+# ==========================================
+
+class ExpenseCategoryStat(BaseModel):
+    category: str
+    amount: float
+    percentage: float
+    count: int
+    is_essential: bool
+
+
+class RecurringExpenseItem(BaseModel):
+    vendor_name: str
+    estimated_monthly: float
+    category: str
+    frequency: str = "monthly"
+
+
+class DuplicateCandidate(BaseModel):
+    tx_id_1: str
+    tx_id_2: str
+    vendor: str
+    amount: float
+    date_difference_hours: float
+    explanation: str
+
+
+class SavingsSuggestion(BaseModel):
+    suggestion_id: str
+    title: str
+    category: str
+    potential_monthly_savings: float
+    reasoning: str
+    is_applied: bool = False
+
+
+class SmartExpenseAnalysisResponse(BaseModel):
+    total_expenses: float
+    category_breakdown: List[ExpenseCategoryStat]
+    recurring_expenses: List[RecurringExpenseItem]
+    duplicate_candidates: List[DuplicateCandidate]
+    savings_suggestions: List[SavingsSuggestion]
+    uncertainty_notice: str = (
+        "Categories derived via transparent rules. Potential duplicates are candidates requiring user confirmation, not confirmed fraud."
+    )
+
+
+# ==========================================
+# Checkpoint 13: AI-Powered Financial Recommendations
+# ==========================================
+
+class FinancialRecommendationItem(BaseModel):
+    id: str
+    category: str  # working_capital, emergency_reserve, debt_restructuring, expense_optimization
+    title: str
+    impact_amount: float
+    confidence_level: str  # High, Moderate, Low
+    reason_evidence: str
+    action_link: Optional[str] = None
+    is_dismissed: bool = False
+
+
+class RecommendationFeedbackRequest(BaseModel):
+    action: str = Field(..., description="'dismiss' or 'helpful'")
+    feedback_notes: Optional[str] = None
+
+
+# ==========================================
+# Checkpoint 14: Fraud Review & Audit
+# ==========================================
+
+class FraudAlertReviewRequest(BaseModel):
+    status: str = Field(..., description="'reviewing', 'dismissed', or 'user_confirmed'")
+    notes: Optional[str] = None
+

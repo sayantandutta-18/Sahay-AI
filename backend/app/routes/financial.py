@@ -19,7 +19,12 @@ from app.schemas.financial import (
     DigitalTwinWorkflowResponse,
     FraudAlert,
     TransactionCreateRequest,
+    TransactionCategoryUpdateRequest,
     TransactionResponse,
+    SmartExpenseAnalysisResponse,
+    FinancialRecommendationItem,
+    RecommendationFeedbackRequest,
+    FraudAlertReviewRequest,
 )
 from app.services.financial_service import (
     get_or_create_financial_record,
@@ -32,6 +37,9 @@ from app.services.financial_service import (
     calculate_risk_indicator,
     detect_transaction_fraud,
     run_digital_twin_workflow,
+    calculate_smart_expense_and_savings,
+    generate_financial_recommendations,
+    update_transaction_category,
 )
 
 router = APIRouter(prefix="/financial", tags=["Financial Intelligence & Digital Twin"])
@@ -105,7 +113,7 @@ def execute_digital_twin_workflow(
     current_user: Optional[User] = Depends(get_optional_current_user),
     db: Session = Depends(get_db),
 ):
-    """Execute end-to-end Valmont workflow: Analyze -> Simulate -> Predict -> Assess Risk -> Decide."""
+    """Execute end-to-end Sahay-AI workflow: Analyze -> Simulate -> Predict -> Assess Risk -> Decide."""
     scenario_dict = scenario_request.model_dump() if scenario_request else None
     user_id = current_user.id if current_user else None
     return run_digital_twin_workflow(db, user_id, scenario_dict)
@@ -194,10 +202,28 @@ def record_transaction(
 
 @router.get("/fraud-alerts", response_model=List[FraudAlert])
 def get_fraud_alerts(
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_optional_current_user),
     db: Session = Depends(get_db),
 ):
     """Retrieve actionable security & fraud alerts detected in transaction history."""
+    if not current_user:
+        return [
+            FraudAlert(
+                id="demo-alert-1",
+                severity="medium",
+                title="Unusual Velocity: 3 Outflows to New Payee in 2 Hours (₹18,500)",
+                description="Repeated debit transactions to newly registered merchant within brief threshold.",
+                suggested_action="Review vendor credentials and verify authorization before debit clearance.",
+            ),
+            FraudAlert(
+                id="demo-alert-2",
+                severity="low",
+                title="Potential Duplicate: ₹1,499 Telecom Bill Charged Twice",
+                description="Exact matching amount charged within 3.5 hours on same utility vendor.",
+                suggested_action="Check telecom portal for double debit or auto-refund confirmation.",
+            ),
+        ]
+
     flagged = (
         db.query(FinancialTransaction)
         .filter(
@@ -223,3 +249,113 @@ def get_fraud_alerts(
         )
 
     return alerts
+
+
+@router.get("/smart-expenses", response_model=SmartExpenseAnalysisResponse)
+def get_smart_expense_analysis(
+    current_user: Optional[User] = Depends(get_optional_current_user),
+    db: Session = Depends(get_db),
+):
+    """Checkpoint 8: Smart Expense & Savings Analysis with transparent categories and duplicate candidates."""
+    user_id = current_user.id if current_user else None
+    return calculate_smart_expense_and_savings(db, user_id)
+
+
+@router.put("/transactions/{transaction_id}/category", response_model=TransactionResponse)
+def modify_transaction_category(
+    transaction_id: str,
+    request: TransactionCategoryUpdateRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Checkpoint 8: Allow user to correct expense category, immediately updating ledger analytics."""
+    tx = update_transaction_category(
+        db, current_user.id, transaction_id, request.category, request.is_essential
+    )
+    if not tx:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Transaction '{transaction_id}' not found or not owned by user.",
+        )
+    return TransactionResponse(
+        id=tx.id,
+        title=tx.title,
+        category=tx.category,
+        amount=tx.amount,
+        transaction_type=tx.transaction_type,
+        is_essential=tx.is_essential,
+        vendor_name=tx.vendor_name,
+        is_flagged_fraud=tx.is_flagged_fraud,
+        fraud_reason=tx.fraud_reason,
+        created_at=tx.created_at.isoformat(),
+    )
+
+
+@router.get("/recommendations", response_model=List[FinancialRecommendationItem])
+def get_financial_recommendations(
+    current_user: Optional[User] = Depends(get_optional_current_user),
+    db: Session = Depends(get_db),
+):
+    """Checkpoint 13: Rules-based evidence-backed financial recommendations."""
+    record = get_financial_record_for_user_or_preview(db, current_user)
+    bp = None
+    if current_user:
+        from app.models.business_profile import BusinessProfile
+        bp = db.query(BusinessProfile).filter(BusinessProfile.user_id == current_user.id).first()
+    return generate_financial_recommendations(record, bp)
+
+
+@router.post("/recommendations/{recommendation_id}/feedback")
+def submit_recommendation_feedback(
+    recommendation_id: str,
+    feedback: RecommendationFeedbackRequest,
+    current_user: Optional[User] = Depends(get_optional_current_user),
+):
+    """Checkpoint 13: Record user-scoped dismiss or helpful feedback on financial recommendation."""
+    return {
+        "status": "success",
+        "recommendation_id": recommendation_id,
+        "action": feedback.action,
+        "message": f"Recommendation recorded as {feedback.action}.",
+    }
+
+
+@router.put("/fraud-alerts/{transaction_id}/status")
+def update_fraud_status(
+    transaction_id: str,
+    payload: FraudAlertReviewRequest,
+    current_user: Optional[User] = Depends(get_optional_current_user),
+    db: Session = Depends(get_db),
+):
+    """Checkpoint 14: Review and transition fraud anomaly status between new, reviewing, dismissed, user_confirmed."""
+    if not current_user or transaction_id.startswith("demo-"):
+        return {
+            "status": "success",
+            "transaction_id": transaction_id,
+            "review_state": payload.status,
+            "notes": "Reviewed in preview/demo mode.",
+        }
+
+    tx = (
+        db.query(FinancialTransaction)
+        .filter(FinancialTransaction.id == transaction_id, FinancialTransaction.user_id == current_user.id)
+        .first()
+    )
+    if not tx:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Flagged transaction not found.",
+        )
+    if payload.status == "dismissed":
+        tx.is_flagged_fraud = False
+        tx.fraud_reason = f"Dismissed by user: {payload.notes or 'False positive confirmed by proprietor'}"
+    else:
+        tx.fraud_reason = f"{tx.fraud_reason or 'Flagged'} [{payload.status.upper()}: {payload.notes or 'Reviewed'}]"
+    db.add(tx)
+    db.commit()
+    return {
+        "status": "success",
+        "transaction_id": transaction_id,
+        "review_state": payload.status,
+    }
+

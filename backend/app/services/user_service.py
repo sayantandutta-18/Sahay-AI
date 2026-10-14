@@ -51,6 +51,24 @@ def seed_default_admin_if_empty(db: Session) -> User:
     return admin
 
 
+def seed_demo_user_if_empty(db: Session) -> User:
+    """Seed default demo entrepreneur account if it does not already exist."""
+    demo = db.query(User).filter(User.phone == "9876543210").first()
+    if not demo:
+        demo = create_user(
+            db,
+            UserCreate(
+                phone="9876543210",
+                name="Demo Entrepreneur",
+                password="Password123!",
+                language="en",
+                state="West Bengal",
+                district="Kolkata",
+            ),
+        )
+    return demo
+
+
 def create_user(db: Session, user_in: UserCreate, force_role: Optional[str] = None) -> User:
     """Create a new user with initialized empty business profile.
     

@@ -1,4 +1,4 @@
-"""Valmont-inspired Financial Intelligence & Digital Twin deterministic services.
+"""Sahay-AI Financial Intelligence & Digital Twin deterministic services.
 
 Deterministic calculation engines for:
 - Financial Health Analysis
@@ -34,6 +34,12 @@ from app.schemas.financial import (
     FraudAlert,
     DigitalTwinDecision,
     DigitalTwinWorkflowResponse,
+    ExpenseCategoryStat,
+    RecurringExpenseItem,
+    DuplicateCandidate,
+    SavingsSuggestion,
+    SmartExpenseAnalysisResponse,
+    FinancialRecommendationItem,
 )
 
 
@@ -559,7 +565,7 @@ def run_digital_twin_workflow(
     user_id: Optional[str] = None,
     scenario_data: Optional[Dict[str, Any]] = None,
 ) -> DigitalTwinWorkflowResponse:
-    """Execute the full Valmont-inspired Digital Twin workflow:
+    """Execute the full Sahay-AI Digital Twin workflow:
     Analyze -> Simulate -> Predict -> Assess Risk -> Decide
     """
     if user_id and user_id not in ["demo", "preview", "guest-preview", "demo-preview"]:
@@ -651,3 +657,280 @@ def run_digital_twin_workflow(
         simulation=sim_result,
         decision=decision,
     )
+
+
+def calculate_smart_expense_and_savings(db: Session, user_id: Optional[str]) -> SmartExpenseAnalysisResponse:
+    """Analyze categorized transactions, recurring commitments, duplicate candidates, and savings potentials."""
+    txs: List[FinancialTransaction] = []
+    if user_id:
+        txs = (
+            db.query(FinancialTransaction)
+            .filter(FinancialTransaction.user_id == user_id, FinancialTransaction.transaction_type == "expense")
+            .order_by(FinancialTransaction.transaction_date.desc())
+            .all()
+        )
+
+    # If no real transactions exist yet, supply realistic baseline MSME operating expense ledger
+    if not txs:
+        baseline_expenses = [
+            ("Raw Materials & Input Supplies", "Wholesale Agro Traders", 18500.0, "Raw Materials", True, 2),
+            ("Shop & Workshop Rent", "Metro Commercial Lease", 12000.0, "Rent & Utilities", True, 5),
+            ("Electricity & Water Utilities", "State Power Distribution", 3400.0, "Rent & Utilities", True, 10),
+            ("Commercial Freight & Delivery", "QuickLogistics Express", 2800.0, "Logistics", True, 12),
+            ("Packaging & Corrugated Boxes", "Bengal Box Manufacturers", 1950.0, "Packaging", True, 15),
+            ("Packaging & Corrugated Boxes", "Bengal Box Manufacturers", 1950.0, "Packaging", True, 16),
+            ("Enterprise Software / Billing", "SaaS Accounting Tool", 899.0, "Software & Subscriptions", False, 18),
+            ("Business Equipment Maintenance", "Machinery Repair Services", 1500.0, "Maintenance", False, 22),
+        ]
+        cat_map: Dict[str, Dict[str, Any]] = {}
+        recurring_list: List[RecurringExpenseItem] = []
+        dup_list: List[DuplicateCandidate] = []
+
+        total_spent = sum(item[2] for item in baseline_expenses)
+
+        for title, vendor, amt, cat, is_ess, days_ago in baseline_expenses:
+            if cat not in cat_map:
+                cat_map[cat] = {"amount": 0.0, "count": 0, "is_essential": is_ess}
+            cat_map[cat]["amount"] += amt
+            cat_map[cat]["count"] += 1
+
+        recurring_list.append(RecurringExpenseItem(vendor_name="Metro Commercial Lease", estimated_monthly=12000.0, category="Rent & Utilities", frequency="monthly"))
+        recurring_list.append(RecurringExpenseItem(vendor_name="State Power Distribution", estimated_monthly=3400.0, category="Rent & Utilities", frequency="monthly"))
+        recurring_list.append(RecurringExpenseItem(vendor_name="SaaS Accounting Tool", estimated_monthly=899.0, category="Software & Subscriptions", frequency="monthly"))
+
+        dup_list.append(
+            DuplicateCandidate(
+                tx_id_1="demo-tx-005",
+                tx_id_2="demo-tx-006",
+                vendor="Bengal Box Manufacturers",
+                amount=1950.0,
+                date_difference_hours=24.0,
+                explanation="Two identical payments of ₹1,950 made to 'Bengal Box Manufacturers' within 24 hours. Candidate for duplicate verification.",
+            )
+        )
+
+        categories = [
+            ExpenseCategoryStat(
+                category=cat,
+                amount=round(data["amount"], 2),
+                percentage=round((data["amount"] / total_spent) * 100.0, 1),
+                count=data["count"],
+                is_essential=data["is_essential"],
+            )
+            for cat, data in sorted(cat_map.items(), key=lambda x: x[1]["amount"], reverse=True)
+        ]
+
+        savings = [
+            SavingsSuggestion(
+                suggestion_id="sav-01",
+                title="Bulk Material Purchasing Discount",
+                category="Raw Materials",
+                potential_monthly_savings=2200.0,
+                reasoning="Negotiating quarterly wholesale procurement for packaging and raw materials can unlock an estimated 8-12% supplier rebate.",
+            ),
+            SavingsSuggestion(
+                suggestion_id="sav-02",
+                title="Consolidate Software & Digital Tool Subscriptions",
+                category="Software & Subscriptions",
+                potential_monthly_savings=450.0,
+                reasoning="Audit auxiliary billing software and downgrade unused multi-seat licenses.",
+            ),
+            SavingsSuggestion(
+                suggestion_id="sav-03",
+                title="Shared Logistics & Delivery Freight Pooling",
+                category="Logistics",
+                potential_monthly_savings=850.0,
+                reasoning="Coordinating bi-weekly combined dispatches with neighboring artisans lowers courier minimum charges.",
+            ),
+        ]
+
+        return SmartExpenseAnalysisResponse(
+            total_expenses=round(total_spent, 2),
+            category_breakdown=categories,
+            recurring_expenses=recurring_list,
+            duplicate_candidates=dup_list,
+            savings_suggestions=savings,
+        )
+
+    # Real user transactions calculation
+    total_spent = sum(t.amount for t in txs) if txs else 1.0
+    cat_map: Dict[str, Dict[str, Any]] = {}
+    vendor_counts: Dict[str, Dict[str, Any]] = {}
+    dup_candidates: List[DuplicateCandidate] = []
+
+    for idx, t in enumerate(txs):
+        cat = t.category or "General Operating"
+        if cat not in cat_map:
+            cat_map[cat] = {"amount": 0.0, "count": 0, "is_essential": t.is_essential}
+        cat_map[cat]["amount"] += t.amount
+        cat_map[cat]["count"] += 1
+
+        v = t.vendor_name or t.title
+        if v not in vendor_counts:
+            vendor_counts[v] = {"count": 0, "total": 0.0, "category": cat}
+        vendor_counts[v]["count"] += 1
+        vendor_counts[v]["total"] += t.amount
+
+        # Check adjacent for duplicate candidate
+        for prev in txs[idx + 1 : idx + 4]:
+            if prev.vendor_name == t.vendor_name and abs(prev.amount - t.amount) < 0.01:
+                diff_hours = abs((t.transaction_date - prev.transaction_date).total_seconds()) / 3600.0
+                if diff_hours <= 48.0:
+                    dup_candidates.append(
+                        DuplicateCandidate(
+                            tx_id_1=t.id,
+                            tx_id_2=prev.id,
+                            vendor=v,
+                            amount=t.amount,
+                            date_difference_hours=round(diff_hours, 1),
+                            explanation=f"Identical amount of ₹{t.amount:,.2f} to {v} within {round(diff_hours, 1)} hours.",
+                        )
+                    )
+
+    categories = [
+        ExpenseCategoryStat(
+            category=cat,
+            amount=round(data["amount"], 2),
+            percentage=round((data["amount"] / max(total_spent, 1.0)) * 100.0, 1),
+            count=data["count"],
+            is_essential=data["is_essential"],
+        )
+        for cat, data in sorted(cat_map.items(), key=lambda x: x[1]["amount"], reverse=True)
+    ]
+
+    recurring_list = [
+        RecurringExpenseItem(
+            vendor_name=v,
+            estimated_monthly=round(info["total"] / max(info["count"], 1), 2),
+            category=info["category"],
+            frequency="recurring",
+        )
+        for v, info in vendor_counts.items()
+        if info["count"] >= 2
+    ]
+
+    savings = [
+        SavingsSuggestion(
+            suggestion_id="sav-opt-1",
+            title="Procurement Volume Rebate",
+            category="Top Category",
+            potential_monthly_savings=round(total_spent * 0.05, 2),
+            reasoning="Consolidating recurring supply orders typically yields a 5% vendor rebate.",
+        )
+    ]
+
+    return SmartExpenseAnalysisResponse(
+        total_expenses=round(total_spent, 2),
+        category_breakdown=categories,
+        recurring_expenses=recurring_list,
+        duplicate_candidates=dup_candidates,
+        savings_suggestions=savings,
+    )
+
+
+def generate_financial_recommendations(
+    record: FinancialRecord, bp: Optional[BusinessProfile] = None
+) -> List[FinancialRecommendationItem]:
+    """Generate rules-based, evidence-backed financial recommendations."""
+    recommendations: List[FinancialRecommendationItem] = []
+
+    monthly_inc = float(getattr(record, "monthly_income", 60000.0) or 60000.0)
+    essential = float(getattr(record, "essential_expenses", 28000.0) or 28000.0)
+    discretionary = float(getattr(record, "discretionary_expenses", 12000.0) or 12000.0)
+    monthly_exp = max(essential + discretionary, getattr(record, "monthly_expenses", 1.0) or 1.0)
+    savings = float(getattr(record, "liquid_savings", getattr(record, "total_savings", 95000.0)) or 95000.0)
+    debt_emi = float(getattr(record, "monthly_debt_emi", getattr(record, "monthly_debt_obligations", 5000.0)) or 5000.0)
+
+    # 1. Emergency Reserve Recommendation
+    current_runway = savings / monthly_exp
+    if current_runway < 3.0:
+        recommendations.append(
+            FinancialRecommendationItem(
+                id="rec-emerg-01",
+                category="emergency_reserve",
+                title="Build 3-Month Minimum Liquidity Runway",
+                impact_amount=round((monthly_exp * 3.0) - savings, 2),
+                confidence_level="High",
+                reason_evidence=(
+                    f"Current accessible savings of ₹{savings:,.0f} cover only {current_runway:.1f} months "
+                    f"of operating expenses. Standard resilience target is 3–6 months."
+                ),
+                action_link="/twin",
+            )
+        )
+
+    # 2. Debt Optimization / MUDRA Subsidies
+    dti = debt_emi / max(monthly_inc, 1.0)
+    if dti > 0.30:
+        recommendations.append(
+            FinancialRecommendationItem(
+                id="rec-debt-01",
+                category="debt_restructuring",
+                title="Refinance High-Interest Debt with Subsidized MUDRA Credit",
+                impact_amount=round(debt_emi * 0.25, 2),
+                confidence_level="High",
+                reason_evidence=(
+                    f"Your Debt-to-Income (DTI) ratio is {dti * 100:.1f}%. "
+                    f"Replacing commercial loans with Pradhan Mantri MUDRA Shishu/Kishore credit reduces interest outflow."
+                ),
+                action_link="/matches",
+            )
+        )
+
+    # 3. Cash Flow Savings Rate Sweeps
+    savings_rate = (monthly_inc - monthly_exp) / max(monthly_inc, 1.0)
+    if savings_rate < 0.20:
+        recommendations.append(
+            FinancialRecommendationItem(
+                id="rec-savings-01",
+                category="working_capital",
+                title="Implement Automated 5% Surplus Sweep to Liquid Assets",
+                impact_amount=round(monthly_inc * 0.05, 2),
+                confidence_level="Moderate",
+                reason_evidence=(
+                    f"Monthly surplus savings rate is currently {max(savings_rate * 100, 0):.1f}%. "
+                    f"Scheduling an automated ₹{round(monthly_inc * 0.05, 0):,.0f} monthly transfer protects working capital."
+                ),
+                action_link="/portfolio",
+            )
+        )
+
+    # 4. Expense Reduction
+    if monthly_exp > 0.75 * monthly_inc:
+        recommendations.append(
+            FinancialRecommendationItem(
+                id="rec-expense-01",
+                category="expense_optimization",
+                title="Review Discretionary Enterprise Operating Costs",
+                impact_amount=round(monthly_exp * 0.08, 2),
+                confidence_level="Moderate",
+                reason_evidence=(
+                    f"Operating expenditure consumes {round((monthly_exp / monthly_inc) * 100, 1)}% of gross monthly revenue. "
+                    f"Negotiating supplier terms could unlock an estimated 8% savings."
+                ),
+                action_link="/twin",
+            )
+        )
+
+    return recommendations
+
+
+def update_transaction_category(
+    db: Session, user_id: str, tx_id: str, new_category: str, is_essential: Optional[bool] = None
+) -> Optional[FinancialTransaction]:
+    """Allow user correction of expense categories, updating ledger and analytics."""
+    tx = (
+        db.query(FinancialTransaction)
+        .filter(FinancialTransaction.id == tx_id, FinancialTransaction.user_id == user_id)
+        .first()
+    )
+    if not tx:
+        return None
+    tx.category = new_category.strip()
+    if is_essential is not None:
+        tx.is_essential = is_essential
+    db.add(tx)
+    db.commit()
+    db.refresh(tx)
+    return tx
+

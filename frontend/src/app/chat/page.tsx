@@ -191,10 +191,11 @@ export default function ChatPage() {
   };
 
   const suggestions = [
+    { label: "Can I afford a ₹50,000 equipment loan?", lang: "en" },
+    { label: "How long can I manage without income?", lang: "en" },
     { label: "PMEGP subsidy rate for women?", lang: "en" },
     { label: "মুদ্রা লোনের জন্য কি গ্যারান্টি দরকার?", lang: "bn" },
     { label: "उद्यम सर्टिफिकेट कैसे डाउनलोड करें?", lang: "hi" },
-    { label: "Calculate loan EMI for ₹5 lakh", lang: "en" },
   ];
 
   return (

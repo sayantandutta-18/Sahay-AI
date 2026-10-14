@@ -69,13 +69,34 @@ export default function DocumentsPage() {
     setIsLoading(true);
     setError(null);
     try {
+      if (typeof window !== "undefined" && !localStorage.getItem("sahay_access_token")) {
+        try {
+          await authDemoLogin();
+        } catch {
+          // Continue to attempt fetch
+        }
+      }
       const [docs, apps] = await Promise.all([
         getUserDocuments(),
         getApplications().catch(() => []),
       ]);
       setDocuments(docs);
       setApplications(apps);
-    } catch (err) {
+    } catch (err: unknown) {
+      if (err && typeof err === "object" && "statusCode" in err && (err as { statusCode: number }).statusCode === 401) {
+        try {
+          await authDemoLogin();
+          const [docs, apps] = await Promise.all([
+            getUserDocuments(),
+            getApplications().catch(() => []),
+          ]);
+          setDocuments(docs);
+          setApplications(apps);
+          return;
+        } catch {
+          // Fall through to error setting
+        }
+      }
       setError(
         err && typeof err === "object" && "message" in err
           ? String((err as { message: unknown }).message)

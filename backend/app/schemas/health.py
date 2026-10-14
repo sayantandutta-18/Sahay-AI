@@ -9,6 +9,9 @@ class DatabaseHealth(BaseModel):
     status: str = Field(..., description="'connected' or 'disconnected'")
     url: str | None = Field(default=None, description="Redacted connection string or driver")
     error: str | None = Field(default=None, description="Error message if connection failed")
+    dialect: str | None = Field(default=None, description="Database dialect (e.g. sqlite, postgresql)")
+    table_count: int | None = Field(default=None, description="Active table count in database")
+    latency_ms: float | None = Field(default=None, description="Ping query latency in milliseconds")
 
 
 class HealthResponse(BaseModel):

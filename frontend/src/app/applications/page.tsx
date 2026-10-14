@@ -108,6 +108,13 @@ export default function ApplicationsPage() {
     setIsLoading(true);
     setError(null);
     try {
+      if (typeof window !== "undefined" && !localStorage.getItem("sahay_access_token")) {
+        try {
+          await authDemoLogin();
+        } catch {
+          // Continue to attempt fetch
+        }
+      }
       const [apps, allSchemes, docs] = await Promise.all([
         getApplications(),
         getSchemes().catch(() => []),
@@ -132,7 +139,23 @@ export default function ApplicationsPage() {
           }
         }
       }
-    } catch (err) {
+    } catch (err: unknown) {
+      if (err && typeof err === "object" && "statusCode" in err && (err as { statusCode: number }).statusCode === 401) {
+        try {
+          await authDemoLogin();
+          const [apps, allSchemes, docs] = await Promise.all([
+            getApplications(),
+            getSchemes().catch(() => []),
+            getUserDocuments().catch(() => []),
+          ]);
+          setApplications(apps);
+          setSchemes(allSchemes);
+          setVaultDocs(docs);
+          return;
+        } catch {
+          // Fall through
+        }
+      }
       setError(
         err && typeof err === "object" && "message" in err
           ? String((err as { message: unknown }).message)

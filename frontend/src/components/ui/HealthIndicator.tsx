@@ -77,7 +77,20 @@ export const HealthIndicator: React.FC = () => {
             <p className="font-medium flex items-center gap-1">
               {data?.database.status === "connected" ? (
                 <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Connected
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>
+                    Connected
+                    {data.database.dialect && (
+                      <span className="ml-1 text-[10px] uppercase font-mono px-1 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300">
+                        {data.database.dialect}
+                      </span>
+                    )}
+                    {typeof data.database.table_count === "number" && (
+                      <span className="ml-1 text-[11px] text-slate-500 font-normal">
+                        ({data.database.table_count} tables)
+                      </span>
+                    )}
+                  </span>
                 </span>
               ) : (
                 <span className="text-rose-600 dark:text-rose-400 flex items-center gap-1">

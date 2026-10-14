@@ -35,6 +35,25 @@ class Settings(BaseSettings):
     # Database Configuration
     DATABASE_URL: str = _CANONICAL_DB_URL
     DATABASE_ECHO: bool = False
+    DB_POOL_SIZE: int = 10
+    DB_MAX_OVERFLOW: int = 20
+    DB_POOL_RECYCLE: int = 1800
+    DB_POOL_TIMEOUT: int = 30
+
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def assemble_database_url(cls, v: str) -> str:
+        if isinstance(v, str):
+            clean = v.strip()
+            # Canonicalize relative SQLite URLs so root vs backend working directory always points to backend/sahay_dev.db
+            if clean.startswith("sqlite:///./"):
+                rel_path = clean[len("sqlite:///./"):]
+                return f"sqlite:///{(_BACKEND_DIR / rel_path).resolve().as_posix()}"
+            elif clean.startswith("sqlite:///") and not clean.startswith("sqlite:////") and ":" not in clean[10:]:
+                db_name = clean[len("sqlite:///"):]
+                return f"sqlite:///{(_BACKEND_DIR / db_name).resolve().as_posix()}"
+            return clean
+        return v
 
     # Redis Configuration
     REDIS_URL: str = "redis://localhost:6379/0"

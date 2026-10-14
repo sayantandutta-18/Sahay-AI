@@ -83,7 +83,7 @@ def detect_chat_intent(message: str) -> str:
     """Classify user intent using deterministic keyword pattern matching."""
     text = message.lower()
 
-    if any(k in text for k in ["runway", "emergency fund", "credit score", "twin", "what-if", "what if", "financial health", "dti", "debt-to-income", "জরুরি তহবিল", "ক্রেডিট স্কোর"]):
+    if any(k in text for k in ["runway", "emergency fund", "credit score", "twin", "what-if", "what if", "financial health", "dti", "debt-to-income", "afford", "affordability", "without income", "income loss", "job loss", "50k", "50000 loan", "জরুরি তহবিল", "ক্রেডিট স্কোর", "লোন কি সম্ভব"]):
         return "FINANCIAL_INTELLIGENCE"
     if any(k in text for k in ["fraud", "suspicious", "scam", "unauthorized", "জালিয়াতি", "धोखाधड़ी"]):
         return "FRAUD_SECURITY"
@@ -244,7 +244,7 @@ def answer_grounded_chat(
         if current_user:
             record = get_or_create_financial_record(db, current_user.id)
         else:
-            from app.models.financial import FinancialRecord
+            from app.models.financial_twin import FinancialRecord
             record = FinancialRecord(
                 id="transient-preview",
                 user_id="preview",
@@ -261,20 +261,45 @@ def answer_grounded_chat(
         health = calculate_financial_health(record)
         emergency = calculate_emergency_fund(record)
         risk = calculate_risk_indicator(record)
+        msg_lower = request.message.lower()
 
-        reply = (
-            f"Based on Sahay's deterministic Financial Digital Twin analysis: "
-            f"1. Health Grade: {health.health_grade} (Net Monthly Surplus: ₹{health.net_cash_flow:,.0f}). "
-            f"2. Debt-to-Income (DTI): {round(health.debt_to_income_ratio * 100, 1)}% ({'Manageable' if health.debt_to_income_ratio <= 0.35 else 'Elevated'}). "
-            f"3. Emergency Runway: {emergency.current_runway_months} months of essential operations ({emergency.status.title()} status). "
-            f"4. Composite Risk Indicator: {risk.overall_risk_score}/100 ({risk.risk_level} Risk). "
-            f"Key Next Action: {emergency.actionable_plan[0] if emergency.actionable_plan else 'Maintain cash flow reserves.'}"
-        )
+        if any(w in msg_lower for w in ["afford", "50k", "50000", "loan"]):
+            # Standard MSME micro-loan: ₹50,000 at 12% for 24 months = ₹2,354/mo
+            hypothetical_emi = 2354.0
+            new_surplus = health.net_cash_flow - hypothetical_emi
+            post_dti = round(((record.monthly_debt_obligations + hypothetical_emi) / max(record.monthly_income, 1.0)) * 100, 1)
+            can_afford = new_surplus > 0 and post_dti <= 45.0
+            verdict = "Yes, you can sustainably afford this loan" if can_afford else "Caution: High leverage risk"
+
+            reply = (
+                f"{verdict}. For a ₹50,000 equipment loan (12% p.a., 24-mo tenure), estimated EMI is ₹{hypothetical_emi:,.0f}/month. "
+                f"With your current net monthly surplus of ₹{health.net_cash_flow:,.0f}, your post-loan surplus will be ₹{new_surplus:,.0f}/month. "
+                f"Your Debt-to-Income (DTI) ratio shifts from {round(health.debt_to_income_ratio * 100, 1)}% to {post_dti}% "
+                f"({'within safe MSME limits' if post_dti <= 35 else 'approaching elevated debt load'}). "
+                f"You can stress-test this in the Sahay Financial Digital Twin."
+            )
+        elif any(w in msg_lower for w in ["without income", "income loss", "job loss", "loss of income"]):
+            zero_income_months = round(record.total_savings / max(record.monthly_expenses, 1.0), 1)
+            reply = (
+                f"Based on your verified liquid savings of ₹{record.total_savings:,.0f} and essential monthly expenses of ₹{record.monthly_expenses:,.0f}, "
+                f"you can sustain your enterprise for approximately {zero_income_months} months with zero revenue before liquid reserves are exhausted. "
+                f"Target recommended reserve is 6 months (₹{emergency.recommended_target_amount:,.0f}). "
+                f"Current Status: {emergency.status.title()}."
+            )
+        else:
+            reply = (
+                f"Based on Sahay's deterministic Financial Digital Twin analysis: "
+                f"1. Health Grade: {health.health_grade} (Net Monthly Surplus: ₹{health.net_cash_flow:,.0f}). "
+                f"2. Debt-to-Income (DTI): {round(health.debt_to_income_ratio * 100, 1)}% ({'Manageable' if health.debt_to_income_ratio <= 0.35 else 'Elevated'}). "
+                f"3. Emergency Runway: {emergency.current_runway_months} months of essential operations ({emergency.status.title()} status). "
+                f"4. Composite Risk Indicator: {risk.overall_risk_score}/100 ({risk.risk_level} Risk). "
+                f"Key Next Action: {emergency.actionable_plan[0] if emergency.actionable_plan else 'Maintain cash flow reserves.'}"
+            )
         sources.append(
             ChatSourceCitation(
                 title="Sahay Financial Digital Twin & Stress Testing Engine",
                 url="https://sahay.local/twin",
-                provider="Sahay Financial Intelligence (Valmont Engine)",
+                provider="Sahay-AI Financial Intelligence Engine",
                 last_verified_at=datetime.now(timezone.utc).strftime("%Y-%m-%d"),
             )
         )

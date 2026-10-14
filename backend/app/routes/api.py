@@ -15,6 +15,7 @@ from app.routes.academy import router as academy_router
 from app.routes.investment import router as investment_router
 from app.routes.portfolio import router as portfolio_router
 from app.routes.financial import router as financial_router
+from app.routes.candlestick import router as candlestick_router
 
 api_router = APIRouter()
 
@@ -33,4 +34,5 @@ api_router.include_router(academy_router)
 api_router.include_router(investment_router)
 api_router.include_router(portfolio_router)
 api_router.include_router(financial_router)
+api_router.include_router(candlestick_router)
 
