@@ -336,6 +336,25 @@ def save_vault_document(
     db.commit()
     db.refresh(doc)
 
+    # Auto-fulfill matching checklist item if linked to an application
+    if application_id and app:
+        for item in app.checklist_items:
+            if item.document_type.lower() == document_type.lower() and not item.is_completed:
+                item.user_document_id = doc.id
+                item.is_completed = True
+                item.validation_message = f"Fulfilled by {original_filename} from Vault"
+                db.add(item)
+                break
+        
+        # Recalculate status and progress
+        all_mandatory = [c for c in app.checklist_items if c.is_mandatory]
+        if all_mandatory and all(c.is_completed for c in all_mandatory) and app.status == "documents_needed":
+            app.status = "ready_to_submit"
+            app.progress_percentage = STATUS_PROGRESS_MAP["ready_to_submit"]
+            app.next_action = "All mandatory checklist items ready. Click Submit."
+            db.add(app)
+        db.commit()
+
     # Log audit event
     log_audit_event(
         db=db,
@@ -346,6 +365,66 @@ def save_vault_document(
         details=f"Uploaded {original_filename} ({detected_mime}, {file_size} bytes, SHA-256: {checksum_sha256[:8]}...)",
     )
 
+    return doc
+
+
+def delete_application(db: Session, application_id: str, user_id: str) -> bool:
+    """Delete draft, documents_needed, or withdrawn application record and unlink documents."""
+    app = get_application_by_id(db, application_id, user_id)
+    if not app:
+        return False
+
+    if app.status in ["submitted", "under_review", "approved"]:
+        raise ValueError(f"Cannot delete application in '{app.status}' status. Withdraw it first.")
+
+    # Unlink any documents pointing to this application
+    db.query(UserDocument).filter(
+        UserDocument.application_id == application_id,
+        UserDocument.user_id == user_id,
+    ).update({"application_id": None})
+
+    db.delete(app)
+    db.commit()
+
+    log_audit_event(
+        db=db,
+        user_id=user_id,
+        action="APPLICATION_DELETED",
+        resource_type="application",
+        resource_id=application_id,
+        details="Deleted draft application and unlinked vault documents",
+    )
+    return True
+
+
+def verify_document_status(
+    db: Session,
+    document_id: str,
+    verification_status: str,
+    rejection_reason: str = "",
+    actor_id: str = "system",
+    actor_role: str = "admin",
+) -> Optional[UserDocument]:
+    """Admin or reviewer verification of document authenticity."""
+    doc = db.query(UserDocument).filter(UserDocument.id == document_id, UserDocument.is_deleted == False).first()
+    if not doc:
+        return None
+
+    doc.verification_status = verification_status
+    doc.rejection_reason = rejection_reason
+    db.add(doc)
+    db.commit()
+    db.refresh(doc)
+
+    log_audit_event(
+        db=db,
+        user_id=actor_id,
+        actor_role=actor_role,
+        action="DOCUMENT_VERIFIED",
+        resource_type="document",
+        resource_id=doc.id,
+        details=f"Document verification status updated to '{verification_status}' (reason='{rejection_reason}')",
+    )
     return doc
 
 

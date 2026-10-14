@@ -103,13 +103,21 @@ export default function SchemesPage() {
           </div>
         ) : schemes.length === 0 ? (
           <Empty
-            title="No Matching Schemes Found"
-            description="Try clearing your search keyword or switching the support type filter."
-            actionLabel="Reset Search"
-            onAction={() => {
-              setSearchTerm("");
-              setTypeFilter("all");
-            }}
+            title={searchTerm || typeFilter !== "all" ? "No Matching Schemes Found" : "No Verified Schemes in Directory"}
+            description={
+              searchTerm || typeFilter !== "all"
+                ? "Try clearing your search keyword or switching the support type filter."
+                : "No verified government schemes are currently active. Please check back later."
+            }
+            actionLabel={searchTerm || typeFilter !== "all" ? "Reset Search" : undefined}
+            onAction={
+              searchTerm || typeFilter !== "all"
+                ? () => {
+                    setSearchTerm("");
+                    setTypeFilter("all");
+                  }
+                : undefined
+            }
           />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">

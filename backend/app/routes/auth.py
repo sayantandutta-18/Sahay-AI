@@ -50,6 +50,25 @@ def get_current_user(
     return user
 
 
+def get_optional_current_user(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security_scheme),
+    db: Session = Depends(get_db),
+) -> Optional[User]:
+    """Dependency extracting the authenticated User if token is provided and valid, else None."""
+    if not credentials:
+        return None
+    try:
+        payload = decode_access_token(credentials.credentials)
+        if not payload or "sub" not in payload:
+            return None
+        user = get_user_by_id(db, payload["sub"])
+        if not user or not user.is_active:
+            return None
+        return user
+    except Exception:
+        return None
+
+
 @router.post(
     "/register",
     response_model=Token,

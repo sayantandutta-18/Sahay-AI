@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { CardSkeleton } from "@/components/ui/Loading";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { Empty } from "@/components/ui/Empty";
-import { checkEligibility, getMyMatches } from "@/lib/api";
+import { checkEligibility, getMyMatches, createApplication } from "@/lib/api";
 import { EligibilitySummaryResponse } from "@/types";
 import {
   CheckCircle,
@@ -23,6 +23,7 @@ import {
 export default function MatchesPage() {
   const [data, setData] = useState<EligibilitySummaryResponse | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [startingSchemeId, setStartingSchemeId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const loadMatches = async () => {
@@ -55,6 +56,19 @@ export default function MatchesPage() {
       );
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleStartApplication = async (schemeId: string) => {
+    setStartingSchemeId(schemeId);
+    try {
+      const app = await createApplication(schemeId);
+      window.location.href = `/applications?scheme_id=${schemeId}&app_id=${app.id}`;
+    } catch {
+      // Fallback navigation with scheme_id parameter so applications page can handle creation or sign-in
+      window.location.href = `/applications?scheme_id=${schemeId}`;
+    } finally {
+      setStartingSchemeId(null);
     }
   };
 
@@ -196,11 +210,14 @@ export default function MatchesPage() {
                   >
                     Official Portal
                   </a>
-                  <Link href="/applications">
-                    <Button size="sm" rightIcon={<ArrowRight className="w-3.5 h-3.5" />}>
-                      Start Application Checklist
-                    </Button>
-                  </Link>
+                  <Button
+                    size="sm"
+                    rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
+                    onClick={() => handleStartApplication(m.scheme_id)}
+                    isLoading={startingSchemeId === m.scheme_id}
+                  >
+                    Start Application Checklist
+                  </Button>
                 </CardFooter>
               </Card>
             ))}

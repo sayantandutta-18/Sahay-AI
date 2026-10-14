@@ -4,7 +4,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database.session import get_db
-from app.routes.auth import get_current_user
+from app.routes.auth import get_current_user, get_optional_current_user
 from app.models.user import User
 from app.models.financial_twin import FinancialTransaction
 from app.schemas.financial import (
@@ -23,6 +23,7 @@ from app.schemas.financial import (
 )
 from app.services.financial_service import (
     get_or_create_financial_record,
+    get_financial_record_for_user_or_preview,
     calculate_financial_health,
     calculate_emergency_fund,
     simulate_income_loss,
@@ -38,75 +39,76 @@ router = APIRouter(prefix="/financial", tags=["Financial Intelligence & Digital 
 
 @router.get("/health", response_model=FinancialHealthResponse)
 def get_financial_health(
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_optional_current_user),
     db: Session = Depends(get_db),
 ):
     """Retrieve deterministic financial health overview, DTI, savings rate, and grade."""
-    record = get_or_create_financial_record(db, current_user.id)
+    record = get_financial_record_for_user_or_preview(db, current_user)
     return calculate_financial_health(record)
 
 
 @router.get("/emergency-fund", response_model=EmergencyFundResponse)
 def get_emergency_fund_analysis(
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_optional_current_user),
     db: Session = Depends(get_db),
 ):
     """Analyze emergency reserve runway, 6-month target buffer, and deficit/surplus."""
-    record = get_or_create_financial_record(db, current_user.id)
+    record = get_financial_record_for_user_or_preview(db, current_user)
     return calculate_emergency_fund(record)
 
 
 @router.post("/simulate/income-loss", response_model=IncomeLossSimulationResponse)
 def run_income_loss_simulation(
     request: IncomeLossSimulationRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_optional_current_user),
     db: Session = Depends(get_db),
 ):
     """Simulate income reduction and project month-by-month reserve exhaustion."""
-    record = get_or_create_financial_record(db, current_user.id)
+    record = get_financial_record_for_user_or_preview(db, current_user)
     return simulate_income_loss(record, request.income_reduction_pct)
 
 
 @router.post("/simulate/what-if", response_model=WhatIfSimulationResponse)
 def run_what_if_simulation(
     request: WhatIfSimulationRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_optional_current_user),
     db: Session = Depends(get_db),
 ):
     """Simulate what-if scenario (new loan EMI, revenue shock, inflation) against baseline."""
-    record = get_or_create_financial_record(db, current_user.id)
+    record = get_financial_record_for_user_or_preview(db, current_user)
     return simulate_what_if(record, request)
 
 
 @router.get("/credit-explainer", response_model=CreditScoreExplainerResponse)
 def get_credit_score_explainer(
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_optional_current_user),
     db: Session = Depends(get_db),
 ):
     """Educational factor breakdown of estimated credit score across 5 standard pillars."""
-    record = get_or_create_financial_record(db, current_user.id)
+    record = get_financial_record_for_user_or_preview(db, current_user)
     return explain_credit_score(record)
 
 
 @router.get("/risk-indicator", response_model=FinancialRiskIndicatorResponse)
 def get_financial_risk_indicator(
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_optional_current_user),
     db: Session = Depends(get_db),
 ):
     """Explainable 0-100 composite risk indicator across liquidity, leverage, and margins."""
-    record = get_or_create_financial_record(db, current_user.id)
+    record = get_financial_record_for_user_or_preview(db, current_user)
     return calculate_risk_indicator(record)
 
 
 @router.post("/twin/workflow", response_model=DigitalTwinWorkflowResponse)
 def execute_digital_twin_workflow(
     scenario_request: Optional[WhatIfSimulationRequest] = None,
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_optional_current_user),
     db: Session = Depends(get_db),
 ):
     """Execute end-to-end Valmont workflow: Analyze -> Simulate -> Predict -> Assess Risk -> Decide."""
     scenario_dict = scenario_request.model_dump() if scenario_request else None
-    return run_digital_twin_workflow(db, current_user.id, scenario_dict)
+    user_id = current_user.id if current_user else None
+    return run_digital_twin_workflow(db, user_id, scenario_dict)
 
 
 @router.get("/transactions", response_model=List[TransactionResponse])

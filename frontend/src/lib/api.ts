@@ -41,7 +41,9 @@ import {
 } from "@/types";
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") || "http://localhost:8000";
+  process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ||
+  process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ||
+  "http://localhost:8000";
 
 interface FetchOptions extends RequestInit {
   timeoutMs?: number;
@@ -217,6 +219,20 @@ export function authLogout(): void {
   if (typeof window !== "undefined") {
     localStorage.removeItem("sahay_access_token");
     localStorage.removeItem("sahay_user");
+  }
+}
+
+export async function authDemoLogin(): Promise<AuthToken> {
+  try {
+    return await authLogin("9876543210", "Password123!");
+  } catch {
+    return await authRegister({
+      phone: "9876543210",
+      name: "Demo Entrepreneur",
+      password: "Password123!",
+      state: "West Bengal",
+      district: "Kolkata",
+    });
   }
 }
 
@@ -398,6 +414,25 @@ export async function updateChecklistItem(
 
 export async function getApplicationHistory(applicationId: string): Promise<ApplicationStatusHistory[]> {
   return fetchApi<ApplicationStatusHistory[]>(`/api/v1/applications/${applicationId}/history`);
+}
+
+export async function deleteApplication(applicationId: string): Promise<void> {
+  return fetchApi<void>(`/api/v1/applications/${applicationId}`, {
+    method: "DELETE",
+  });
+}
+
+export async function attachDocumentToChecklist(
+  applicationId: string,
+  itemId: string,
+  userDocumentId: string,
+  notes?: string
+): Promise<ApplicationChecklistItem> {
+  return updateChecklistItem(applicationId, itemId, {
+    user_document_id: userDocumentId,
+    is_completed: true,
+    notes: notes || "Attached from Document Vault",
+  });
 }
 
 export async function recordDocumentUpload(data: {

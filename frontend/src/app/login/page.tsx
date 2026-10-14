@@ -8,8 +8,8 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
-import { authLogin } from "@/lib/api";
-import { Sparkles, Phone, Lock, ArrowRight } from "lucide-react";
+import { authLogin, authDemoLogin } from "@/lib/api";
+import { Sparkles, Phone, Lock, ArrowRight, UserCheck } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -20,6 +20,23 @@ export default function LoginPage() {
   const [otpSent, setOtpSent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const handleDemoLogin = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      await authDemoLogin();
+      router.push("/dashboard");
+    } catch (err) {
+      setError(
+        err && typeof err === "object" && "message" in err
+          ? String((err as { message: unknown }).message)
+          : "Demo sign-in failed."
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handlePasswordLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -190,7 +207,17 @@ export default function LoginPage() {
               </form>
             )}
 
-            <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 text-center">
+            <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 space-y-3 text-center">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
+                onClick={handleDemoLogin}
+                isLoading={isLoading}
+                leftIcon={<UserCheck className="w-4 h-4 text-emerald-600" />}
+              >
+                1-Click Demo Entrepreneur Sign-In
+              </Button>
               <p className="text-xs text-slate-500">
                 New micro-entrepreneur?{" "}
                 <Link href="/onboarding" className="text-emerald-600 font-semibold hover:underline">

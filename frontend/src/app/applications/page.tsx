@@ -12,13 +12,25 @@ import { Empty } from "@/components/ui/Empty";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import {
   getApplications,
+  getSchemes,
+  createApplication,
+  deleteApplication,
   grantConsent,
   updateApplicationStatus,
   getApplicationChecklist,
   updateChecklistItem,
   getApplicationHistory,
+  getUserDocuments,
+  attachDocumentToChecklist,
+  authDemoLogin,
 } from "@/lib/api";
-import { ApplicationResponse, ApplicationChecklistItem, ApplicationStatusHistory } from "@/types";
+import {
+  ApplicationResponse,
+  ApplicationChecklistItem,
+  ApplicationStatusHistory,
+  Scheme,
+  UserDocumentResponse,
+} from "@/types";
 import { useLanguage } from "@/lib/i18n";
 import {
   Clock,
@@ -33,6 +45,11 @@ import {
   AlertCircle,
   ArrowRight,
   FileText,
+  Plus,
+  Trash2,
+  Paperclip,
+  UserCheck,
+  Check,
 } from "lucide-react";
 
 const ALLOWED_STATUS_MAP: Record<string, string[]> = {
@@ -51,6 +68,8 @@ const ALLOWED_STATUS_MAP: Record<string, string[]> = {
 export default function ApplicationsPage() {
   const { t } = useLanguage();
   const [applications, setApplications] = useState<ApplicationResponse[]>([]);
+  const [schemes, setSchemes] = useState<Scheme[]>([]);
+  const [vaultDocs, setVaultDocs] = useState<UserDocumentResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -70,15 +89,49 @@ export default function ApplicationsPage() {
   const [sharedFields, setSharedFields] = useState("name,phone,business_type,annual_turnover,has_udyam");
   const [isSubmittingConsent, setIsSubmittingConsent] = useState(false);
 
-  // Status transition state
-  const [transitioningAppId, setTransitioningAppId] = useState<string | null>(null);
+  // New Application Modal state
+  const [isNewAppModalOpen, setIsNewAppModalOpen] = useState(false);
+  const [selectedSchemeId, setSelectedSchemeId] = useState("");
+  const [applicationNotes, setApplicationNotes] = useState("");
+  const [isCreatingApp, setIsCreatingApp] = useState(false);
 
-  const loadApplications = async () => {
+  // Attach Document from Vault Modal state
+  const [attachModalItem, setAttachModalItem] = useState<{ appId: string; item: ApplicationChecklistItem } | null>(null);
+  const [selectedDocIdToAttach, setSelectedDocIdToAttach] = useState("");
+  const [isAttaching, setIsAttaching] = useState(false);
+
+  // Transition & delete states
+  const [transitioningAppId, setTransitioningAppId] = useState<string | null>(null);
+  const [deletingAppId, setDeletingAppId] = useState<string | null>(null);
+
+  const loadData = async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await getApplications();
-      setApplications(data);
+      const [apps, allSchemes, docs] = await Promise.all([
+        getApplications(),
+        getSchemes().catch(() => []),
+        getUserDocuments().catch(() => []),
+      ]);
+      setApplications(apps);
+      setSchemes(allSchemes);
+      setVaultDocs(docs);
+
+      // Check query param for auto-opening or pre-selecting scheme
+      if (typeof window !== "undefined") {
+        const params = new URLSearchParams(window.location.search);
+        const schemeIdParam = params.get("scheme_id");
+        if (schemeIdParam) {
+          setSelectedSchemeId(schemeIdParam);
+          // If no existing application for this scheme, prompt new modal
+          const existing = apps.find((a) => a.scheme_id === schemeIdParam);
+          if (existing) {
+            setExpandedChecklistAppId(existing.id);
+          } else {
+            setIsNewAppModalOpen(true);
+          }
+        }
+      }
     } catch (err) {
       setError(
         err && typeof err === "object" && "message" in err
@@ -91,8 +144,20 @@ export default function ApplicationsPage() {
   };
 
   useEffect(() => {
-    loadApplications();
+    loadData();
   }, []);
+
+  const handleDemoSignIn = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      await authDemoLogin();
+      await loadData();
+    } catch (err) {
+      setError("Demo sign in failed. Please try logging in manually.");
+      setIsLoading(false);
+    }
+  };
 
   const toggleChecklist = async (appId: string) => {
     if (expandedChecklistAppId === appId) {
@@ -123,9 +188,75 @@ export default function ApplicationsPage() {
         [appId]: (prev[appId] || []).map((ci) => (ci.id === item.id ? updated : ci)),
       }));
       // Refresh applications to reflect progress %
-      await loadApplications();
+      const refreshedApps = await getApplications();
+      setApplications(refreshedApps);
     } catch (err) {
       alert("Failed to update checklist item: " + String(err));
+    }
+  };
+
+  const handleCreateApplication = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedSchemeId) {
+      alert("Please select a verified government scheme.");
+      return;
+    }
+    setIsCreatingApp(true);
+    try {
+      const newApp = await createApplication(selectedSchemeId, applicationNotes);
+      setIsNewAppModalOpen(false);
+      setSelectedSchemeId("");
+      setApplicationNotes("");
+      await loadData();
+      setExpandedChecklistAppId(newApp.id);
+      const items = await getApplicationChecklist(newApp.id);
+      setChecklists((prev) => ({ ...prev, [newApp.id]: items }));
+    } catch (err) {
+      alert("Failed to create application: " + String(err));
+    } finally {
+      setIsCreatingApp(false);
+    }
+  };
+
+  const handleDeleteApplication = async (appId: string) => {
+    if (!confirm("Are you sure you want to discard this application draft?")) return;
+    setDeletingAppId(appId);
+    try {
+      await deleteApplication(appId);
+      await loadData();
+    } catch (err) {
+      alert("Failed to delete application: " + String(err));
+    } finally {
+      setDeletingAppId(null);
+    }
+  };
+
+  const handleAttachVaultDocument = async () => {
+    if (!attachModalItem || !selectedDocIdToAttach) {
+      alert("Please select a document from your vault.");
+      return;
+    }
+    setIsAttaching(true);
+    try {
+      const updated = await attachDocumentToChecklist(
+        attachModalItem.appId,
+        attachModalItem.item.id,
+        selectedDocIdToAttach
+      );
+      setChecklists((prev) => ({
+        ...prev,
+        [attachModalItem.appId]: (prev[attachModalItem.appId] || []).map((ci) =>
+          ci.id === attachModalItem.item.id ? updated : ci
+        ),
+      }));
+      setAttachModalItem(null);
+      setSelectedDocIdToAttach("");
+      const refreshedApps = await getApplications();
+      setApplications(refreshedApps);
+    } catch (err) {
+      alert("Failed to attach document: " + String(err));
+    } finally {
+      setIsAttaching(false);
     }
   };
 
@@ -147,7 +278,7 @@ export default function ApplicationsPage() {
     setTransitioningAppId(appId);
     try {
       await updateApplicationStatus(appId, newStatus, `Transitioned to ${newStatus} from portal`);
-      await loadApplications();
+      await loadData();
       if (expandedChecklistAppId === appId) {
         const items = await getApplicationChecklist(appId);
         setChecklists((prev) => ({ ...prev, [appId]: items }));
@@ -166,7 +297,7 @@ export default function ApplicationsPage() {
       await grantConsent(consentModalApp.id, partnerName, sharedFields);
       await updateApplicationStatus(consentModalApp.id, "submitted", "Dossier forwarded to lender with digital consent");
       setConsentModalApp(null);
-      await loadApplications();
+      await loadData();
     } catch (err) {
       alert("Failed to record consent: " + String(err));
     } finally {
@@ -195,9 +326,20 @@ export default function ApplicationsPage() {
               {t.applications.subtitle}
             </p>
           </div>
-          <Link href="/matches">
-            <Button size="sm">{t.applications.newApplication}</Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              leftIcon={<Plus className="w-4 h-4" />}
+              onClick={() => setIsNewAppModalOpen(true)}
+            >
+              {t.applications.newApplication}
+            </Button>
+            <Link href="/matches">
+              <Button size="sm" variant="outline">
+                Evaluate Matches
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Consent Transparency Notice */}
@@ -212,11 +354,39 @@ export default function ApplicationsPage() {
         </div>
 
         {error && (
-          <ErrorBanner
-            title="Unable to Retrieve Applications"
-            message={error}
-            onRetry={loadApplications}
-          />
+          <div className="space-y-2">
+            <ErrorBanner
+              title={
+                error.toLowerCase().includes("token") || error.toLowerCase().includes("login") || error.toLowerCase().includes("auth")
+                  ? "Authentication Required"
+                  : "Unable to Retrieve Applications"
+              }
+              message={
+                error.toLowerCase().includes("token") || error.toLowerCase().includes("login") || error.toLowerCase().includes("auth")
+                  ? "Please sign in to view, create, and track your verified scheme applications."
+                  : error
+              }
+              onRetry={loadData}
+              actionLabel="Sign In"
+              onAction={() => { window.location.href = "/login"; }}
+            />
+            {(error.toLowerCase().includes("token") || error.toLowerCase().includes("login") || error.toLowerCase().includes("auth")) && (
+              <div className="flex items-center justify-between p-3 bg-emerald-50 dark:bg-emerald-950/30 rounded-lg border border-emerald-200 dark:border-emerald-800 text-xs">
+                <span className="text-emerald-800 dark:text-emerald-300">
+                  Exploring Sahay as a reviewer or entrepreneur?
+                </span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-emerald-400 text-emerald-700 dark:text-emerald-300"
+                  onClick={handleDemoSignIn}
+                  leftIcon={<UserCheck className="w-3.5 h-3.5 text-emerald-600" />}
+                >
+                  1-Click Demo Sign-In
+                </Button>
+              </div>
+            )}
+          </div>
         )}
 
         {isLoading ? (
@@ -227,9 +397,9 @@ export default function ApplicationsPage() {
         ) : applications.length === 0 ? (
           <Empty
             title={t.applications.noApplications}
-            description="You have not started any scheme applications yet. Match schemes against your profile to begin."
+            description="You have not started any scheme applications yet. Start an application directly or match schemes against your profile to begin."
             actionLabel={t.applications.newApplication}
-            onAction={() => (window.location.href = "/matches")}
+            onAction={() => setIsNewAppModalOpen(true)}
           />
         ) : (
           <div className="space-y-4">
@@ -237,6 +407,7 @@ export default function ApplicationsPage() {
               const allowedNext = ALLOWED_STATUS_MAP[app.status] || [];
               const items = checklists[app.id] || [];
               const isExpanded = expandedChecklistAppId === app.id;
+              const completedCount = items.filter((i) => i.is_completed).length;
 
               return (
                 <Card key={app.id}>
@@ -306,7 +477,7 @@ export default function ApplicationsPage() {
                       <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2">
                         <div className="flex items-center justify-between">
                           <h4 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-                            {t.applications.checklistTitle} ({items.filter((i) => i.is_completed).length}/{items.length})
+                            {t.applications.checklistTitle} ({completedCount}/{items.length})
                           </h4>
                           <Link href="/documents" className="text-xs text-emerald-600 hover:underline flex items-center gap-1">
                             <FileText className="w-3.5 h-3.5" /> Go to Vault
@@ -318,42 +489,78 @@ export default function ApplicationsPage() {
                         ) : items.length === 0 ? (
                           <p className="text-xs text-slate-400 py-2">No specific documents registered for this scheme.</p>
                         ) : (
-                          <div className="space-y-1.5 divide-y divide-slate-100 dark:divide-slate-800">
-                            {items.map((item) => (
-                              <div
-                                key={item.id}
-                                className="pt-2 flex items-start justify-between gap-3 text-xs"
-                              >
-                                <div className="flex items-start gap-2.5">
-                                  <input
-                                    type="checkbox"
-                                    checked={item.is_completed}
-                                    onChange={() => handleToggleChecklistItem(app.id, item)}
-                                    className="mt-0.5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 h-4 w-4"
-                                  />
-                                  <div>
-                                    <span className={`font-semibold ${item.is_completed ? "line-through text-slate-400" : "text-slate-900 dark:text-white"}`}>
-                                      {item.title}
+                          <div className="space-y-2 divide-y divide-slate-100 dark:divide-slate-800">
+                            {items.map((item) => {
+                              const isMandatory = item.is_mandatory ?? item.mandatory;
+                              const attachedDoc = item.user_document_id
+                                ? vaultDocs.find((d) => d.id === item.user_document_id)
+                                : null;
+
+                              return (
+                                <div
+                                  key={item.id}
+                                  className="pt-2 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs"
+                                >
+                                  <div className="flex items-start gap-2.5">
+                                    <input
+                                      type="checkbox"
+                                      checked={item.is_completed}
+                                      onChange={() => handleToggleChecklistItem(app.id, item)}
+                                      className="mt-0.5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 h-4 w-4 cursor-pointer"
+                                    />
+                                    <div>
+                                      <div className="flex items-center gap-1.5 flex-wrap">
+                                        <span className={`font-semibold ${item.is_completed ? "text-emerald-900 dark:text-emerald-300" : "text-slate-900 dark:text-white"}`}>
+                                          {item.title}
+                                        </span>
+                                        {isMandatory ? (
+                                          <span className="px-1.5 py-0.2 rounded text-[10px] bg-rose-50 text-rose-600 border border-rose-200">
+                                            Mandatory
+                                          </span>
+                                        ) : (
+                                          <span className="px-1.5 py-0.2 rounded text-[10px] bg-slate-100 text-slate-600">
+                                            Optional
+                                          </span>
+                                        )}
+                                      </div>
+                                      {item.validation_message ? (
+                                        <p className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-0.5 flex items-center gap-1 font-medium">
+                                          <CheckCircle2 className="w-3 h-3 shrink-0" />
+                                          {item.validation_message}
+                                        </p>
+                                      ) : attachedDoc ? (
+                                        <p className="text-[11px] text-slate-500 mt-0.5">
+                                          Attached: {attachedDoc.file_name} ({attachedDoc.verification_status})
+                                        </p>
+                                      ) : null}
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+                                    {!item.is_completed && (
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="text-[11px] h-7 px-2"
+                                        onClick={() => {
+                                          setAttachModalItem({ appId: app.id, item });
+                                          setSelectedDocIdToAttach("");
+                                        }}
+                                      >
+                                        <Paperclip className="w-3 h-3 mr-1" /> Attach from Vault
+                                      </Button>
+                                    )}
+                                    <span className={`text-[10px] px-2 py-0.5 rounded font-mono ${
+                                      item.is_completed
+                                        ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                        : "bg-slate-100 text-slate-500"
+                                    }`}>
+                                      {item.is_completed ? "Completed" : "Pending"}
                                     </span>
-                                    {item.mandatory ? (
-                                      <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] bg-rose-50 text-rose-600 border border-rose-200">
-                                        Mandatory
-                                      </span>
-                                    ) : (
-                                      <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] bg-slate-100 text-slate-600">
-                                        Optional
-                                      </span>
-                                    )}
-                                    {item.description && (
-                                      <p className="text-slate-500 text-[11px] mt-0.5">{item.description}</p>
-                                    )}
                                   </div>
                                 </div>
-                                <span className="text-[10px] text-slate-400 shrink-0 font-mono">
-                                  {item.is_completed ? "Completed" : "Pending"}
-                                </span>
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         )}
                       </div>
@@ -385,7 +592,7 @@ export default function ApplicationsPage() {
                   </CardContent>
 
                   <CardFooter className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <Button
                         size="sm"
                         variant="ghost"
@@ -412,7 +619,18 @@ export default function ApplicationsPage() {
                       </Button>
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {["draft", "documents_needed", "withdrawn"].includes(app.status) && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-xs"
+                          onClick={() => handleDeleteApplication(app.id)}
+                          isLoading={deletingAppId === app.id}
+                        >
+                          <Trash2 className="w-3.5 h-3.5 mr-1" /> Discard
+                        </Button>
+                      )}
                       {!app.lender_consent_granted && (
                         <Button
                           size="sm"
@@ -429,6 +647,110 @@ export default function ApplicationsPage() {
               );
             })}
           </div>
+        )}
+
+        {/* Start New Application Modal */}
+        <Modal
+          isOpen={isNewAppModalOpen}
+          onClose={() => setIsNewAppModalOpen(false)}
+          title="Start Scheme Application Checklist"
+          description="Select a verified government scheme to initialize a formal application checklist and tracking timeline."
+          footer={
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" onClick={() => setIsNewAppModalOpen(false)}>
+                {t.common.cancel}
+              </Button>
+              <Button onClick={handleCreateApplication} isLoading={isCreatingApp} disabled={!selectedSchemeId}>
+                Initialize Application
+              </Button>
+            </div>
+          }
+        >
+          <form onSubmit={handleCreateApplication} className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                Select Scheme
+              </label>
+              <select
+                value={selectedSchemeId}
+                onChange={(e) => setSelectedSchemeId(e.target.value)}
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-white"
+                required
+              >
+                <option value="">-- Choose a verified scheme --</option>
+                {schemes.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name} ({s.provider})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                Application Notes / Project Purpose (Optional)
+              </label>
+              <textarea
+                value={applicationNotes}
+                onChange={(e) => setApplicationNotes(e.target.value)}
+                rows={3}
+                placeholder="e.g. Financing for machinery expansion in textile workshop"
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-white"
+              />
+            </div>
+          </form>
+        </Modal>
+
+        {/* Attach Document from Vault Modal */}
+        {attachModalItem && (
+          <Modal
+            isOpen={Boolean(attachModalItem)}
+            onClose={() => setAttachModalItem(null)}
+            title={`Attach Document: ${attachModalItem.item.title}`}
+            description="Select an encrypted document from your vault to fulfill this application checklist requirement."
+            footer={
+              <div className="flex justify-end gap-2">
+                <Button variant="ghost" onClick={() => setAttachModalItem(null)}>
+                  {t.common.cancel}
+                </Button>
+                <Button
+                  onClick={handleAttachVaultDocument}
+                  isLoading={isAttaching}
+                  disabled={!selectedDocIdToAttach}
+                >
+                  Confirm Attachment
+                </Button>
+              </div>
+            }
+          >
+            <div className="space-y-4">
+              {vaultDocs.length === 0 ? (
+                <div className="p-4 bg-slate-50 dark:bg-slate-900 rounded-lg text-center text-xs text-slate-500 space-y-2">
+                  <p>Your Document Vault is currently empty.</p>
+                  <Link href="/documents">
+                    <Button size="sm">Go to Vault & Upload Document</Button>
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    Select Vault Document
+                  </label>
+                  <select
+                    value={selectedDocIdToAttach}
+                    onChange={(e) => setSelectedDocIdToAttach(e.target.value)}
+                    className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-white"
+                  >
+                    <option value="">-- Choose document from vault --</option>
+                    {vaultDocs.map((doc) => (
+                      <option key={doc.id} value={doc.id}>
+                        {doc.display_label || doc.file_name} ({doc.document_type.replace(/_/g, " ").toUpperCase()} • {doc.verification_status})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+          </Modal>
         )}
 
         {/* Status Lifecycle Audit History Modal */}
@@ -450,28 +772,34 @@ export default function ApplicationsPage() {
               <p className="text-xs text-slate-400 py-4">No status transitions logged yet.</p>
             ) : (
               <div className="space-y-3 divide-y divide-slate-100 dark:divide-slate-800">
-                {historyItems.map((h) => (
-                  <div key={h.id} className="pt-2.5 text-xs space-y-1">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-slate-900 dark:text-white uppercase">
-                          {h.new_status.replace(/_/g, " ")}
-                        </span>
-                        {h.previous_status && (
-                          <span className="text-slate-400 text-[10px]">
-                            (from {h.previous_status.replace(/_/g, " ")})
+                {historyItems.map((h) => {
+                  const targetStatus = h.to_status || h.new_status || "STATUS_UPDATED";
+                  const originStatus = h.from_status || h.previous_status;
+                  const reason = h.change_reason || h.notes;
+
+                  return (
+                    <div key={h.id} className="pt-2.5 text-xs space-y-1">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-slate-900 dark:text-white uppercase">
+                            {targetStatus.replace(/_/g, " ")}
                           </span>
-                        )}
+                          {originStatus && (
+                            <span className="text-slate-400 text-[10px]">
+                              (from {originStatus.replace(/_/g, " ")})
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-[10px] text-slate-400 font-mono">
+                          {new Date(h.created_at).toLocaleString()}
+                        </span>
                       </div>
-                      <span className="text-[10px] text-slate-400 font-mono">
-                        {new Date(h.created_at).toLocaleString()}
-                      </span>
+                      <p className="text-slate-500 text-[11px]">
+                        Actor: <span className="font-semibold">{h.actor_role}</span> {reason && `• ${reason}`}
+                      </p>
                     </div>
-                    <p className="text-slate-500 text-[11px]">
-                      Actor: <span className="font-semibold">{h.actor_role}</span> {h.notes && `• ${h.notes}`}
-                    </p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </Modal>
@@ -516,13 +844,13 @@ export default function ApplicationsPage() {
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                  Authorized Data Fields
+                  Authorized Data Fields (Comma Separated)
                 </label>
                 <textarea
-                  rows={3}
                   value={sharedFields}
                   onChange={(e) => setSharedFields(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-mono text-slate-900 dark:text-white"
+                  rows={2}
+                  className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-white font-mono text-xs"
                 />
               </div>
             </div>

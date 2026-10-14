@@ -26,6 +26,7 @@ from app.services.application_service import (
     get_application_history,
     grant_data_sharing_consent,
     revoke_data_sharing_consent,
+    delete_application,
 )
 
 router = APIRouter(prefix="/applications", tags=["Applications"])
@@ -236,3 +237,19 @@ def revoke_consent(
     if not consent:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Consent record not found")
     return DataSharingConsentResponse.model_validate(consent)
+
+
+@router.delete("/{application_id}", status_code=status.HTTP_204_NO_CONTENT)
+def remove_application(
+    application_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Delete draft or withdrawn application record and unlink documents."""
+    try:
+        deleted = delete_application(db, application_id, current_user.id)
+        if not deleted:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Application not found")
+        return None
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))

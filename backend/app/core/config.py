@@ -1,8 +1,10 @@
-"""Application configuration settings."""
-
+from pathlib import Path
 from typing import List, Union
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_BACKEND_DIR = Path(__file__).resolve().parent.parent.parent
+_CANONICAL_DB_URL = f"sqlite:///{(_BACKEND_DIR / 'sahay_dev.db').as_posix()}"
 
 
 class Settings(BaseSettings):
@@ -31,7 +33,7 @@ class Settings(BaseSettings):
         return v
 
     # Database Configuration
-    DATABASE_URL: str = "sqlite:///./sahay_dev.db"
+    DATABASE_URL: str = _CANONICAL_DB_URL
     DATABASE_ECHO: bool = False
 
     # Redis Configuration

@@ -159,14 +159,19 @@ export interface UserDocumentResponse {
   id: string;
   user_id: string;
   application_id?: string | null;
+  display_label?: string;
   document_type: string;
+  purpose?: string;
   file_name: string;
   file_size_bytes: number;
-  storage_path: string;
+  mime_type?: string;
+  checksum_sha256?: string;
+  storage_path?: string;
   verification_status: "pending" | "verified" | "rejected" | string;
-  rejection_reason: string;
+  rejection_reason?: string;
   expiry_date?: string | null;
   created_at: string;
+  updated_at?: string | null;
 }
 
 export interface ApplicationChecklistItem {
@@ -174,21 +179,29 @@ export interface ApplicationChecklistItem {
   application_id: string;
   requirement_id?: string | null;
   title: string;
-  description: string;
-  mandatory: boolean;
+  description?: string;
+  document_type?: string;
+  is_mandatory: boolean;
+  mandatory?: boolean;
   is_completed: boolean;
+  user_document_id?: string | null;
   vault_document_id?: string | null;
+  validation_message?: string;
   notes?: string | null;
   completed_at?: string | null;
+  created_at?: string;
 }
 
 export interface ApplicationStatusHistory {
   id: string;
   application_id: string;
+  from_status?: string;
+  to_status?: string;
   previous_status?: string | null;
-  new_status: string;
+  new_status?: string;
   actor_id?: string | null;
   actor_role: string;
+  change_reason?: string;
   notes?: string | null;
   created_at: string;
 }

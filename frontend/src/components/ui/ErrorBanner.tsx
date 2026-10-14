@@ -7,6 +7,8 @@ export interface ErrorBannerProps {
   message: string;
   onRetry?: () => void;
   onDismiss?: () => void;
+  actionLabel?: string;
+  onAction?: () => void;
   className?: string;
 }
 
@@ -15,6 +17,8 @@ export const ErrorBanner: React.FC<ErrorBannerProps> = ({
   message,
   onRetry,
   onDismiss,
+  actionLabel,
+  onAction,
   className = "",
 }) => {
   return (
@@ -29,17 +33,28 @@ export const ErrorBanner: React.FC<ErrorBannerProps> = ({
         <p className="mt-0.5 text-xs text-rose-700 dark:text-rose-300">
           {message}
         </p>
-        {onRetry && (
-          <div className="mt-2.5">
-            <Button
-              size="sm"
-              variant="outline"
-              className="border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/40"
-              leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
-              onClick={onRetry}
-            >
-              Retry
-            </Button>
+        {(onRetry || (actionLabel && onAction)) && (
+          <div className="mt-2.5 flex items-center gap-2">
+            {onRetry && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-rose-300 dark:border-rose-800 text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/40"
+                leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
+                onClick={onRetry}
+              >
+                Retry
+              </Button>
+            )}
+            {actionLabel && onAction && (
+              <Button
+                size="sm"
+                className="bg-rose-600 hover:bg-rose-700 text-white"
+                onClick={onAction}
+              >
+                {actionLabel}
+              </Button>
+            )}
           </div>
         )}
       </div>

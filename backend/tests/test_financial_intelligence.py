@@ -222,3 +222,18 @@ def test_chat_financial_and_fraud_routing(auth_headers):
     assert data_fraud["intent_detected"] == "FRAUD_SECURITY"
     assert data_fraud["deterministic_action_taken"] == "SCANNED_BY_FRAUD_PREVENTION_RULES"
     assert "fraud detection" in data_fraud["reply"].lower()
+
+
+def test_guest_unauthenticated_digital_twin_workflow():
+    """Verify that guests can run what-if simulations and twin workflows using isolated transient demo data."""
+    res = client.post(
+        "/api/v1/financial/twin/workflow",
+        json={"scenario_type": "new_loan", "additional_monthly_debt": 5000},
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert "analysis" in data
+    assert "simulation" in data
+    assert "decision" in data
+    assert data["decision"]["action"] in ["PROCEED", "PROCEED_WITH_CAUTION", "DO_NOT_PROCEED"]
+    assert len(data["decision"]["checklist"]) > 0

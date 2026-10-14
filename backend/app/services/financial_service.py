@@ -79,6 +79,27 @@ def get_or_create_financial_record(db: Session, user_id: str) -> FinancialRecord
     return new_record
 
 
+def get_financial_record_for_user_or_preview(db: Session, user: Optional[Any]) -> FinancialRecord:
+    """Retrieve financial record for authenticated user or return transient demo record for guest preview."""
+    if user and getattr(user, "id", None):
+        return get_or_create_financial_record(db, user.id)
+
+    # In-memory transient demo profile (realistic micro-enterprise baseline)
+    return FinancialRecord(
+        id="transient-demo-preview",
+        user_id="demo-preview",
+        monthly_income=65000.0,
+        essential_expenses=26600.0,
+        discretionary_expenses=11400.0,
+        monthly_debt_emi=6000.0,
+        liquid_savings=93100.0,
+        estimated_credit_score=728,
+        credit_utilization_pct=26.5,
+        on_time_payment_pct=98.0,
+        credit_history_months=30,
+    )
+
+
 def calculate_financial_health(record: FinancialRecord) -> FinancialHealthResponse:
     """Compute deterministic financial health metrics, debt-to-income, and grade."""
     total_expenses = record.essential_expenses + record.discretionary_expenses
@@ -535,13 +556,16 @@ def detect_transaction_fraud(
 
 def run_digital_twin_workflow(
     db: Session,
-    user_id: str,
+    user_id: Optional[str] = None,
     scenario_data: Optional[Dict[str, Any]] = None,
 ) -> DigitalTwinWorkflowResponse:
     """Execute the full Valmont-inspired Digital Twin workflow:
     Analyze -> Simulate -> Predict -> Assess Risk -> Decide
     """
-    record = get_or_create_financial_record(db, user_id)
+    if user_id and user_id not in ["demo", "preview", "guest-preview", "demo-preview"]:
+        record = get_or_create_financial_record(db, user_id)
+    else:
+        record = get_financial_record_for_user_or_preview(db, None)
 
     # 1. ANALYZE
     health = calculate_financial_health(record)
@@ -606,18 +630,19 @@ def run_digital_twin_workflow(
         checklist=checklist,
     )
 
-    # Persist scenario record
-    scenario_db = FinancialTwinScenario(
-        user_id=user_id,
-        scenario_name=sim_result.scenario_description,
-        scenario_type=scenario_type,
-        parameters=scenario_data or {},
-        projected_metrics=sim_result.simulated,
-        risk_score=sim_result.simulated["risk_score"],
-        verdict=sim_result.verdict,
-    )
-    db.add(scenario_db)
-    db.commit()
+    # Persist scenario record only for authenticated users
+    if user_id:
+        scenario_db = FinancialTwinScenario(
+            user_id=user_id,
+            scenario_name=sim_result.scenario_description,
+            scenario_type=scenario_type,
+            parameters=scenario_data or {},
+            projected_metrics=sim_result.simulated,
+            risk_score=sim_result.simulated["risk_score"],
+            verdict=sim_result.verdict,
+        )
+        db.add(scenario_db)
+        db.commit()
 
     return DigitalTwinWorkflowResponse(
         analysis=health,

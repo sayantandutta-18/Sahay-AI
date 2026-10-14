@@ -195,3 +195,58 @@ def test_admin_rbac_and_audit_redaction():
     assert "1234 5678 9012" not in scrubbed
     assert "ABCDE1234F" not in scrubbed
     assert "XXXXXX234F" in scrubbed
+
+
+def test_auto_fulfill_checklist_and_delete_application():
+    """Verify that uploading a document with application_id auto-fulfills matching checklist requirement, and draft application can be deleted."""
+    token, headers = get_auth_token("9811100006", "entrepreneur")
+
+    schemes = client.get("/api/v1/schemes").json()
+    scheme_id = schemes[0]["id"]
+
+    # 1. Create draft application
+    create_res = client.post(
+        "/api/v1/applications",
+        json={"scheme_id": scheme_id, "notes": "Auto-fulfill test"},
+        headers=headers,
+    )
+    assert create_res.status_code == 201
+    app_id = create_res.json()["id"]
+
+    # 2. Get initial checklist
+    chk_res = client.get(f"/api/v1/applications/{app_id}/checklist", headers=headers)
+    assert chk_res.status_code == 200
+    items = chk_res.json()
+    assert len(items) >= 1
+    target_item = items[0]
+    target_doc_type = target_item["document_type"]
+
+    # 3. Upload document matching target_doc_type linked to application_id
+    pdf_bytes = b"%PDF-1.4 test auto-fulfill pdf document content"
+    files = {"file": (f"{target_doc_type}_proof.pdf", io.BytesIO(pdf_bytes), "application/pdf")}
+    upload_res = client.post(
+        "/api/v1/documents/upload",
+        files=files,
+        data={
+            "document_type": target_doc_type,
+            "application_id": app_id,
+            "display_label": f"Uploaded {target_doc_type}",
+        },
+        headers=headers,
+    )
+    assert upload_res.status_code == 201
+    doc_id = upload_res.json()["id"]
+
+    # 4. Verify checklist item was auto-fulfilled
+    chk_after = client.get(f"/api/v1/applications/{app_id}/checklist", headers=headers).json()
+    updated_item = next(i for i in chk_after if i["id"] == target_item["id"])
+    assert updated_item["is_completed"] is True
+    assert updated_item["user_document_id"] == doc_id
+
+    # 5. Delete draft application
+    del_res = client.delete(f"/api/v1/applications/{app_id}", headers=headers)
+    assert del_res.status_code == 204
+
+    # 6. Verify application is gone
+    get_res = client.get(f"/api/v1/applications/{app_id}", headers=headers)
+    assert get_res.status_code == 404
