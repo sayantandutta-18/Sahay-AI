@@ -23,13 +23,18 @@ class Settings(BaseSettings):
     CORS_ORIGINS: Union[str, List[str]] = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
+        "https://sahay-ai-git-main-sayantandutta444-6280.vercel.app",
+        "https://sahay-ai.vercel.app",
     ]
+    CORS_ORIGIN_REGEX: str = r"^https:\/\/(?:[a-zA-Z0-9_-]+\.)*vercel\.app$"
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> List[str]:
         if isinstance(v, str):
-            return [origin.strip() for origin in v.split(",") if origin.strip()]
+            return [origin.strip().rstrip("/") for origin in v.split(",") if origin.strip()]
+        if isinstance(v, list):
+            return [str(o).strip().rstrip("/") for o in v if str(o).strip()]
         return v
 
     # Database Configuration

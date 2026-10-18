@@ -7,7 +7,11 @@ backend/*/*/__pycache__/
 *$py.class
 *.sqlite3
 *.db
+*.db-shm
+*.db-wal
 backend/*.db
+backend/*.db-shm
+backend/*.db-wal
 .pytest_cache/
 .coverage
 htmlcov/

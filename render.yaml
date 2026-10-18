@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: sahay-ai-backend
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: "false"
+      - key: PROJECT_NAME
+        value: Sahay-AI
+      - key: CORS_ORIGINS
+        value: "https://sahay-ai-git-main-sayantandutta444-6280.vercel.app,https://sahay-ai.vercel.app,http://localhost:3000,http://127.0.0.1:3000"
+      - key: CORS_ORIGIN_REGEX
+        value: "^https:\/\/(?:[a-zA-Z0-9_-]+\.)*vercel\.app$"
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "1440"
+      - key: LLM_PROVIDER
+        value: mock

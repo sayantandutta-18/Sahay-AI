@@ -42,17 +42,29 @@ app = FastAPI(
 cors_origins = (
     settings.CORS_ORIGINS
     if isinstance(settings.CORS_ORIGINS, list)
-    else [o.strip() for o in str(settings.CORS_ORIGINS).split(",") if o.strip()]
+    else [o.strip().rstrip("/") for o in str(settings.CORS_ORIGINS).split(",") if o.strip()]
 )
-if not cors_origins:
-    cors_origins = ["http://localhost:3000", "http://127.0.0.1:3000"]
+
+# Essential development and production frontend origins always permitted
+default_trusted_origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://sahay-ai-git-main-sayantandutta444-6280.vercel.app",
+    "https://sahay-ai.vercel.app",
+]
+for origin in default_trusted_origins:
+    if origin not in cors_origins:
+        cors_origins.append(origin)
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
-    allow_credentials="*" not in cors_origins,
-    allow_methods=["*"],
+    allow_origin_regex=settings.CORS_ORIGIN_REGEX.strip() if getattr(settings, "CORS_ORIGIN_REGEX", None) and settings.CORS_ORIGIN_REGEX.strip() else None,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=86400,
 )
 
 # Root-level health endpoint (GET /health)

@@ -46,7 +46,7 @@ import {
   FraudAlert,
 } from "@/types";
 
-const API_BASE_URL =
+export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ||
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ||
   "http://localhost:8000";
@@ -139,41 +139,80 @@ export async function fetchApi<T>(
   }
 }
 
-/**
- * Fetch system health status.
- */
-export async function getHealth(): Promise<HealthResponse> {
-  return fetchApi<HealthResponse>("/health");
-}
-
-/**
- * Diagnostics helper that measures latency and reports detailed connection state.
- */
-export async function checkApiConnectivity(): Promise<{
+export interface ApiConnectivityResult {
   connected: boolean;
   latencyMs: number;
   data?: HealthResponse;
   error?: string;
-}> {
+  isWakingUp?: boolean;
+}
+
+/**
+ * Fetch system health status with configurable timeout.
+ */
+export async function getHealth(timeoutMs: number = 10000): Promise<HealthResponse> {
+  return fetchApi<HealthResponse>("/health", { timeoutMs });
+}
+
+/**
+ * Diagnostics helper that measures latency and reports detailed connection state.
+ * Includes cold-start detection and a single limited backoff retry for transient network/spin-up delays.
+ */
+export async function checkApiConnectivity(): Promise<ApiConnectivityResult> {
   const start = performance.now();
   try {
-    const data = await getHealth();
+    const data = await getHealth(12000);
     const latencyMs = Math.round(performance.now() - start);
     return {
       connected: true,
       latencyMs,
       data,
+      isWakingUp: false,
     };
-  } catch (err) {
-    const latencyMs = Math.round(performance.now() - start);
+  } catch (err: unknown) {
+    const initialLatency = Math.round(performance.now() - start);
     const errorMsg =
       err && typeof err === "object" && "message" in err
         ? String((err as { message: unknown }).message)
         : "Cannot reach backend server";
+
+    const isTimeout =
+      errorMsg.toLowerCase().includes("timed out") ||
+      (err && typeof err === "object" && "statusCode" in err && (err as { statusCode: number }).statusCode === 408);
+
+    // If initial probe timed out or hit network glitch (standard during Render cold-start wakeups),
+    // wait 2.5s and perform ONE retry with a 10s budget
+    if (isTimeout || errorMsg.includes("Failed to fetch") || errorMsg.includes("NetworkError")) {
+      try {
+        await new Promise((resolve) => setTimeout(resolve, 2500));
+        const retryStart = performance.now();
+        const retryData = await getHealth(10000);
+        const retryLatencyMs = Math.round(performance.now() - retryStart);
+        return {
+          connected: true,
+          latencyMs: retryLatencyMs,
+          data: retryData,
+          isWakingUp: false,
+        };
+      } catch (retryErr: unknown) {
+        const finalMsg =
+          retryErr && typeof retryErr === "object" && "message" in retryErr
+            ? String((retryErr as { message: unknown }).message)
+            : errorMsg;
+        return {
+          connected: false,
+          latencyMs: initialLatency,
+          error: finalMsg,
+          isWakingUp: Boolean(isTimeout || initialLatency >= 8000),
+        };
+      }
+    }
+
     return {
       connected: false,
-      latencyMs,
+      latencyMs: initialLatency,
       error: errorMsg,
+      isWakingUp: Boolean(isTimeout || initialLatency >= 8000),
     };
   }
 }
@@ -748,6 +787,4 @@ export async function analyzeCustomCandles(payload: {
     body: JSON.stringify(payload),
   });
 }
-
-export { API_BASE_URL };
 
