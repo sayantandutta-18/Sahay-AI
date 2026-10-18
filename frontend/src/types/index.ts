@@ -10,6 +10,7 @@ export interface DatabaseHealth {
   dialect?: string;
   table_count?: number;
   latency_ms?: number;
+  journal_mode?: string | null;
 }
 
 export interface HealthResponse {

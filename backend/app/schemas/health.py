@@ -12,6 +12,7 @@ class DatabaseHealth(BaseModel):
     dialect: str | None = Field(default=None, description="Database dialect (e.g. sqlite, postgresql)")
     table_count: int | None = Field(default=None, description="Active table count in database")
     latency_ms: float | None = Field(default=None, description="Ping query latency in milliseconds")
+    journal_mode: str | None = Field(default=None, description="Active SQLite journal mode or None")
 
 
 class HealthResponse(BaseModel):

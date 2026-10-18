@@ -45,6 +45,11 @@ class Settings(BaseSettings):
     def assemble_database_url(cls, v: str) -> str:
         if isinstance(v, str):
             clean = v.strip()
+            # Support postgres:// and postgresql:// normalization for psycopg 3
+            if clean.startswith("postgres://"):
+                clean = "postgresql+psycopg://" + clean[len("postgres://"):]
+            elif clean.startswith("postgresql://") and not clean.startswith("postgresql+"):
+                clean = "postgresql+psycopg://" + clean[len("postgresql://"):]
             # Canonicalize relative SQLite URLs so root vs backend working directory always points to backend/sahay_dev.db
             if clean.startswith("sqlite:///./"):
                 rel_path = clean[len("sqlite:///./"):]

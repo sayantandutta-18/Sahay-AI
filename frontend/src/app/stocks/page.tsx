@@ -32,6 +32,7 @@ import {
   updateInvestmentProfile,
   getCandlestickInstruments,
   getCandlestickAnalysis,
+  authDemoLogin,
 } from "@/lib/api";
 import {
   MarketQuoteResponse,
@@ -77,6 +78,13 @@ export default function StockResearchPage() {
       setLoading(true);
       setErrorMsg(null);
       try {
+        if (typeof window !== "undefined" && !localStorage.getItem("sahay_access_token")) {
+          try {
+            await authDemoLogin();
+          } catch {
+            // Proceed
+          }
+        }
         const [benchData, profileData, instData] = await Promise.allSettled([
           getMarketBenchmarks(),
           getInvestmentProfile(),

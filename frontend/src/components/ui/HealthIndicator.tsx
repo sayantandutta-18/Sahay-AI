@@ -85,6 +85,11 @@ export const HealthIndicator: React.FC = () => {
                         {data.database.dialect}
                       </span>
                     )}
+                    {data.database.journal_mode && (
+                      <span className="ml-1 text-[10px] uppercase font-mono px-1 py-0.5 rounded bg-sky-50 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300">
+                        {data.database.journal_mode}
+                      </span>
+                    )}
                     {typeof data.database.table_count === "number" && (
                       <span className="ml-1 text-[11px] text-slate-500 font-normal">
                         ({data.database.table_count} tables)

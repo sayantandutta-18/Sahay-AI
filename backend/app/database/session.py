@@ -3,11 +3,30 @@
 import time
 import logging
 from typing import Generator
-from sqlalchemy import create_engine, text, inspect
+from sqlite3 import Connection as SQLite3Connection
+from sqlalchemy import create_engine, text, inspect, event
+from sqlalchemy.engine import Engine
 from sqlalchemy.orm import sessionmaker, Session
 from app.core.config import settings, _CANONICAL_DB_URL
 
 logger = logging.getLogger("sahay.database")
+
+
+@event.listens_for(Engine, "connect")
+def _set_sqlite_pragma(dbapi_connection, connection_record):
+    """Enforce WAL mode, foreign keys, and busy timeout for concurrent SQLite operations."""
+    if isinstance(dbapi_connection, SQLite3Connection):
+        cursor = dbapi_connection.cursor()
+        try:
+            cursor.execute("PRAGMA journal_mode=WAL")
+            cursor.execute("PRAGMA synchronous=NORMAL")
+            cursor.execute("PRAGMA busy_timeout=10000")
+            cursor.execute("PRAGMA foreign_keys=ON")
+        except Exception as exc:
+            logger.debug("SQLite PRAGMA setup notice: %s", exc)
+        finally:
+            cursor.close()
+
 
 # Build connection arguments and pooling parameters
 connect_args = {}
@@ -18,6 +37,7 @@ engine_kwargs = {
 
 if settings.DATABASE_URL.startswith("sqlite"):
     connect_args["check_same_thread"] = False
+    connect_args["timeout"] = 30
     engine_kwargs["connect_args"] = connect_args
 else:
     # Production PostgreSQL pooling
@@ -40,7 +60,7 @@ except Exception as init_exc:
         )
         engine = create_engine(
             _CANONICAL_DB_URL,
-            connect_args={"check_same_thread": False},
+            connect_args={"check_same_thread": False, "timeout": 30},
             echo=settings.DATABASE_ECHO,
             pool_pre_ping=True,
         )
@@ -67,8 +87,13 @@ def check_db_health() -> dict:
     """Execute a query to verify database connectivity, returning latency and metadata."""
     start_time = time.perf_counter()
     try:
+        journal_mode = None
         with engine.connect() as connection:
             connection.execute(text("SELECT 1"))
+            if engine.dialect.name == "sqlite":
+                jm_res = connection.execute(text("PRAGMA journal_mode")).scalar()
+                journal_mode = str(jm_res).lower() if jm_res else None
+
         latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
 
         inspector = inspect(engine)
@@ -88,6 +113,7 @@ def check_db_health() -> dict:
             "dialect": engine.dialect.name,
             "table_count": table_count,
             "latency_ms": latency_ms,
+            "journal_mode": journal_mode,
         }
     except Exception as exc:
         return {

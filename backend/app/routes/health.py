@@ -20,6 +20,7 @@ def get_health() -> HealthResponse:
         dialect=db_result.get("dialect"),
         table_count=db_result.get("table_count"),
         latency_ms=db_result.get("latency_ms"),
+        journal_mode=db_result.get("journal_mode"),
     )
 
     overall_status = "healthy" if db_health.status == "connected" else "degraded"
