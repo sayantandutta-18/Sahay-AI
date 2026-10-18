@@ -1,563 +1,308 @@
 
-🌟 Sahay --- Your AI-Powered Financial & Business Companion
-<p align="center">
-<a href="https://sahay-ai-beige.vercel.app/">{=html}<img src="https://img.shields.io/badge/Live%20Frontend-Visit%20Sahay-0EA472?style=for-the-badge&logo=vercel&logoColor=white" alt="Live Frontend" />{=html}</a>{=html}
-<a href="https://sahay-ai-5.onrender.com">{=html}<img src="https://img.shields.io/badge/Backend-Render-46E3B7?style=for-the-badge&logo=render&logoColor=black" alt="Backend API" />{=html}</a>{=html}
-<a href="https://sahay-ai-5.onrender.com/docs">{=html}<img src="https://img.shields.io/badge/API%20Docs-Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=black" alt="API Documentation" />{=html}</a>{=html}
-
-</p>
-<p align="center">
-<strong>{=html}🌐 Live App:</strong>{=html}
-<a href="https://sahay-ai-beige.vercel.app/">{=html}sahay-ai-beige.vercel.app</a>{=html}
- •  <strong>{=html}⚙️ Backend:</strong>{=html}
-<a href="https://sahay-ai-5.onrender.com">{=html}sahay-ai-5.onrender.com</a>{=html}
- •  <strong>{=html}📚 API Docs:</strong>{=html}
-<a href="https://sahay-ai-5.onrender.com/docs">{=html}Open Swagger
-UI</a>{=html}
-
-</p>
-<p align="center">
-<strong>{=html}💡 Understand Your Money. Discover Opportunities. Make
-Smarter Decisions.</strong>{=html}
-
-</p>
-<p align="center">
-An independent, multilingual AI platform designed to simplify financial
-management, scheme discovery, application tracking, and intelligent
-financial decision-making.
-
-</p>
-<p align="center">
-<img src="https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white" alt="Next.js" />{=html}
-<img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" />{=html}
-<img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />{=html}
-<img src="https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="Tailwind CSS" />{=html}
-<img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python" />{=html}
-<img src="https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI" />{=html}
-<img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL" />{=html}
-
-</p>
-✨ What Is Sahay?
-Sahay is an AI-powered financial and business companion that aims to
-make complex financial information easier to understand and act upon.
-
-From exploring potentially relevant government schemes to organizing
-applications, understanding expenses, and analyzing financial scenarios,
-Sahay brings multiple useful workflows into one platform.
-
-🎯 Our mission: Make financial knowledge more accessible,
-understandable, and actionable for everyone.
-
-🇮🇳 Sahay is an independent project. It is not an official government
-website and is not affiliated with or endorsed by any government
-authority.
-
-🚀 Why Sahay?
-Managing money and navigating financial information can be complicated.
-People often struggle to find reliable information, understand
-eligibility requirements, keep track of applications, and make informed
-financial decisions.
-
-Sahay aims to simplify these challenges through a unified, AI-assisted
-experience.
-
-<table>
-<tr>
-<td width="50%">
-<h3>
-🤖 AI-Powered Assistance
-
-</h3>
-Get clear explanations of financial concepts and information.
-
-</td>
-<td width="50%">
-<h3>
-🌐 Multilingual Experience
-
-</h3>
-Designed for users who prefer English, Hindi, or Bengali.
-
-</td>
-</tr>
-<tr>
-<td width="50%">
-<h3>
-📊 Financial Intelligence
-
-</h3>
-Understand spending patterns, financial health, and hypothetical
-scenarios.
-
-</td>
-<td width="50%">
-<h3>
-🗂️ Organized Workflows
-
-</h3>
-Keep applications, checklists, and document records organized.
-
-</td>
-</tr>
-</table>
-💎 Key Features
-🏛️ 1. Smart Scheme Discovery
-Discover relevant scheme information and understand published
-eligibility criteria.
-
-🔎 Explore available scheme information.
-📋 Review eligibility requirements.
-📄 Understand potentially required documents.
-🧠 Get AI-assisted explanations of complex requirements.
-🔗 Verify details through official sources.
-Eligibility assessments are informational and do not guarantee approval
-or benefits.
-
-📌 2. Application Tracker
-Stay organized throughout the application process.
-
-✅ Track application progress.
-📝 Manage application checklists.
-📍 Review pending steps.
-📂 Keep application-related information together.
-🔐 3. Document Vault
-Organize document records associated with applications and financial
-workflows.
-
-📄 Maintain document metadata.
-🗂️ Organize document records.
-🔗 Associate records with relevant applications.
-📋 Identify required and missing documents.
-Secure file storage and access controls depend on the implemented
-storage configuration.
-
-🛡️ 4. Admin Console & Audit Logs
-Support administrative workflows with a focus on accountability.
-
-⚙️ Administrative tools.
-🔍 Activity and audit-log visibility.
-🔐 Controlled access to administrative functions.
-📊 A foundation for system oversight.
-💼 5. Business & Financial Insights
-Help users and small-business owners understand their financial
-information.
-
-💰 Income and expense analysis.
-📊 Spending-pattern insights.
-💡 Savings opportunities.
-📈 Financial summaries and trends.
-🧮 Data-driven financial calculations.
-🤖 6. AI Financial Companion
-Sahay's planned AI capabilities focus on making financial information
-easier to interpret.
-
-💬 Conversational financial assistance.
-🧠 Context-aware explanations.
-🔎 Grounded answers using relevant information.
-📉 Financial scenario analysis.
-🎯 Explainable insights and recommendations.
-Note: The feature list describes the product direction; individual
-features may be in development or depend on additional integrations.
-
-🧠 The Financial Intelligence Roadmap
-Sahay aims to evolve beyond a conventional financial dashboard into an
-intelligent financial companion.
-
-Feature What It Aims to Do
-
-❤️ Financial Health Analyzer Summarize a user's financial
-position
-
-💸 Smart Expense Analyzer Identify spending patterns and
-potential savings
-
-🏦 Credit Score Explainer Explain credit-related concepts and
-available information
-
-🛟 Emergency Fund Analyzer Estimate emergency savings coverage
-
-📉 Income-Loss Simulator Explore the impact of reduced
-income
-
-🔮 What-If Simulator Compare hypothetical financial
-scenarios
-
-🎯 AI Financial Recommendations Suggest explainable, context-aware
-actions
-
-🚨 AI Fraud Detection Flag potentially suspicious
-activity for review
-
-⚖️ Financial Risk Indicator Explain factors contributing to
-financial risk
-
-🪞 AI Financial Digital Twin Model financial scenarios using
-structured assumptions
-
-💬 Conversational AI Assistant Answer financial questions using
-available context
-
-💡 Our approach: Financial calculations should use validated
-application logic. AI should help explain the results, communicate
-uncertainty, and make the information easier to understand---not
-invent financial facts.
-
-🌍 Built for Multilingual Accessibility
-Sahay is designed to support three languages:
-
-🇬🇧 English (en)
-🇮🇳 हिन्दी --- Hindi (hi)
-🇮🇳 বাংলা --- Bengali (bn)
-💱 Localized Currency Formatting
-Language Example
-
-🇬🇧 English ₹15,42,500.5
-🇮🇳 Hindi ₹15,42,500.5
-🇮🇳 Bengali ₹১৫,৪২,৫০০.৫
-
-✅ The latest reported localization checks confirmed 100%
-translation-key parity across the three locales and passed the
-project's multilingual INR-formatting checks.
-
-🛠️ Technology Stack
-Sahay uses a modular architecture intended to support maintainability,
-reliable data handling, and future AI integrations.
-
-Technology Purpose
-
-⚛️ Next.js Frontend framework
-
-⚛️ React Component-based user interface
-
-🔷 TypeScript Frontend type safety
-
-🎨 Tailwind CSS Responsive styling
-
-🐍 Python Backend development
-
-⚡ FastAPI Backend APIs
-
-✅ Pydantic Data validation
-
-🐘 PostgreSQL Relational database
-
-🔎 pgvector Vector search, where enabled
-
-🧠 Hosted LLM AI-assisted explanations
-
-📚 RAG Retrieval-grounded AI responses
-
-🧪 pytest Backend testing
-
-🌿 Git & GitHub Version control and collaboration
-
-🐳 Docker / CI/CD Repeatable environments and
-deployment, where configured
-
-🏗️ System Architecture
-                   👤 USER
-                      │
-                      ▼
-          ┌─────────────────────────┐
-          │       FRONTEND          │
-          │   Next.js + React       │
-          │      TypeScript         │
-          └────────────┬────────────┘
-                       │
-                    REST API
-                       │
-                       ▼
-          ┌─────────────────────────┐
-          │        BACKEND          │
-          │       FastAPI           │
-          │                         │
-          │ 🔐 Authentication       │
-          │ 🏛️ Scheme & Eligibility │
-          │ 📌 Application Tracker  │
-          │ 📂 Document Management  │
-          │ 🛡️ Admin & Audit        │
-          │ 💰 Financial Intelligence│
-          └────────────┬────────────┘
-                       │
-             ┌─────────┴─────────┐
-             ▼                   ▼
-  ┌──────────────────┐  ┌──────────────────┐
-  │    PostgreSQL    │  │    AI / RAG       │
-  │  Structured Data │  │ Hosted LLM +      │
-  │                  │  │ Verified Sources  │
-  └──────────────────┘  └──────────────────┘
-🧩 Architecture Principles
-🏗️ Modular monolith: Start with organized modules instead of
-unnecessary microservices.
-🧮 Reliable calculations: Keep financial arithmetic and
-rule-based eligibility in validated application code.
-📚 Grounded responses: Use relevant, trustworthy source material
-for AI-assisted answers.
-🔐 Security first: Protect sensitive information and restrict
-access appropriately.
-📈 Scalable foundation: Add new capabilities without
-unnecessarily complicating the core architecture.
-📁 Project Structure
-The following is a reference structure. Adapt it to match the actual
-files and folders in your repository.
-
-Sahay-AI/
-│
-├── 📂 frontend/
-│   ├── 📂 app/
-│   ├── 📂 components/
-│   ├── 📂 lib/
-│   ├── 📂 public/
-│   ├── 📂 scripts/
-│   └── 📄 package.json
-│
-├── 📂 backend/
-│   ├── 📂 app/
-│   │   ├── 📂 routes/
-│   │   ├── 📂 services/
-│   │   ├── 📂 eligibility/
-│   │   ├── 📂 ai/
-│   │   └── 📂 rag/
-│   │
-│   ├── 📂 tests/
-│   ├── 📄 requirements.txt
-│   └── ...
-│
-├── 📄 README.md
-├── 📄 .gitignore
-└── ...
-📌 Directory Overview
-frontend/app/ --- application pages and routing.
-frontend/components/ --- reusable interface components.
-frontend/lib/ --- shared utilities and frontend logic.
-frontend/scripts/ --- validation and utility scripts.
-backend/app/routes/ --- API routes.
-backend/app/services/ --- business and application logic.
-backend/app/eligibility/ --- eligibility-related rules.
-backend/app/ai/ --- AI integration logic.
-backend/app/rag/ --- retrieval and source-grounding logic.
-backend/tests/ --- automated backend tests.
-⚙️ Getting Started
-Want to run Sahay locally? Follow these steps.
-
-📋 Prerequisites
-Install the following:
-
-🟢 Node.js and npm
-🐍 Python compatible with the backend dependencies
-🐘 PostgreSQL or a configured database service
-🌿 Git
-💻 Visual Studio Code or another code editor
-Optional: Docker and credentials for any enabled AI provider.
-
-1️⃣ Clone the Repository
+::: {align="center"} # 🌿 SAHAY ### Your AI-Powered Financial & Business Companion **Understand your money. Discover opportunities. Make confident decisions.** An independent, multilingual platform designed to make financial information, government-scheme discovery, application tracking, and small-business insights easier to understand and manage. `<br />`{=html} [![Live App](https://img.shields.io/badge/🚀_Live_App-Open_Sahay-059669?style=for-the-badge)](https://sahay-ai-beige.vercel.app/) [![Backend API](https://img.shields.io/badge/⚙️_Backend-Render-0F766E?style=for-the-badge)](https://sahay-ai-5.onrender.com) [![API Docs](https://img.shields.io/badge/📚_API_Docs-Swagger-4F46E5?style=for-the-badge)](https://sahay-ai-5.onrender.com/docs) `<br />`{=html} **🌐 Live Website:** [sahay-ai-beige.vercel.app](https://sahay-ai-beige.vercel.app/)\ **🔌 Backend API:** [sahay-ai-5.onrender.com](https://sahay-ai-5.onrender.com) · **[Explore API Docs →](https://sahay-ai-5.onrender.com/docs)** :::
+✨ At a Glance
+🎯 Purpose Make financial and business
+information easier to access and
+understand
+
+👥 Designed for Individuals, entrepreneurs, and
+small-business owners
+
+🌍 Languages English · हिन्दी · বাংলা
+
+🧩 Architecture Next.js frontend + FastAPI
+backend + PostgreSQL
+
+🚀 Status Live deployment links available;
+individual workflows and
+integrations require ongoing
+verification
+
+💚 Why Sahay?
+Financial decisions can be confusing. Finding relevant scheme
+information, understanding eligibility rules, organizing application
+documents, and reviewing business finances often requires switching
+between multiple tools.
+
+Sahay brings these workflows together in one experience---with an
+emphasis on accessibility, clear explanations, and responsible use of
+AI.
+
+What Sahay aims to help with
+🏛️ Explore scheme information and understand published
+requirements.
+🧾 Organize applications and keep track of next steps.
+📂 Manage document records associated with important workflows.
+💼 Understand business finances through summaries and spending
+insights.
+🤖 Make complex information easier to understand with
+AI-assisted explanations.
+🌐 Use the platform in a preferred language: English, Hindi, or
+Bengali.
+🇮🇳 Independence notice: Sahay is an independent project. It is not
+an official government website and is not affiliated with, endorsed
+by, or operated by any government authority.
+
+🚀 Explore the Platform
+::: {align="center"} ----------------------------------------------------------------------- Module What it is designed to do ----------------------------------- ----------------------------------- 🏛️ **Smart Scheme Discovery** Explore scheme information, review published eligibility criteria, and identify documents to verify. 🎯 **Eligibility Evaluation** Evaluate user-provided information against implemented rules and explain the result. 🗂️ **Application Tracker** Organize application progress, checklists, and pending steps. 🔐 **Document Vault** Maintain document records and identify missing items; actual file-storage security depends on deployment configuration. 📊 **Business & Financial Review income, expenses, and Insights** financial trends where the relevant workflows are implemented. 📈 **Stock Learning & Analysis** Provide educational context and structured analysis where available; not a guarantee of investment outcomes. 🛡️ **Admin & Audit Tools** Support restricted administrative workflows and activity visibility where implemented. 💬 **AI Financial Companion** Help explain financial concepts and information using available context and integrations. ----------------------------------------------------------------------- :::
+Some capabilities may be in development or depend on configuration and
+external integrations. Please verify each workflow in the live app
+before relying on it.
+
+🌍 Designed for Multilingual Access
+Sahay is designed to support:
+
+Language Locale
+
+🇬🇧 English en
+🇮🇳 हिन्दी (Hindi) hi
+🇮🇳 বাংলা (Bengali) bn
+
+The project's latest reported localization check passed translation-key
+parity across these three locales and validated INR formatting.
+
+🧰 Technology Stack
+::: {align="center"} ![Next.js](https://img.shields.io/badge/Next.js-000000?style=flat-square&logo=next.js&logoColor=white) ![React](https://img.shields.io/badge/React-20232A?style=flat-square&logo=react&logoColor=61DAFB) ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white) ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white) ![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white) ![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white) ![Pydantic](https://img.shields.io/badge/Pydantic-E92063?style=flat-square&logo=pydantic&logoColor=white) ![pytest](https://img.shields.io/badge/pytest-0A9EDC?style=flat-square&logo=pytest&logoColor=white) ![Vercel](https://img.shields.io/badge/Vercel-000000?style=flat-square&logo=vercel&logoColor=white) ![Render](https://img.shields.io/badge/Render-46E3B7?style=flat-square&logo=render&logoColor=black) :::
+Technology Role
+
+Next.js + React Frontend application and routing
+TypeScript Typed frontend code
+Tailwind CSS Responsive interface styling
+Python + FastAPI Backend API and application logic
+Pydantic Request and response validation
+PostgreSQL Relational data storage
+pytest Backend automated tests
+Vercel Frontend hosting
+Render Backend hosting
+
+Additional AI/RAG, vector-search, Docker, or CI/CD capabilities should
+be considered enabled only where confirmed in the current
+implementation.
+
+🏗️ How It Fits Together
+                 👤 USER
+                    │
+                    ▼
+       ┌─────────────────────────┐
+       │       SAHAY FRONTEND    │
+       │     Next.js + React     │
+       │       TypeScript        │
+       │        Vercel           │
+       └────────────┬────────────┘
+                    │ HTTPS / REST API
+                    ▼
+       ┌─────────────────────────┐
+       │       FASTAPI BACKEND   │
+       │ Authentication & APIs   │
+       │     Business Logic      │
+       │         Render          │
+       └────────────┬────────────┘
+                    │
+                    ▼
+       ┌─────────────────────────┐
+       │       PostgreSQL        │
+       │     Structured Data     │
+       └─────────────────────────┘
+Core principles
+
+🧮 Use deterministic application logic for financial calculations
+and eligibility rules.
+📚 Explain information using relevant sources and clearly state
+uncertainty.
+🔐 Protect private data, credentials, and administrative operations.
+🧱 Prefer clear, modular code that is easier to test and maintain.
+✅ Treat deployment and feature status as verified only after actual
+tests.
+🔗 Live Links
+Resource Link
+
+🌐 Sahay Frontend Open the live app
+
+⚙️ FastAPI Backend Open backend URL
+
+📚 API Documentation Open Swagger UI
+
+🧑‍💻 GitHub Repository sayantandutta-18/Sahay-AI
+The backend root URL may not display a webpage if no root route is
+configured. Use the API documentation or the implemented health endpoint
+to check the service. A live URL alone does not prove every feature is
+working.
+
+💻 Run Sahay Locally
+Prerequisites
+Node.js and npm
+Python version supported by backend dependencies
+Access to a configured PostgreSQL database
+Git
+1. Clone the repository
 git clone https://github.com/sayantandutta-18/Sahay-AI.git
 cd Sahay-AI
-Repository:
-sayantandutta-18/Sahay-AI.
-
-2️⃣ Install Frontend Dependencies
-From the project root:
-
+2. Start the frontend
 cd frontend
 npm install
-Start the development server:
+Create frontend/.env.local using the exact environment variable name
+read by the existing API client. Example only:
+
+NEXT_PUBLIC_API_URL=http://localhost:8000
+Then run:
 
 npm run dev
-🌐 Open the local application:
+Open http://localhost:3000.
 
-http://localhost:3000
-
-3️⃣ Set Up the Backend
-Open a second terminal at the project root:
+3. Start the backend
+Open a second terminal at the repository root:
 
 cd backend
 python -m venv .venv
-Activate the virtual environment in Windows PowerShell:
-
 .\.venv\Scripts\Activate.ps1
-Install dependencies if the repository contains requirements.txt:
-
 python -m pip install -r requirements.txt
-Start FastAPI using the actual application entry point. For example, if
-the application object is app inside app/main.py:
+Configure backend/.env using the exact names expected by the current
+backend configuration. Example placeholders:
 
-python -m uvicorn app.main:app --reload
-📌 If your backend uses a different entry point, update the command to
-match your code.
-
-4️⃣ Configure the Database
-Before running database-dependent features:
-
-🐘 Configure the PostgreSQL connection.
-🔑 Set the required environment variables.
-🗄️ Apply the project's database migrations, if configured.
-✅ Verify that the backend can connect to the database.
-5️⃣ Connect the Frontend and Backend
-Confirm the backend API URL expected by the frontend.
-Configure CORS for the frontend development origin.
-Check that required environment variables are loaded.
-Test the API endpoints before validating full user workflows.
-🔑 Environment Variables
-Create local environment files according to the conventions used by your
-codebase.
-
-Frontend --- frontend/.env.local
-NEXT_PUBLIC_API_URL=http://localhost:8000
-Backend --- backend/.env
 DATABASE_URL=postgresql://USER:PASSWORD@HOST:5432/DATABASE
 SECRET_KEY=replace-with-a-secure-random-secret
-LLM_API_KEY=replace-with-your-provider-key
-⚠️ Important: These are illustrative variable names. Confirm the
-exact names required by your implementation before using them.
+Only add other variables, such as an LLM provider key, if the current
+implementation requires them.
 
-🔒 Never commit real credentials, API keys, database passwords, or
-secret tokens to GitHub. Keep local environment files out of version
-control and use secure secret management for production deployments.
+Start the API (assuming the FastAPI application object is app in
+app/main.py):
 
-🧪 Testing & Validation
-Quality checks help keep Sahay reliable as new features are introduced.
+python -m uvicorn app.main:app --reload
+Backend API: http://localhost:8000
+API docs: http://localhost:8000/docs
 
-🐍 Backend Tests
-From the project root:
+4. Verify the database
+Confirm the PostgreSQL server or hosted database is reachable.
+Verify DATABASE_URL is set correctly in the backend environment.
+Apply the project's migrations if migration tooling is configured.
+Test the backend health endpoint and database connectivity.
+Confirm the frontend API URL and backend CORS origins match your
+local setup.
+Important: Installing VS Code does not install or run PostgreSQL.
+You can use a hosted PostgreSQL service instead of installing
+PostgreSQL locally, provided the backend has the correct connection
+details and network access.
 
+🔐 Environment Variables & Secrets
+Environment variable names must match the actual application code. The
+following are examples, not a guarantee of the names your repository
+expects.
+
+Location Example Notes
+
+frontend/.env.local NEXT_PUBLIC_API_URL Set to the local API
+URL for development if
+this is the variable
+your API client reads.
+
+Backend environment DATABASE_URL PostgreSQL connection
+string; keep the
+password secret.
+
+Backend environment SECRET_KEY Use a strong, unique
+production secret.
+
+Backend environment AI provider key Only if required by an
+enabled AI integration.
+
+Never commit .env files, database credentials, secret keys, access
+tokens, or real user data to GitHub. Configure production variables
+through the hosting provider's environment-variable settings.
+
+🧪 Quality Checks
+Run checks from the project root unless stated otherwise.
+
+Backend tests
 backend\.venv\Scripts\python.exe -m pytest backend\tests -q
-🌐 Localization Tests
-From the project root:
-
+Localization checks
 node frontend\scripts\test-i18n.mjs
-Or from the frontend directory:
-
-npm run test:i18n
-🏗️ Production Build
-Run the build command from the frontend directory:
-
+Frontend production build
 cd frontend
 npm run build
-💡 Tip: If you run npm run build from the repository root, npm may
-report a missing script when the root package.json does not define
-one.
+Latest reported checks
+✅ Backend tests: 59 passed in the latest reported run.
+✅ Localization: 100% translation-key parity across English,
+Hindi, and Bengali.
+✅ INR formatting checks: Passed.
+⏳ Production build and end-to-end live integration: Require
+confirmation from the latest run.
+These results describe previously reported checks, not a guarantee of
+current production health.
 
-📊 Latest Reported Validation
-Check Reported Result
-
-Backend automated tests ✅ 59 passed in the latest reported run
-Translation-key parity ✅ 100% across three locales
-Multilingual INR formatting ✅ Passed
-Production frontend build ⏳ Result not yet confirmed
-
-The previous backend test output included a Starlette/httpx deprecation
-warning, and the localization script reported a Node.js module-type
-warning. These should be reviewed separately from test failures.
-
-🔐 Security & Responsible AI
-Sahay is designed around the principle that trust matters more than an
-impressive AI response.
-
-🛡️ Security Priorities
-🔐 Authentication and authorization for protected operations.
-🧾 Server-side validation of user inputs.
-🔑 Secure handling of passwords, tokens, and secrets.
-👮 Restricted administrative access.
-📜 Audit logging for relevant administrative activities.
-📂 Appropriate document access controls and retention policies.
-🚦 Rate limiting and abuse prevention where appropriate.
-🗄️ Secure database permissions and backups.
-🚨 Safe error handling that does not expose secrets.
-🧠 Responsible AI Principles
-📚 Ground answers in reliable sources and relevant data.
-🧮 Keep deterministic financial calculations separate from
-AI-generated explanations.
-⚖️ Explain assumptions, limitations, and uncertainty.
-🚫 Never invent eligibility requirements or guarantee financial
-outcomes.
-🔍 Treat potential fraud indicators as signals requiring review, not
-proof.
-🤝 Review provider, security, and compliance requirements before
-introducing real financial integrations.
-🗺️ Development Roadmap
-Sahay is being developed incrementally, with testing and validation at
-each stage.
-
-🧱 Phase 1 --- Core Foundation
-
-Backend test suite: 59 tests passed in the latest reported run.
-
-Localization parity validated.
-
-Multilingual INR formatting validated.
-Verify the production frontend build.
-Complete end-to-end frontend/backend testing.
-🏛️ Phase 2 --- Scheme & Application Workflows
-Verify scheme information against official sources.
-Refine eligibility explanations.
-Validate application tracking and checklists.
-Review document storage and access controls.
-Review administrative permissions and audit coverage.
-💰 Phase 3 --- Financial Intelligence
-Establish the shared financial-data foundation.
-Develop financial health analysis.
-Build expense and savings insights.
-Add emergency-fund and income-loss simulations.
-Develop what-if financial scenarios.
-Add explainable financial risk indicators.
+🗺️ Roadmap
+🧱 Reliability & Core Experience
+Verify production API and database health end-to-end.
+Complete frontend/backend integration tests.
+Improve error states and retry behavior.
+Confirm authentication and authorization on protected endpoints.
+Verify production build and deployment configuration.
+🏛️ Scheme & Application Workflows
+Validate scheme information against official sources.
+Refine eligibility explanations and rule coverage.
+Improve application checklists and status tracking.
+Review document access controls and retention.
+Strengthen administrative permissions and audit coverage.
+💰 Financial Intelligence
+Expand income and expense insights.
+Add financial health and emergency-fund analysis.
+Develop income-loss and what-if simulations.
+Improve explainable financial risk indicators.
 Expand grounded conversational assistance.
-Evaluate fraud detection and false-positive behavior.
-🚀 Phase 4 --- Production Readiness
-Complete security and access-control reviews.
+Evaluate fraud signals and false-positive behavior.
+🚀 Production Readiness
+Complete security and privacy reviews.
+Add monitoring and error reporting.
+Validate backups and recovery procedures.
 Expand automated and end-to-end testing.
-Validate localization quality.
-Configure monitoring and error reporting.
-Prepare production deployment and CI/CD.
-Document backup, recovery, and incident-response procedures.
-Roadmap items should be marked complete only after the corresponding
-functionality has been implemented and validated.
+Document deployment and incident-response processes.
+Roadmap items should be marked complete only after implementation and
+verification.
 
+🔒 Security & Responsible Use
+Keep authentication and authorization enforced server-side.
+Validate incoming data and return safe error messages.
+Restrict administrative features to authorized users.
+Protect document records and sensitive financial information.
+Do not expose secrets through frontend code or logs.
+Verify scheme requirements using official sources.
+Treat AI-generated answers as assistance, not guaranteed truth.
+Treat financial simulations as estimates based on their assumptions.
+Treat fraud indicators as signals for review, not proof of
+wrongdoing.
 🤝 Contributing
-Want to improve Sahay? Contributions and constructive feedback are
-welcome.
+Contributions, feedback, and ideas are welcome.
 
-🌿 Contribution Workflow
-🍴 Fork the repository.
-🌱 Create a feature branch.
-💻 Implement your changes.
-🧪 Add or update relevant tests.
-✅ Run the required validation checks.
-📬 Submit a pull request describing your changes.
+Fork the repository.
+Create a focused feature branch.
+Implement the change and add appropriate tests.
+Run relevant backend, frontend, and localization checks.
+Submit a pull request explaining the change.
 Example branch names:
 
 feature/application-tracker
-feature/financial-health-analysis
-fix/localization-formatting
-test/backend-api
-Please keep contributions focused, document configuration changes, and
-never include private credentials in commits.
+feature/financial-insights
+fix/backend-health-check
+test/api-integration
+Please never include private credentials or real personal data in
+commits.
 
 ⚠️ Disclaimer
 Sahay is an independent software project intended to support financial
 understanding and information management.
 
-🏛️ It is not affiliated with or endorsed by any government
-authority.
-📋 Scheme information and eligibility must be verified through
+It is not affiliated with or endorsed by any government authority.
+Scheme details and eligibility requirements must be checked against
 official sources.
-🤖 AI-generated content may contain errors and should be checked
-before consequential decisions.
-📊 Financial simulations are estimates based on inputs and
-assumptions.
-📈 Investment-related information does not guarantee returns.
-🚨 Fraud indicators do not establish that a person or transaction is
+AI-generated content may contain errors.
+Financial scenarios are estimates, not guarantees.
+Investment-related information does not guarantee returns.
+Fraud indicators do not prove that a person or transaction is
 fraudulent.
-👨‍💼 Users should consult appropriately qualified professionals for
-consequential financial or legal decisions.
+Seek qualified professional advice for consequential financial,
+legal, or investment decisions.
 📄 License
-No license has been specified in this README. Add a LICENSE file and
-update this section once the project license has been selected.
+No license has been specified in this README. Add a LICENSE file once
+the project license has been selected.
 
-<p align="center">
-<strong>{=html}🌟 Sahay --- Your Financial Journey, Made
-Smarter.</strong>{=html} <br />{=html} <em>{=html}💡 Understand
-better. Plan smarter. Move forward with confidence.</em>{=html}
-
-</p>
+::: {align="center"} ### 🌿 Sahay --- Make Financial Knowledge More Accessible **Understand better. Plan smarter. Move forward with confidence.** [🚀 Visit Sahay](https://sahay-ai-beige.vercel.app/) · [📚 API Docs](https://sahay-ai-5.onrender.com/docs) · [💻 GitHub Repository](https://github.com/sayantandutta-18/Sahay-AI) `<sub>`{=html}Built with care for clearer financial and business decisions.`</sub>`{=html} :::
 ⋮⋮⋮⋮
