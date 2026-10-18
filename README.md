@@ -1,85 +1,99 @@
-🌿 Sahay AI — AI-Powered Financial & Business Companion
-Understand Your Money. Discover Opportunities. Make Smarter Decisions.
-Sahay AI is an AI-powered platform designed to help users explore government schemes, understand eligibility requirements, organize application-related tasks, and access financial and business information in a simpler way.
-🚀 Live Demo
-- Frontend: https://sahay-ai-beige.vercel.app/
-- Backend API: https://sahay-ai-5.onrender.com/
-- API Documentation: https://sahay-ai-5.onrender.com/docs
-- GitHub Repository: https://github.com/sayantandutta-18/Sahay-AI
+
+<div align="center">
+🌿 SAHAY AI
+Your AI-Powered Financial & Business Companion
+Understand your options. Find useful information. Make informed decisions.
+
+
+
+
+
+</div>
+📌 About Sahay AI
+Sahay AI is an AI-powered platform designed to make useful financial, business, and government-scheme information easier to explore. It aims to help users understand eligibility requirements, organize application-related tasks, and access information in a more approachable way.
+
+Our goal: Make complex information easier to understand and more accessible to more people.
+
+🌐 Project Links
+Resource	Link
+Live Application	Open Sahay AI
+Backend API	Open API
+API Documentation	Swagger UI
+Source Code	GitHub Repository
 ✨ Features Explained
-1. 🏛️ Government Scheme Discovery
-- Scheme Information: Helps users explore information about government schemes.
-- Eligibility Guidance: Helps users understand eligibility criteria.
-- Document Requirements: Highlights documents that may be required for an application.
-- Simplified Explanations: Makes complex scheme information easier to understand.
-- Official Verification: Encourages users to confirm requirements and deadlines through official sources.
-2. 🤖 AI-Powered Assistance
-- Natural-Language Questions: Lets users ask questions in everyday language.
-- Clear Explanations: Helps explain unfamiliar or complex topics.
-- Contextual Guidance: Provides assistance based on the information available to the application.
-- Decision Support: Helps users understand options before deciding.
-- Information Assistance: Makes information easier to explore and understand.
-3. 🌍 Multilingual Support
-- English: Supports English-language users.
-- Hindi: Supports Hindi-language users.
-- Bengali: Supports Bengali-language users.
-- Accessibility: Helps users interact in a language they understand.
-- Inclusive Experience: Makes the platform more approachable for different users.
-4. 📋 Application Tracking
-- Application Organization: Helps organize application-related information.
-- Progress Tracking: Helps users review progress where supported.
-- Pending Tasks: Helps identify remaining steps.
-- Checklists: Helps users keep track of actions and required documents.
-- Better Organization: Reduces the chance of overlooking application tasks.
-5. 📄 Document Management
-- Document Organization: Helps users keep track of relevant documents.
-- Requirement Checklist: Helps identify documents that may be needed.
-- Readiness Review: Helps users check whether documents are prepared.
-- Application Preparation: Supports preparation before applying.
-- Workflow Support: Keeps document-related tasks organized.
-6. 💰 Financial & Business Assistance
-- Financial Information: Helps users explore general financial concepts.
-- Business Guidance: Supports exploration of business-related information.
-- Opportunity Awareness: Helps users investigate potentially relevant schemes or opportunities.
-- Simple Terminology: Explains unfamiliar terms in accessible language.
-- Informed Decisions: Provides informational support before financial or business decisions.
-7. 📊 Dashboard & User Interface
-- Central Dashboard: Provides a central place to access available features.
-- Organized Information: Presents supported information in a structured layout.
-- Navigation: Helps users move between application sections.
-- Responsive Layout: Aims to support desktop and mobile screen sizes.
-- Usability: Keeps key information and actions easy to find.
-8. 🔌 Backend API Integration
-- REST API: Connects the frontend to backend functionality through HTTP requests.
-- FastAPI: Provides the backend API framework.
-- Request Validation: Pydantic schemas can validate supported request and response data.
-- Error Handling: Helps the application handle unsuccessful API requests.
-- Swagger Documentation: Makes supported endpoints easier to inspect and test.
-9. 🩺 System Health Monitoring
-- Backend Connectivity: Helps check whether the frontend can reach the backend.
-- API Health: Exposes health information when a health endpoint is configured.
-- Response Latency: Can display response timing where implemented.
-- Troubleshooting: Helps developers investigate connectivity issues.
-- Service Visibility: Makes service status easier to inspect.
-10. 🔐 Security & Configuration
-- Environment Variables: Separates configuration from source code.
-- Secret Protection: Keeps API keys and credentials out of public commits.
-- Input Validation: Helps reject invalid request data.
-- Authentication: Authentication and authorization should be described as available only where implemented.
-- Safer Deployment: Encourages secure configuration practices.
-11. ☁️ Cloud Deployment
-- Frontend Hosting: The frontend is deployed on Vercel.
-- Backend Hosting: The backend is deployed on Render.
-- Production API URL: Configures the frontend to communicate with the deployed backend.
-- Environment Configuration: Supports deployment-specific settings.
-- Remote Access: Makes the deployed application available through its public URLs.
-12. 🧪 Testing & Reliability
-- Backend Tests: Uses Pytest for backend automated tests where configured.
-- Frontend Linting: Can check code quality using the configured npm script.
-- Build Validation: Can verify whether the frontend builds successfully.
-- API Testing: Swagger UI can be used to inspect and test available endpoints.
-- Regression Checks: Automated tests can help catch issues after code changes.
-Implementation note: Feature descriptions above explain the intended product capabilities. Before presenting every item as implemented, verify it against the current codebase and remove features that are not yet available.
+🏛️ 1. Government Scheme Discovery
+Scheme information: Explore information about government schemes.
+Eligibility guidance: Understand eligibility criteria and requirements.
+Document requirements: Review documents that may be needed for an application.
+Simplified explanations: Make complicated information easier to understand.
+Official verification: Check important details with official sources before applying.
+🤖 2. AI-Powered Assistance
+Natural-language questions: Ask questions using everyday language.
+Clear explanations: Get help understanding complex or unfamiliar topics.
+Context-aware guidance: Receive assistance based on the information available to the application.
+Decision support: Explore options before making a decision.
+Information discovery: Reduce the effort needed to find and understand information.
+🌍 3. Multilingual Experience
+English: Use the application in English.
+Hindi: Access supported content in Hindi.
+Bengali: Access supported content in Bengali.
+Improved accessibility: Use a language that feels comfortable.
+Inclusive design: Help make the platform approachable for more users.
+📋 4. Application Tracking
+Application organization: Keep application-related information organized.
+Progress review: Review progress where the feature is implemented.
+Pending actions: Identify steps that still need attention.
+Task checklists: Track actions and required documents.
+Better organization: Reduce the chance of overlooking important steps.
+📄 5. Document Management
+Document organization: Keep track of application-related documents.
+Requirement checklist: Review which documents may be required.
+Readiness review: Check whether the necessary documents are prepared.
+Application preparation: Prepare documents before beginning an application.
+Workflow support: Keep document-related tasks in one organized workflow.
+💰 6. Financial & Business Information
+Financial concepts: Explore explanations of general financial topics.
+Business information: Find information relevant to business-related questions.
+Opportunity discovery: Investigate potentially relevant schemes and opportunities.
+Simple explanations: Understand unfamiliar terminology more easily.
+Informed decisions: Use informational guidance to support, not replace, your own judgement.
+📊 7. Dashboard & User Experience
+Central dashboard: Access available application features from a central interface.
+Structured information: View supported information in an organized layout.
+Navigation: Move between the available sections of the application.
+Responsive layout: Use the interface across supported screen sizes.
+Usability: Find important information and actions more easily.
+🔌 8. Backend API Integration
+REST API: Connect the frontend and backend through HTTP requests.
+FastAPI backend: Handle supported API endpoints using FastAPI.
+Data validation: Use Pydantic validation where configured.
+Error handling: Handle unsuccessful requests and API errors.
+Interactive documentation: Inspect available endpoints through Swagger UI.
+🩺 9. Health & Connectivity
+Backend connectivity: Check whether the frontend can communicate with the backend.
+Health information: View health status if the relevant endpoint is configured.
+Response timing: Show latency where implemented.
+Troubleshooting: Help investigate connectivity issues.
+Service visibility: Make the state of connected services easier to inspect.
+🔐 10. Security & Configuration
+Environment configuration: Keep settings outside the main source code.
+Secret protection: Avoid committing credentials and API keys.
+Input validation: Validate request data on the backend.
+Access control: Use authentication and authorization only where implemented.
+Safer deployment: Follow secure configuration practices.
+☁️ 11. Deployment
+Frontend hosting: The frontend is deployed on Vercel.
+Backend hosting: The backend is deployed on Render.
+Production API connection: Configure the frontend to call the deployed backend.
+Environment settings: Maintain the required configuration for each environment.
+Remote access: Access the deployed application using the live links above.
+🧪 12. Testing & Maintenance
+Backend tests: Run automated tests with Pytest where configured.
+Frontend linting: Use the configured lint command to check code quality.
+Build validation: Check whether the frontend builds successfully.
+API testing: Inspect and test endpoints through Swagger UI.
+Regression prevention: Use tests to catch issues after code changes.
+Accuracy note: The feature list describes the product's intended capabilities. Confirm each item against the current code before presenting it as fully implemented. Remove or relabel features that are still planned.
 
 🛠️ Technology Stack
 Layer	Technologies
@@ -87,82 +101,87 @@ Frontend	Next.js, React, TypeScript
 Styling	Tailwind CSS
 Backend	Python, FastAPI
 Validation	Pydantic
-API	REST
-Testing	Pytest and configured frontend scripts
-Frontend Deployment	Vercel
-Backend Deployment	Render
-
-
-🏗️ System Architecture
-                 ┌──────────────────────┐
-                 │         User         │
-                 └──────────┬───────────┘
-                            │
-                            ▼
-                 ┌──────────────────────┐
-                 │   Next.js Frontend   │
-                 │ React / TypeScript   │
-                 └──────────┬───────────┘
-                            │ HTTP / REST API
-                            ▼
-                 ┌──────────────────────┐
-                 │    FastAPI Backend   │
-                 │ Routes and Services  │
-                 │ Request Validation   │
-                 └──────────┬───────────┘
-                            │
-                            ▼
-                 ┌──────────────────────┐
-                 │    Data Storage      │
-                 └──────────────────────┘
+API style	REST
+Backend testing	Pytest
+Frontend hosting	Vercel
+Backend hosting	Render
+🏗️ How It Works
+                         ┌──────────────────────┐
+                         │         USER         │
+                         └──────────┬───────────┘
+                                    │
+                                    ▼
+                 ┌─────────────────────────────────┐
+                 │          FRONTEND               │
+                 │       Next.js + React           │
+                 │       TypeScript + UI           │
+                 └────────────────┬────────────────┘
+                                  │
+                           HTTP / REST API
+                                  │
+                                  ▼
+                 ┌─────────────────────────────────┐
+                 │           BACKEND               │
+                 │             FastAPI              │
+                 │     Routes, Validation, Logic   │
+                 └────────────────┬────────────────┘
+                                  │
+                                  ▼
+                 ┌─────────────────────────────────┐
+                 │        DATA / SERVICES          │
+                 │   Configured by the project     │
+                 └─────────────────────────────────┘
 📂 Project Folder Structure
-The tree below is a reference structure. Adjust it to match the actual folders and filenames in your repository.
+The tree below is a reference layout based on the project discussed. Keep the names aligned with the actual files in your repository.
+
 Sahay-AI/
+│
 ├── frontend/
-│   ├── public/                 # Static assets
+│   ├── public/                       # Static assets
 │   ├── src/
-│   │   ├── app/                # Next.js pages, layouts and routes
-│   │   ├── components/         # Reusable UI components
-│   │   ├── lib/                # Utilities, API helpers and localization
-│   │   └── types/              # TypeScript types (if present)
-│   ├── scripts/                # Helper scripts (if present)
-│   ├── package.json            # Frontend dependencies and scripts
-│   └── tsconfig.json           # TypeScript configuration
+│   │   ├── app/                      # Pages, layouts and routes
+│   │   ├── components/               # Reusable UI components
+│   │   ├── lib/                      # API helpers, utilities, localization
+│   │   └── types/                    # TypeScript types, if used
+│   ├── scripts/                      # Helper scripts, if present
+│   ├── package.json                  # Dependencies and npm scripts
+│   ├── next.config.*                 # Next.js configuration
+│   └── tsconfig.json                 # TypeScript configuration
 │
 ├── backend/
 │   ├── app/
-│   │   ├── main.py             # FastAPI entry point (verify filename)
-│   │   ├── routes/             # API route handlers
-│   │   ├── schemas/            # Request/response schemas
-│   │   ├── models/             # Data models
-│   │   ├── services/           # Business logic
-│   │   ├── database/           # Database configuration (if present)
-│   │   └── core/               # Settings and shared configuration
-│   ├── tests/                  # Backend tests
-│   └── requirements.txt        # Python dependencies
+│   │   ├── main.py                   # FastAPI entry point (verify filename)
+│   │   ├── routes/                   # API endpoint handlers
+│   │   ├── schemas/                  # Request and response schemas
+│   │   ├── models/                   # Data models, if used
+│   │   ├── services/                 # Application/business logic
+│   │   ├── database/                 # Database setup, if present
+│   │   └── core/                     # Settings and shared configuration
+│   ├── tests/                        # Backend tests
+│   └── requirements.txt              # Python dependencies
 │
 ├── docs/
 │   └── images/
-│       ├── sahay-homepage.png  # Add homepage screenshot
-│       └── sahay-dashboard.png # Add dashboard screenshot
+│       ├── sahay-homepage.png        # Homepage screenshot
+│       └── sahay-dashboard.png       # Dashboard screenshot
 │
 ├── .gitignore
 └── README.md
-Folder Responsibilities
-- frontend/src/app/: Pages, layouts, and route definitions.
-- frontend/src/components/: Reusable UI components.
-- frontend/src/lib/: Shared utilities, API helpers, and localization logic.
-- backend/app/routes/: API endpoint definitions.
-- backend/app/schemas/: Input and output validation schemas.
-- backend/app/models/: Data model definitions.
-- backend/app/services/: Application business logic.
-- backend/tests/: Automated backend tests.
-- docs/images/: Images referenced by this README.
+What Each Folder Does
+frontend/src/app/ — Contains the app's pages, layouts, and route definitions.
+frontend/src/components/ — Stores reusable UI components.
+frontend/src/lib/ — Holds shared utilities, API helpers, and localization logic.
+backend/app/routes/ — Defines API endpoints.
+backend/app/schemas/ — Defines and validates request/response data.
+backend/app/models/ — Holds data model definitions when used.
+backend/app/services/ — Contains business logic and service operations.
+backend/tests/ — Stores automated backend tests.
+docs/images/ — Stores screenshots used in this README.
 ⚙️ Getting Started
 Prerequisites
-- Git
-- Node.js and npm
-- Python version compatible with the backend dependencies
+Git
+Node.js and npm
+A Python version compatible with the backend dependencies
 1. Clone the Repository
 git clone https://github.com/sayantandutta-18/Sahay-AI.git
 cd Sahay-AI
@@ -171,50 +190,60 @@ cd backend
 python -m venv .venv
 .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-Configure the environment variables required by the backend, then start the server using the actual application entry point. For example, if the entry point is app.main:app:
+Create the required environment file and configure the variables used by your backend. Start the server using your actual FastAPI entry point. For example, if the application object is app in app/main.py:
+
 uvicorn app.main:app --reload
-- Local API: http://127.0.0.1:8000
-- API documentation: http://127.0.0.1:8000/docs
+Local API: http://127.0.0.1:8000
+API documentation: http://127.0.0.1:8000/docs
 3. Set Up the Frontend
-Open another terminal and navigate to the actual frontend directory (shown as frontend/ here):
+Open a separate terminal and navigate to the frontend directory (adjust the folder name if your repository differs):
+
 cd frontend
 npm install
 npm run dev
-Open http://localhost:3000 in your browser.
-Configure the frontend API base URL using the environment variable name already defined in your project.
-🧪 Testing
-From the repository root, run backend tests if Pytest and the listed test directory are configured:
+Open http://localhost:3000 in your browser. Configure the frontend's API base URL using the environment variable already defined by the project.
+
+🧪 Run Tests
+From the repository root, if the backend test directory is configured:
+
 python -m pytest backend/tests/ -v
-From the frontend directory, use the scripts that actually exist in package.json. Common examples include:
+From the frontend directory, use the scripts actually present in package.json. Examples, only if defined:
+
 npm run lint
 npm run build
 npm run test:i18n
 🔑 Environment Variables & Security
-- Use .env files for local configuration.
-- Never commit API keys, passwords, database credentials, or production secrets.
-- Document required variable names in a safe .env.example file.
-- Configure production CORS to allow only trusted frontend origins.
-- Validate user input and handle API errors carefully.
+Use environment variables for local and production configuration.
+Never commit API keys, passwords, database credentials, or production secrets.
+Provide a safe .env.example with variable names but no real secrets.
+Configure CORS for trusted frontend origins only.
+Validate input and handle API errors carefully.
 🌐 Deployment
-- Frontend: Vercel
-- Backend: Render
-- Configure the deployed frontend to use the correct backend URL.
-- Check environment variables, CORS settings, and service logs if requests fail.
+Frontend: Vercel
+Backend: Render
+After deployment, verify the frontend's backend URL, environment variables, CORS configuration, and service logs if requests fail.
+
 🗺️ Future Improvements
-- Improve scheme discovery and eligibility guidance.
-- Expand financial and business assistance.
-- Improve application and document workflows.
-- Expand multilingual coverage and accessibility.
-- Strengthen automated tests and production monitoring.
+Improve scheme discovery and eligibility guidance.
+Expand financial and business information features.
+Improve application and document workflows.
+Expand multilingual coverage and accessibility.
+Strengthen automated tests and monitoring.
 🤝 Contributing
-1. Fork the repository.
-2. Create a feature branch.
-3. Make your changes.
-4. Run the relevant tests and checks.
-5. Open a pull request with a clear description.
+Fork the repository.
+Create a feature branch.
+Make your changes.
+Run the relevant checks.
+Submit a pull request describing your changes.
 ⚠️ Disclaimer
-Sahay AI is an independent project. It is not an official government website and is not affiliated with or endorsed by a government authority. Verify scheme information with official sources. AI-generated information may be incomplete or inaccurate and should not replace professional financial or legal advice.
+Sahay AI is an independent project. It is not an official government website and is not affiliated with or endorsed by any government authority. Verify scheme details through official sources. AI-generated information may be incomplete or inaccurate and should not replace professional financial, legal, or other qualified advice.
+
 👨‍💻 Author
 Sayantan Dutta
 GitHub: @sayantandutta-18
-<p align="center">Made with ❤️ to make useful information easier to access.</p>
+
+<div align="center">
+Made with ❤️ to make useful information easier to access.
+
+</div>
+⋮⋮⋮⋮⋮⋮⋮⋮⋮⋮⋮⋮
