@@ -1,212 +1,381 @@
-::: {align="center"}
-# 🌿 SAHAY
 
-### 🤝 Your AI-Powered Financial & Business Companion
+PS C:\Users\Sayantan Dutta\OneDrive\Desktop\Sahay-AI> git ^C
+PS C:\Users\Sayantan Dutta\OneDrive\Desktop\Sahay-AI> s(Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned) ; (& "c:\Users\Sayantan Dutta\OneDrive\Desktop\Sahay-AI\backend\.venv\Scripts\Activate.ps1")
+s : The term 's' is not recognized 
+as the name of a cmdlet, function, 
+script file, or operable program. 
+Check the spelling of the name, or 
+if a path was included, verify that 
+the path is correct and try again.
+At line:1 char:1
++ s(Set-ExecutionPolicy -Scope 
+Process -ExecutionPolicy 
+RemoteSigned) ; ...
++ ~
+    + CategoryInfo          : Object 
+   NotFound: (s:String) [], Command  
+  NotFoundException
+    + FullyQualifiedErrorId : Comman 
+   dNotFoundException
+ 
+(.venv) PS C:\Users\Sayantan Dutta\OneDrive\Desktop\Sahay-AI> git status
+On branch main
+Your branch is up to date with 'origin/main'.
 
-**💡 Understand your money. Discover opportunities. Make confident
-decisions.**
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+        modified:   .gitignore
+        modified:   backend/app/core/config.py
+        modified:   backend/app/main.py
+        modified:   backend/tests/test_health.py
+        modified:   frontend/src/components/ui/HealthIndicator.tsx
+        modified:   frontend/src/lib/api.ts
 
-An independent, multilingual AI platform designed to help Indian
-micro-entrepreneurs explore scheme information, organize application
-workflows, and understand business and financial information.
+Untracked files:
+  (use "git add <file>..." to includein what will be committed)
+        render.yaml
 
-`<br />`{=html}
+no changes added to commit (use "git add" and/or "git commit -a")
+(.venv) PS C:\Users\Sayantan Dutta\OneDrive\Desktop\Sahay-AI> git add .
+warning: in the working copy of 'backend/tests/test_health.py', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'frontend/src/components/ui/HealthIndicator.tsx', LF will be replaced by CRLF thenext time Git touches it
+warning: in the working copy of 'render.yaml', LF will be replaced by CRLF the next time Git touches it
+(.venv) PS C:\Users\Sayantan Dutta\OneDrive\Desktop\Sahay-AI> git push origin main
+Everything up-to-date
+(.venv) PS C:\Users\Sayantan Dutta\OneDrive\Desktop\Sahay-AI>   push holo na
+…
+Sayantan, push হয়নি কারণ তুমি git add . করেছ, কিন্তু git commit করোনি। তাই git push origin main বলছে Everything up-to-date—নতুন commit তৈরি হয়নি।
 
-[![🚀 Live
-Frontend](https://img.shields.io/badge/🚀_Live_Frontend-Open_Sahay-059669?style=for-the-badge&logo=vercel&logoColor=white)](https://sahay-ai-beige.vercel.app/)
-[![⚙️ Backend
-API](https://img.shields.io/badge/⚙️_Backend_API-Render-0F766E?style=for-the-badge&logo=render&logoColor=white)](https://sahay-ai-5.onrender.com)
-[![📚 API
-Docs](https://img.shields.io/badge/📚_API_Docs-Swagger-4F46E5?style=for-the-badge&logo=swagger&logoColor=white)](https://sahay-ai-5.onrender.com/docs)
+তোমার git status অনুযায়ী changes এখনও আছে। এখন এই command-গুলো এক এক করে চালাও।
 
-`<br />`{=html}
+Step 1: Staged files verify করো
+git status
 
-  -------------------------------------------------------------------------------------------------------------------------------
-               🌐 Live Frontend                          ⚙️ Backend API                          📚 API Documentation
-  ------------------------------------------ --------------------------------------- --------------------------------------------
-                [**Open Sahay                              [**Open API                              [**Swagger UI
-   →**](https://sahay-ai-beige.vercel.app/)   →**](https://sahay-ai-5.onrender.com)   →**](https://sahay-ai-5.onrender.com/docs)
+যদি Changes to be committed-এর নিচে তোমার modified files এবং render.yaml থাকে, তাহলে পরের ধাপে যাও।
 
-  -------------------------------------------------------------------------------------------------------------------------------
+Step 2: Commit করো
+git commit -m "Fix backend health checks and API connection"
 
-`<br />`{=html}
+Step 3: GitHub-এ push করো
+git push origin main
 
-`<img src="docs/images/sahay-homepage.png" alt="Sahay-AI homepage showing the hero section, onboarding actions, and live backend/database health panel" width="92%" />`{=html}
+Step 4: Verify করো
+git status
 
-`<sub>`{=html}🏠 Sahay homepage preview --- add the screenshot to
-`<code>`{=html}docs/images/sahay-homepage.png`</code>`{=html} in the
-repository.`</sub>`{=html}
-:::📌 Table of Contents
-- ✨ About Sahay
-- 🚀 Live Demo
-- 💎 Features & Modules
-- 🌍 Multilingual Experience
-- 🛠️ Technology Stack
-- 🏗️ Architecture
-- 📁 Project Structure
-- ⚙️ Local Setup
-- 🔐 Environment Variables
-- 🧪 Testing & Quality Checks
-- 🗺️ Roadmap
-- 🔒 Security & Responsible AI
-- 🤝 Contributing
-- ⚠️ Disclaimer
-- 📄 License
-✨ About Sahay
-Sahay is an independent AI-assisted financial and business companion
-built to make complex information easier to understand and manage.
-Small-business owners and entrepreneurs may need to navigate scheme
-requirements, prepare documents, follow application progress, and
-understand their finances. Sahay aims to bring these workflows together
-through a clear, multilingual interface.
-🎯 Our Mission
-Make financial knowledge more accessible, understandable, and
-actionable for everyone.
+সফল হলে সাধারণত দেখাবে:
 
-👥 Who Is It For?
-- 🧑‍💼 Micro-entrepreneurs and small-business owners
-- 🧾 People organizing applications and supporting documents
-- 📊 Users who want clearer explanations of business and financial
-  information
-- 🌐 Users who prefer English, Hindi, or Bengali
-🇮🇳 Independence notice: Sahay is an independent project. It is not
-an official government website and is not affiliated with, endorsed
-by, or operated by any government authority.
+Your branch is up to date with 'origin/main'
+nothing to commit, working tree clean
+দুটি বিষয় খেয়াল রেখো:
+
+LF will be replaced by CRLF warning Windows-এর line-ending সংক্রান্ত; সাধারণত এটি push আটকায় না।
+
+যদি commit করার সময় .env, database credentials বা অন্য secret staged হয়ে থাকে, commit করার আগে সেগুলো unstage করো। render.yaml-এ hardcoded secret আছে কি না সেটাও দেখে নিও।
+
+এখন প্রথমে git commit চালাও। কোনো error এলে পুরো output পাঠাও।
+
+
+Pasted text(20261018-080515).txt
+Document
+ https://sahay-ai-5.onrender.com eta backend sahay-ai-beige.vercel.app  frontend egulo add kore darun kore sajie ekta readme banie dao
+
+
+
+তোমার README তৈরি করে দিলাম! ✨ তোমার আগের README-এর features, tech stack, architecture, setup instructions এবং roadmap রেখে live deployment links সুন্দরভাবে সাজিয়ে দিয়েছি।
+
+Sahay-AI README.md
+Markdown · GitHub-ready · Emoji-rich
+
+README-তে যোগ করা হয়েছে:
+
+ Live frontend ও backend links
+
+ Swagger API documentation link
+
+ Features, tech stack ও architecture
+
+ Installation, environment setup ও testing
+
+ Security, responsible AI ও development roadmap
+
+GitHub-এ কীভাবে add করবে
+Download করা README_Sahay_AI.md ফাইলের নাম README.md করো।
+
+তোমার Sahay-AI project-এর root folder-এ existing README.md-এর জায়গায় বসাও।
+
+PowerShell-এ চালাও:
+
+git add README.md
+git commit -m "Update Sahay-AI README with live deployment links"
+git push origin main
+
+তোমার live links:
+
+Frontend: sahay-ai-beige.vercel.app
+
+Backend: sahay-ai-5.onrender.com
+
+API Docs: Open Swagger UI
+
+README-তে backend-এর 59টি passing tests-এর আগের reported result-ও উল্লেখ করেছি। Production build ও live integration সম্পূর্ণ verify না হওয়া পর্যন্ত সেগুলোকে verified success হিসেবে দাবি করা হয়নি।
+
+ekdom e structured way te saajano hoini bhalo kore de user attractive hoi jate
+
+বুঝেছি ভাই ❤️ আগের README-টা আরও professional, structured এবং GitHub profile-এ attractive দেখানোর মতো করে নতুন করে সাজিয়ে দিলাম। এবার শুধু feature-এর লিস্ট নয়—পুরো project-টাকে একটা proper product presentation-এর মতো সাজানো হয়েছে।
+
+Sixpay Fintech Dashboard UI UX Design by Jahid Hasan on Dribbble
+
+🌿 Sahay — Professional README
+Markdown · GitHub-ready · Structured
+
+Updated version
+নতুন version-এ visual hierarchy, live deployment badges, feature tables, architecture diagram এবং clean documentation layout রয়েছে।
+
+কী কী improve করেছি?
+Hero section: Project name, tagline, live frontend, backend ও API docs-এর prominent links।
+
+At a glance: Project purpose, target users, languages ও tech stack এক নজরে।
+
+Feature showcase: Scheme discovery, eligibility, application tracker, document vault এবং financial tools সুন্দরভাবে সাজানো।
+
+Architecture diagram: Frontend → FastAPI backend → PostgreSQL flow।
+
+Setup guide: Local installation, environment variables, database connection ও testing commands।
+
+Professional roadmap: Core reliability, financial intelligence, security ও future improvements।
+
+Responsible AI & security: Secrets protection, eligibility disclaimers এবং financial safety।
+
+এবার GitHub-এ update করো
+ডাউনলোড করা ফাইলটির নাম README.md করে project root-এ রাখো। তারপর:
+
+git add README.md
+git commit -m "Improve Sahay-AI README presentation"
+git push origin main
+
+একটা কথা: README-তে live links দেওয়া আছে, কিন্তু deployment-এর প্রতিটি feature কাজ করছে—এমন দাবি করিনি। এতে project-টা attractive দেখাবে, আবার documentation-ও honest ও professional থাকবে।
+
+User attachment
+add this also in readme and give me a proper readme file in structured way using emojis in msg format
+
+
+ভাই, এবার তোমার দেওয়া homepage screenshot-টাও README-তে include করার জন্য package তৈরি করেছি। ❤️
+
+🌿 Sahay-AI — Final Professional README
+AI Finance Management Dashboard by Afzal Masud 🔥 for ZERO STUDIO on Dribbble
+
+Sahay README Package
+README.md + Homepage screenshot
+
+GitHub-ready structure, emoji-rich headings, deployment badges, feature showcase, architecture diagram, setup guide, testing, roadmap and disclaimer.
+
+Screenshot-টা কীভাবে কাজ করবে?
+ZIP-এর ভিতরে এই structure আছে:
+
+Sahay-AI/
+├── README.md
+└── docs/
+    └── images/
+        └── sahay-homepage.png
+দুটোই তোমার repository-র root-এ ঠিক এই structure-এ রাখবে। তাহলে GitHub README-তে homepage screenshot render করার path তৈরি থাকবে।
+
+GitHub-এ push
+git add README.md docs/images/sahay-homepage.png
+git commit -m "Add professional README and homepage preview"
+git push origin main
+
+এবার README-তে তোমার live frontend, backend, API docs এবং homepage preview একসঙ্গে থাকবে। Screenshot-এ যেভাবে Backend Connected, Database Connected এবং latency দেখা যাচ্ছে, সেটিও উল্লেখ করেছি—তবে সেটা screenshot capture করার সময়কার অবস্থা, সবসময় live health-এর নিশ্চয়তা নয়।
+
+User attachment
+wtf u made this make it properly in structured way and add this as a demo ss
+
+ভাই, এবার README-টা নতুন করে proper GitHub project documentation হিসেবে সাজিয়েছি এবং তোমার দেওয়া screenshot-টা demo image হিসেবে সরাসরি include করেছি। আগের মতো শুধু image path লিখে রাখিনি—ZIP-এর মধ্যে image file-টাও আছে। ❤️
+
+🌿 Sahay-AI — Proper README Package
+Sahay README + Demo Screenshot
+ZIP package · GitHub-ready · Emoji-rich
+
+Screenshot included
+এবার কী কী আছে?
+🌟 Attractive hero section ও live deployment badges
+
+🖼️ তোমার দেওয়া homepage screenshot-সহ demo section
+
+🚀 Live frontend, backend ও Swagger API documentation links
+
+💎 Features এবং multilingual support
+
+🛠️ Tech stack ও architecture diagram
+
+📂 Project structure
+
+⚙️ Local setup ও environment variables
+
+🧪 Testing, roadmap, security ও responsible AI
+
+🤝 Contribution guide এবং disclaimer
+
+GitHub-এ বসানোর নিয়ম
+ZIP extract করে তার contents project root-এ রাখবে। Structure-টা এমন হতে হবে:
+
+Sahay-AI/
+├── README.md
+├── docs/
+│   └── images/
+│       └── sahay-homepage.png
+├── frontend/
+└── backend/
+তারপর PowerShell-এ:
+
+git add README.md docs/images/sahay-homepage.png
+git commit -m "Add structured README with homepage demo"
+git push origin main
+
+এবার GitHub repository খুললে README-র মধ্যে demo screenshot-টা render হবে, কারণ image-টা সঠিক relative path-এ রাখা হয়েছে।
+
+<div align="center"> <img src="docs/images/sahay-homepage.png" alt="Sahay-AI live homepage demo" width="100%" />
+🌿 Sahay — Your AI-Powered Financial & Business Companion
+Understand your money. Discover opportunities. Make smarter decisions.
+An independent, multilingual AI platform designed to help Indian micro-entrepreneurs explore scheme information, organize applications, and understand business and financial information.
+
+
+
+
+
+
+🌐 Live Demo · 📚 API Documentation · 💻 GitHub Repository
+
+</div>
+📑 Table of Contents
+✨ Overview
+🚀 Live Demo
+💎 Features
+🌍 Multilingual Experience
+🛠️ Tech Stack
+🏗️ Architecture
+📂 Project Structure
+⚙️ Getting Started
+🔐 Environment Variables
+🧪 Testing
+🗺️ Roadmap
+🔒 Security & Responsible AI
+🤝 Contributing
+⚠️ Disclaimer
+📄 License
+✨ Overview
+Sahay is an independent AI-assisted financial and business companion that aims to make complex information easier to understand and manage.
+
+Entrepreneurs often need to find scheme information, understand eligibility rules, organize documents, track application steps, and review business finances. Sahay brings these workflows into one multilingual experience.
+
+🎯 Mission
+Make financial knowledge more accessible, understandable, and actionable for everyone.
+
+👥 Designed for
+🧑‍💼 Micro-entrepreneurs and small-business owners
+🗂️ People organizing applications and supporting documents
+📊 Users seeking clearer business and financial information
+🌐 People who prefer English, Hindi, or Bengali
+🇮🇳 Independent project: Sahay is not an official government website and is not affiliated with or endorsed by any government authority.
 
 🚀 Live Demo
-  Component                           Deployment
-  🌐 Frontend                     sahay-ai-beige.vercel.app
-  ⚙️ Backend API                  sahay-ai-5.onrender.com
-  📚 Interactive API docs         Open Swagger UI
-  💻 Source code                  GitHub ---
-                                  sayantandutta-18/Sahay-AI
-🩺 Live System Health Preview
-The supplied homepage screenshot shows the Backend Health: Connected
-and Database: Connected indicators, with a reported latency of 413
-ms at the time of capture. The displayed database label is SQLite
-WAL (21 tables).
-ℹ️ This describes the uploaded screenshot at the time it was captured,
-not a guarantee of current uptime or a claim that the production
-database is PostgreSQL. Live service health can change.
+Resource	Link
+🌐 Frontend	sahay-ai-beige.vercel.app
+⚙️ Backend API	sahay-ai-5.onrender.com
+📚 Interactive API docs	Swagger UI
+💻 Source code	sayantandutta-18/Sahay-AI
+🖥️ Homepage Demo Screenshot
+The screenshot below shows the Sahay landing page, navigation, onboarding actions, and system-health panel as captured. At the time of capture, the panel displayed Backend: Connected, Database: Connected, and 413 ms latency.
 
-💎 Features & Modules
-::: {align="center"}
-  -----------------------------------------------------------------------
-  🧩 Module                           🌟 Purpose
-  ----------------------------------- -----------------------------------
-  🏛️ **Smart Scheme Discovery**       Explore scheme information and
-                                      review published eligibility
-                                      requirements.
+<div align="center"> <img src="docs/images/sahay-homepage.png" alt="Sahay homepage demo showing connected backend and database status" width="100%" /> <p><em>Homepage preview captured during a successful health check. Live service status may change over time.</em></p> </div>
+Note: The screenshot's database badge displays SQLite WAL and 21 tables. This is what the UI showed at capture time; it should not be interpreted as proof that production uses PostgreSQL or that the service is currently healthy.
 
-  🎯 **Eligibility Evaluation**       Compare user-provided details with
-                                      implemented rules and explain
-                                      outcomes.
+💎 Features
+Module	Description
+🏛️ Smart Scheme Discovery	Explore scheme information and review published eligibility requirements.
+🎯 Eligibility Evaluation	Compare user-provided details against implemented rules and explain outcomes.
+🗂️ Application Tracker	Organize application progress, checklists, and pending steps.
+🔐 Document Vault	Maintain document records and identify missing items, depending on configured storage.
+💼 Business & Financial Insights	Review income, expenses, and trends where implemented.
+📈 Stock Learning & Analysis	Provide educational context and structured analysis where available.
+🛡️ Admin & Audit Tools	Support restricted administrative workflows and activity visibility where implemented.
+🤖 AI Financial Companion	Explain financial concepts using available context and enabled integrations.
+Feature descriptions reflect the project's intended capabilities. Verify each workflow in the live app before relying on it.
 
-  🗂️ **Application Tracker**          Organize application progress,
-                                      checklists, and pending steps.
-
-  🔐 **Document Vault**               Maintain document records and
-                                      identify missing items, depending
-                                      on configured storage.
-
-  💼 **Business & Financial           Review income, expenses, and trends
-  Insights**                          where implemented.
-
-  📈 **Stock Learning & Analysis**    Offer educational context and
-                                      structured analysis where
-                                      available.
-
-  🛡️ **Admin & Audit Tools**          Support restricted administrative
-                                      workflows and activity visibility
-                                      where implemented.
-
-  🤖 **AI Financial Companion**       Help explain financial concepts
-                                      using available context and
-                                      integrations.
-  -----------------------------------------------------------------------
-:::Feature descriptions represent the product's intended capabilities.
-Verify individual workflows in the live application before relying on
-them.
 🌍 Multilingual Experience
-Sahay is designed to support three languages:
-  Language             Locale
-  🇬🇧 English           en
-  🇮🇳 हिन्दी (Hindi)     hi
-  🇮🇳 বাংলা (Bengali)   bn
-- 🗣️ Language switching for supported interface content
-- 💱 INR currency formatting checks
-- ✅ Latest reported localization check passed translation-key parity
-  across the three locales
-🛠️ Technology Stack
-::: {align="center"}
-![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white)
-![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
-![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
-![Tailwind
-CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)
+Sahay is designed to support:
 
-![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
-![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)
-![Render](https://img.shields.io/badge/Render-46E3B7?style=for-the-badge&logo=render&logoColor=black)
-:::  Technology            Role
-  ⚛️ Next.js + React    Frontend application and routing
-  🔷 TypeScript         Frontend type safety
-  🎨 Tailwind CSS       Responsive UI styling
-  🐍 Python + FastAPI   Backend API and application logic
-  ✅ Pydantic           Request and response validation
-  🐘 PostgreSQL         Relational data layer, where configured
-  🧪 pytest             Backend automated tests
-  🚀 Vercel             Frontend deployment
-  ☁️ Render             Backend deployment
+Language	Locale
+🇬🇧 English	en
+🇮🇳 हिन्दी (Hindi)	hi
+🇮🇳 বাংলা (Bengali)	bn
+🗣️ Language switching for supported interface content
+💱 INR currency-formatting support
+✅ The latest reported localization check passed translation-key parity across the three locales
+🛠️ Tech Stack
+<div align="center">
+
+
+
+
+
+
+
+
+
+
+
+</div>
+Technology	Purpose
+⚛️ Next.js + React	Frontend app and routing
+🔷 TypeScript	Frontend type safety
+🎨 Tailwind CSS	Responsive UI styling
+🐍 Python + FastAPI	Backend APIs and application logic
+✅ Pydantic	Request and response validation
+🐘 PostgreSQL	Relational data layer where configured
+🧪 pytest	Backend testing
+🚀 Vercel	Frontend hosting
+☁️ Render	Backend hosting
 🏗️ Architecture
-                         👤 USER
-                            │
-                            ▼
-               ┌─────────────────────────┐
-               │      SAHAY FRONTEND     │
-               │  Next.js · React · TS   │
-               │         Vercel          │
-               └────────────┬────────────┘
-                            │ HTTPS / REST API
-                            ▼
-               ┌─────────────────────────┐
-               │      FASTAPI BACKEND    │
-               │     Python · Pydantic   │
-               │         Render          │
-               └────────────┬────────────┘
-                            │
-                            ▼
-               ┌─────────────────────────┐
-               │     DATABASE LAYER      │
-               │ PostgreSQL / configured│
-               │        database         │
-               └─────────────────────────┘
-🧭 Architecture Principles
-- 🧮 Deterministic logic: Financial calculations and eligibility
-  rules should run in validated application code.
-- 📚 Grounded AI: Explanations should use relevant information and
-  clearly communicate uncertainty.
-- 🔐 Security first: Protect credentials, personal information,
-  and privileged routes.
-- 🧱 Maintainability: Keep features modular and testable.
-- ✅ Evidence-based status: Report features as working only after
-  verification.
-📁 Project Structure
-The structure below is a simplified guide. Refer to the actual
-repository for the current file layout.
+                      👤 USER
+                         │
+                         ▼
+             ┌────────────────────────┐
+             │     SAHAY FRONTEND     │
+             │ Next.js · React · TS   │
+             │        Vercel          │
+             └───────────┬────────────┘
+                         │ HTTPS / REST API
+                         ▼
+             ┌────────────────────────┐
+             │    FASTAPI BACKEND     │
+             │ Python · Pydantic      │
+             │        Render          │
+             └───────────┬────────────┘
+                         │
+                         ▼
+             ┌────────────────────────┐
+             │      DATA LAYER        │
+             │ Configured database    │
+             └────────────────────────┘
+🧭 Principles
+🧮 Use deterministic application logic for financial calculations and eligibility rules.
+📚 Ground AI explanations in relevant information and communicate uncertainty.
+🔐 Protect credentials, personal information, and privileged routes.
+🧱 Keep modules maintainable and testable.
+✅ Mark features as working only after verification.
+📂 Project Structure
+Simplified reference structure; check the repository for the current layout.
 
 Sahay-AI/
 ├── frontend/
 │   ├── src/
-│   │   ├── app/             # Pages and routing
-│   │   ├── components/      # Reusable UI components
+│   │   ├── app/              # Pages and routing
+│   │   ├── components/       # Reusable UI
 │   │   ├── lib/              # API clients and utilities
 │   │   └── types/            # TypeScript types
 │   ├── scripts/              # Validation scripts
 │   └── package.json
-│
 ├── backend/
 │   ├── app/
 │   │   ├── routes/           # API endpoints
@@ -216,169 +385,161 @@ Sahay-AI/
 │   │   └── core/             # Configuration and security
 │   ├── tests/                # Backend tests
 │   └── requirements.txt
-│
 ├── docs/
 │   └── images/
 │       └── sahay-homepage.png
 ├── README.md
 └── .gitignore
-⚙️ Local Setup
+⚙️ Getting Started
 📋 Prerequisites
-- Node.js and npm
-- Python version compatible with backend dependencies
-- A reachable database configured for the backend
-- Git
+Node.js and npm
+Python compatible with backend dependencies
+A reachable database configured for the backend
+Git
 1️⃣ Clone the repository
 git clone https://github.com/sayantandutta-18/Sahay-AI.git
 cd Sahay-AI
-2️⃣ Configure and run the backend
-From the project root, open a terminal:
+2️⃣ Run the backend
+From the repository root:
+
 cd backend
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
-Configure the required backend environment variables (see below), then
-start the API if app.main exposes the FastAPI object named app:
+Set the backend environment variables, then run the API if the FastAPI object is named app in app/main.py:
+
 python -m uvicorn app.main:app --reload
-- Backend: http://localhost:8000
-- API documentation: http://localhost:8000/docs
-3️⃣ Configure and run the frontend
+API: http://localhost:8000
+Docs: http://localhost:8000/docs
+3️⃣ Run the frontend
 Open a second terminal:
+
 cd frontend
 npm install
-Create frontend/.env.local with the exact API variable name read by
-the frontend API client. Example only:
+Create frontend/.env.local using the exact variable name read by the current frontend API client. Example only:
+
 NEXT_PUBLIC_API_URL=http://localhost:8000
 Then run:
+
 npm run dev
 Open http://localhost:3000.
-4️⃣ Verify database connectivity
-1. Confirm which database engine the current backend configuration
-   uses.
-2. Ensure the configured database server is reachable.
-3. Set the correct connection string in the backend environment.
-4. Run migrations if the repository uses migration tooling.
-5. Check the health endpoint and test database-dependent API routes.
-💡 You do not need to install PostgreSQL locally if your application
-is intentionally configured to use a hosted PostgreSQL service. VS
-Code itself is only an editor; it does not start a database server.
+
+4️⃣ Check database connectivity
+Confirm the database engine used by the current backend configuration.
+Verify that the configured database is reachable.
+Set the correct connection string in the backend environment.
+Run migrations if the project uses migration tooling.
+Check the health endpoint and test database-dependent routes.
+💡 VS Code is an editor, not a database server. A local PostgreSQL installation is not necessary if the application is intentionally configured to use a reachable hosted database.
 
 🔐 Environment Variables
-The names below are examples only. Confirm exact names in the
-repository before setting them.
-Frontend --- frontend/.env.local
+The names below are examples only. Confirm exact names in the current source code.
+
+Frontend — frontend/.env.local
 NEXT_PUBLIC_API_URL=http://localhost:8000
-Use the production backend URL in Vercel only if this is the actual
-variable consumed by the frontend API client:
+If the frontend actually reads NEXT_PUBLIC_API_URL, its production value would be:
+
 NEXT_PUBLIC_API_URL=https://sahay-ai-5.onrender.com
-Backend --- backend/.env
+Backend — backend/.env
 DATABASE_URL=your-database-connection-string
 SECRET_KEY=replace-with-a-strong-random-secret
-Add other variables only when required by the current code.
-🔒 Never commit .env files, database passwords, API keys, JWT
-secrets, access tokens, or real user data. Configure production secrets
-in the hosting provider's environment settings.
-🧪 Testing & Quality Checks
+Add other variables only if required by the code.
+
+🔒 Never commit .env files, passwords, API keys, JWT secrets, access tokens, or real user data. Set production secrets in the hosting provider's environment settings.
+
+🧪 Testing
 🐍 Backend tests
-From the project root on Windows:
+Run from the project root on Windows:
+
 backend\.venv\Scripts\python.exe -m pytest backend\tests -q
 🌐 Localization checks
 node frontend\scripts\test-i18n.mjs
-🏗️ Frontend production build
+🏗️ Production frontend build
 cd frontend
 npm run build
-📊 Latest reported validation
-  Check                               Reported status
-  Backend automated tests             ✅ 59 passed in a previously
-                                      reported run
-  Translation-key parity              ✅ Passed across English, Hindi,
-                                      and Bengali
-  INR formatting                      ✅ Passed
-  Latest production build             ⏳ Must be confirmed
-  Full live end-to-end integration    ⏳ Must be verified against the
-                                  current deployment
-These are previously reported results, not a guarantee that the latest
-deployment is healthy.
+📊 Latest reported checks
+Check	Reported result
+Backend tests	✅ 59 passed in a previously reported run
+Translation-key parity	✅ Passed across English, Hindi, and Bengali
+INR formatting	✅ Passed
+Latest production build	⏳ Needs confirmation
+Full live integration	⏳ Verify against the current deployment
+These are previously reported results, not a guarantee of current production health.
+
 🗺️ Roadmap
 🧱 Reliability & Core Experience
-- [ ] Verify production API and database health end-to-end
-- [ ] Complete frontend/backend integration testing
-- [ ] Improve error states and retry behavior
-- [ ] Verify protected-route authorization
-- [ ] Confirm production build and deployment settings
+Verify production API and database health end-to-end
+Complete frontend/backend integration testing
+Improve error states and retry behavior
+Verify protected-route authorization
+Confirm production build and deployment configuration
 🏛️ Scheme & Application Workflows
-- [ ] Verify scheme information against official sources
-- [ ] Improve eligibility explanations and rule coverage
-- [ ] Refine application checklists and status tracking
-- [ ] Review document access controls and retention
-- [ ] Improve admin permissions and audit coverage
+Verify scheme information against official sources
+Improve eligibility explanations and rule coverage
+Refine application checklists and status tracking
+Review document access controls and retention
+Strengthen admin permissions and audit coverage
 💰 Financial Intelligence
-- [ ] Expand business income and expense insights
-- [ ] Add financial health and emergency-fund analysis
-- [ ] Develop income-loss and what-if simulations
-- [ ] Improve explainable financial risk indicators
-- [ ] Expand grounded conversational assistance
-- [ ] Evaluate fraud signals and false positives
+Expand business income and expense insights
+Add financial health and emergency-fund analysis
+Develop income-loss and what-if simulations
+Improve explainable financial risk indicators
+Expand grounded conversational assistance
+Evaluate fraud signals and false positives
 🚀 Production Readiness
-- [ ] Complete security and privacy reviews
-- [ ] Add monitoring and error reporting
-- [ ] Validate backups and recovery procedures
-- [ ] Expand automated and end-to-end tests
-- [ ] Document deployment and incident response
-Mark roadmap items complete only after implementation and
-verification.
+Complete security and privacy reviews
+Add monitoring and error reporting
+Validate backups and recovery procedures
+Expand automated and end-to-end testing
+Document deployment and incident response
 🔒 Security & Responsible AI
-- 🔐 Enforce authentication and authorization on the server.
-- 🧾 Validate user inputs and handle errors safely.
-- 🛡️ Restrict administrative actions to authorized users.
-- 📂 Protect document records and sensitive financial information.
-- 🔑 Never expose secrets in frontend code or logs.
-- 🏛️ Verify scheme information against official sources.
-- 🤖 Treat AI output as assistance, not guaranteed truth.
-- 🧮 Treat financial simulations as estimates based on assumptions.
-- 🚨 Treat fraud indicators as signals for review, not proof of
-  wrongdoing.
+🔐 Enforce authentication and authorization on the server.
+🧾 Validate user input and handle errors safely.
+🛡️ Restrict administrative actions to authorized users.
+📂 Protect document records and financial information.
+🔑 Never expose secrets in frontend code or logs.
+🏛️ Verify scheme information against official sources.
+🤖 Treat AI output as assistance, not guaranteed truth.
+🧮 Treat financial simulations as estimates, not guarantees.
+🚨 Treat fraud indicators as signals for review, not proof of wrongdoing.
 🤝 Contributing
-Contributions, feedback, and suggestions are welcome!
-1. 🍴 Fork the repository.
-2. 🌱 Create a focused feature branch.
-3. 💻 Implement the change and add suitable tests.
-4. 🧪 Run relevant validation checks.
-5. 📬 Open a pull request describing your changes.
+Contributions, feedback, and ideas are welcome!
+
+🍴 Fork the repository.
+🌱 Create a focused feature branch.
+💻 Implement the change and add suitable tests.
+🧪 Run relevant validation checks.
+📬 Open a pull request describing your changes.
 Example branch names:
+
 feature/application-tracker
 feature/financial-insights
 fix/backend-health-check
 test/api-integration
-Please keep contributions focused and never include credentials or
-private user data.
+Please never include credentials or private user data in commits.
+
 ⚠️ Disclaimer
-Sahay is an independent project for financial understanding and
-information management.
-- It is not affiliated with or endorsed by any government authority.
-- Scheme details and eligibility must be verified through official
-  sources.
-- AI-generated content may contain errors.
-- Financial simulations are estimates, not guarantees.
-- Investment-related information does not guarantee returns.
-- Fraud indicators do not prove that a person or transaction is
-  fraudulent.
-- Seek qualified professional advice for consequential financial,
-  legal, or investment decisions.
+Sahay is an independent project intended to support financial understanding and information management.
+
+It is not affiliated with or endorsed by any government authority.
+Scheme details and eligibility must be verified through official sources.
+AI-generated content may contain errors.
+Financial simulations are estimates based on assumptions.
+Investment-related information does not guarantee returns.
+Fraud indicators do not prove that a person or transaction is fraudulent.
+Seek qualified professional advice for consequential financial, legal, or investment decisions.
 📄 License
-No license has been specified yet. Add a LICENSE file once the project
-license has been selected.
-::: {align="center"}
-## 🌿 SAHAY
+No license has been specified yet. Add a LICENSE file after selecting the project's license.
 
-### Make Financial Knowledge More Accessible
+<div align="center">
+🌿 SAHAY
+Make Financial Knowledge More Accessible
+Understand better. Plan smarter. Move forward with confidence.
 
-**Understand better. Plan smarter. Move forward with confidence.**
+🚀 Live App · 📚 API Docs · 💻 GitHub
 
-[🚀 Open Live App](https://sahay-ai-beige.vercel.app/) · [📚 API
-Docs](https://sahay-ai-5.onrender.com/docs) · [💻
-GitHub](https://github.com/sayantandutta-18/Sahay-AI)
+<sub>Built with care for clearer financial and business decisions.</sub>
 
-`<sub>`{=html}Built with care for clearer financial and business
-decisions.`</sub>`{=html}
-:::
+</div>
+
+
