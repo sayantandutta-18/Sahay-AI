@@ -4,10 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
-    "test:i18n": "node scripts/test-i18n.mjs"
+    "test:i18n": "node scripts/test-i18n.mjs",
+    "test:verification": "node scripts/test-verification.mjs",
+    "test:readiness": "node scripts/test-readiness.mjs"
   },
   "dependencies": {
     "lucide-react": "^1.55.0",

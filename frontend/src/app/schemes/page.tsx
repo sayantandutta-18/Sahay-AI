@@ -5,6 +5,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
+import { VerificationBadge } from "@/components/ui/VerificationBadge";
 import { CardSkeleton } from "@/components/ui/Loading";
 import { Empty } from "@/components/ui/Empty";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
@@ -129,12 +130,22 @@ export default function SchemesPage() {
                       <CardTitle className="text-base font-semibold leading-tight">
                         {s.name}
                       </CardTitle>
-                      <Badge
-                        variant={s.scheme_type === "subsidy" ? "success" : "info"}
-                        size="sm"
-                      >
-                        {s.scheme_type.toUpperCase()}
-                      </Badge>
+                      <div className="flex items-center gap-1.5 flex-wrap shrink-0">
+                        <Badge
+                          variant={s.scheme_type === "subsidy" ? "success" : "info"}
+                          size="sm"
+                        >
+                          {s.scheme_type.toUpperCase()}
+                        </Badge>
+                        <VerificationBadge
+                          status={s.verification_status}
+                          lastVerifiedAt={s.last_verified_at}
+                          officialUrl={s.official_url}
+                          verifier={s.verifier}
+                          schemeName={s.name}
+                          size="sm"
+                        />
+                      </div>
                     </div>
                     <CardDescription className="flex items-center gap-1.5 mt-1">
                       <Building className="w-3.5 h-3.5 text-slate-400" />

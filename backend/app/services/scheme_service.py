@@ -1,258 +1,128 @@
-"""Government scheme data management and official verified seed records."""
+"""Government scheme data management and authoritative verified seed records."""
 
+import json
+import logging
+from datetime import datetime, date
+from pathlib import Path
 from typing import List, Optional
 from sqlalchemy.orm import Session
 from app.models.scheme import Scheme, SchemeDocumentRequirement, SchemeRule
+from app.schemas.scheme import SchemeDataValidationRecord
+
+logger = logging.getLogger("sahay.schemes")
+_SCHEMES_DATA_PATH = Path(__file__).resolve().parent.parent / "data" / "schemes.json"
+VERIFICATION_FRESHNESS_LIMIT_DAYS = 180
+
+
+def compute_verification_status(
+    official_url: Optional[str],
+    last_verified_at: Optional[str],
+    verification_status: Optional[str] = None,
+    max_age_days: int = VERIFICATION_FRESHNESS_LIMIT_DAYS,
+    reference_date: Optional[date] = None,
+) -> str:
+    """
+    Determines scheme verification status according to Checkpoint 3 rules:
+    - 'unverified': Official source URL missing, date missing, or flagged unverified.
+    - 'outdated': Checked longer ago than max_age_days (default 180 days) or flagged outdated.
+    - 'verified': Confirmed official source and verified within max_age_days.
+    """
+    if verification_status == "unverified" or not official_url or not last_verified_at:
+        return "unverified"
+    if verification_status == "outdated":
+        return "outdated"
+
+    try:
+        verified_date = datetime.strptime(last_verified_at[:10], "%Y-%m-%d").date()
+    except (ValueError, TypeError):
+        return "unverified"
+
+    ref = reference_date or date.today()
+    age_days = (ref - verified_date).days
+    if age_days > max_age_days:
+        return "outdated"
+
+    return "verified"
 
 
 def seed_verified_schemes_if_empty(db: Session) -> None:
-    """Populate database with authoritative official government schemes and rules if empty."""
-    existing_count = db.query(Scheme).count()
-    if existing_count > 0:
+    """Populate database with authoritative official government schemes and rules from validated JSON foundation."""
+    if not _SCHEMES_DATA_PATH.exists():
+        logger.warning("Schemes data foundation file not found at %s", _SCHEMES_DATA_PATH)
         return
 
-    # 1. PMEGP
-    pmegp = Scheme(
-        name="Prime Minister Employment Generation Programme (PMEGP)",
-        slug="pmegp",
-        provider="Ministry of MSME, Govt of India",
-        scheme_type="subsidy",
-        short_description="Credit-linked subsidy program to generate employment opportunities by setting up micro-enterprises in non-farm sectors.",
-        detailed_benefits="Margin money subsidy of 25% (general urban) up to 35% (special category / rural) on bank-financed projects up to ₹50 Lakhs for manufacturing and ₹20 Lakhs for service units.",
-        max_amount=5000000.0,
-        interest_subsidy_pct=0.0,
-        states_served="ALL",
-        target_sectors="manufacturing,services,agriculture_allied",
-        official_url="https://www.kviconline.gov.in/pmegpeportal",
-        last_verified_at="2026-03-01",
-        is_active=True,
-    )
-    db.add(pmegp)
-    db.flush()
+    try:
+        with open(_SCHEMES_DATA_PATH, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except Exception as exc:
+        logger.error("Failed to parse schemes JSON file: %s", exc)
+        return
 
-    # PMEGP Documents
-    db.add_all([
-        SchemeDocumentRequirement(
-            scheme_id=pmegp.id,
-            document_type="pan",
-            title="Permanent Account Number (PAN)",
-            description="PAN card of the individual proprietor or enterprise.",
-            mandatory=True,
-            how_to_get_url="https://www.incometax.gov.in",
-        ),
-        SchemeDocumentRequirement(
-            scheme_id=pmegp.id,
-            document_type="project_report",
-            title="Detailed Project Appraisal Report (DPR)",
-            description="Project report showing cost of machinery, civil works, and working capital.",
-            mandatory=True,
-            how_to_get_url="https://www.kviconline.gov.in/pmegp/pmegpweb/docs/jsp/modelproject.jsp",
-        ),
-        SchemeDocumentRequirement(
-            scheme_id=pmegp.id,
-            document_type="edp_cert",
-            title="EDP Training Certificate",
-            description="10-day Entrepreneurship Development Programme certificate.",
-            mandatory=False,
-            how_to_get_url="https://msmetraining.gov.in",
-        ),
-    ])
+    for item in data:
+        # Schema validation (Pydantic). If invalid or unverified, reject loading.
+        try:
+            validated = SchemeDataValidationRecord.model_validate(item)
+        except Exception as exc:
+            logger.error("Rejected invalid scheme record '%s': %s", item.get("name"), exc)
+            continue
 
-    # PMEGP Rules
-    db.add_all([
-        SchemeRule(
-            scheme_id=pmegp.id,
-            field="business_type",
-            operator="in",
-            value="manufacturing,services,agriculture_allied",
-            weight=0.0,
-            is_hard_rule=True,
-            explanation="Business sector must be in non-farm manufacturing, services, or agro-processing.",
-            rule_version="1.4.2",
-        ),
-        SchemeRule(
-            scheme_id=pmegp.id,
-            field="annual_turnover",
-            operator="lte",
-            value="10000000",
-            weight=0.0,
-            is_hard_rule=True,
-            explanation="Applicant enterprise must fall within micro-enterprise capital limits.",
-            rule_version="1.4.2",
-        ),
-        SchemeRule(
-            scheme_id=pmegp.id,
-            field="has_bank_account",
-            operator="boolean_is",
-            value="true",
-            weight=0.0,
-            is_hard_rule=True,
-            explanation="Active commercial bank account required for credit disbursement.",
-            rule_version="1.4.2",
-        ),
-        SchemeRule(
-            scheme_id=pmegp.id,
-            field="gender",
-            operator="eq",
-            value="female",
-            weight=25.0,
-            is_hard_rule=False,
-            explanation="Women entrepreneurs qualify for higher 35% margin money subsidy.",
-            rule_version="1.4.2",
-        ),
-        SchemeRule(
-            scheme_id=pmegp.id,
-            field="has_udyam",
-            operator="boolean_is",
-            value="true",
-            weight=20.0,
-            is_hard_rule=False,
-            explanation="Udyam registration accelerates bank appraisal and subsidy verification.",
-            rule_version="1.4.2",
-        ),
-    ])
+        existing = db.query(Scheme).filter(Scheme.slug == validated.slug).first()
+        if not existing:
+            scheme = Scheme(
+                name=validated.name,
+                slug=validated.slug,
+                provider=validated.provider,
+                scheme_type=validated.scheme_type,
+                short_description=validated.short_description,
+                detailed_benefits=validated.detailed_benefits,
+                max_amount=validated.max_amount,
+                interest_subsidy_pct=validated.interest_subsidy_pct,
+                states_served=validated.states_served,
+                target_sectors=validated.target_sectors,
+                official_url=validated.official_url,
+                last_verified_at=validated.last_verified_at,
+                deadline=validated.deadline,
+                verifier=validated.verifier,
+                verification_status=validated.verification_status,
+                language_coverage=validated.language_coverage,
+                publication_status=validated.publication_status,
+                is_active=validated.is_active,
+            )
+            db.add(scheme)
+            db.flush()
 
-    # 2. Pradhan Mantri MUDRA Yojana (Tarun)
-    mudra = Scheme(
-        name="Pradhan Mantri MUDRA Yojana (Tarun)",
-        slug="pmmy-tarun",
-        provider="Department of Financial Services, MoF",
-        scheme_type="loan",
-        short_description="Collateral-free institutional loans for established micro-enterprises looking to expand operations.",
-        detailed_benefits="Zero collateral business loans from ₹5 Lakhs up to ₹10 Lakhs disbursed through commercial banks, RRBs, and MFIs at standard competitive interest rates.",
-        max_amount=1000000.0,
-        interest_subsidy_pct=0.0,
-        states_served="ALL",
-        target_sectors="manufacturing,services,trading,agriculture_allied",
-        official_url="https://www.mudra.org.in",
-        last_verified_at="2026-02-15",
-        is_active=True,
-    )
-    db.add(mudra)
-    db.flush()
+            for doc in validated.documents:
+                db.add(
+                    SchemeDocumentRequirement(
+                        scheme_id=scheme.id,
+                        document_type=doc.document_type,
+                        title=doc.title,
+                        description=doc.description,
+                        mandatory=doc.mandatory,
+                        how_to_get_url=doc.how_to_get_url,
+                    )
+                )
 
-    db.add_all([
-        SchemeDocumentRequirement(
-            scheme_id=mudra.id,
-            document_type="bank_statement",
-            title="Last 6 Months Bank Statement",
-            description="Continuous commercial or savings bank statement verifying cash receipts.",
-            mandatory=True,
-            how_to_get_url="https://www.onlinesbi.sbi",
-        ),
-        SchemeDocumentRequirement(
-            scheme_id=mudra.id,
-            document_type="pan",
-            title="Proprietor PAN Card",
-            description="PAN card for identity and credit bureau verification.",
-            mandatory=True,
-            how_to_get_url="https://www.incometax.gov.in",
-        ),
-    ])
-
-    db.add_all([
-        SchemeRule(
-            scheme_id=mudra.id,
-            field="category",
-            operator="in",
-            value="micro,small",
-            weight=0.0,
-            is_hard_rule=True,
-            explanation="Must be a micro or small non-corporate enterprise.",
-            rule_version="1.2.0",
-        ),
-        SchemeRule(
-            scheme_id=mudra.id,
-            field="has_bank_account",
-            operator="boolean_is",
-            value="true",
-            weight=0.0,
-            is_hard_rule=True,
-            explanation="Must possess active operative bank account.",
-            rule_version="1.2.0",
-        ),
-        SchemeRule(
-            scheme_id=mudra.id,
-            field="has_udyam",
-            operator="boolean_is",
-            value="true",
-            weight=30.0,
-            is_hard_rule=False,
-            explanation="Udyam MSME number verifies formal status with lending institutions.",
-            rule_version="1.2.0",
-        ),
-    ])
-
-    # 3. Banglashree Scheme
-    banglashree = Scheme(
-        name="Banglashree Scheme (West Bengal State MSME)",
-        slug="banglashree",
-        provider="Department of MSME&T, Govt of West Bengal",
-        scheme_type="subsidy",
-        short_description="State capital investment subsidy and electricity duty reimbursement for micro-enterprises located in West Bengal.",
-        detailed_benefits="15% to 25% state capital investment subsidy on plant & machinery, plus 5-year waiver on electricity duty and interest subsidy for micro units.",
-        max_amount=1000000.0,
-        interest_subsidy_pct=2.0,
-        states_served="West Bengal",
-        target_sectors="manufacturing,services",
-        official_url="https://wbmsme.gov.in",
-        last_verified_at="2026-02-10",
-        is_active=True,
-    )
-    db.add(banglashree)
-    db.flush()
-
-    db.add_all([
-        SchemeDocumentRequirement(
-            scheme_id=banglashree.id,
-            document_type="trade_license",
-            title="Municipal Trade License",
-            description="Valid municipal trade license or panchayat certificate for operation in West Bengal.",
-            mandatory=True,
-            how_to_get_url="https://wb.gov.in",
-        ),
-        SchemeDocumentRequirement(
-            scheme_id=banglashree.id,
-            document_type="udyam",
-            title="Udyam Registration Certificate",
-            description="MSME Udyam registration acknowledging location within West Bengal district.",
-            mandatory=True,
-            how_to_get_url="https://udyamregistration.gov.in",
-        ),
-    ])
-
-    db.add_all([
-        SchemeRule(
-            scheme_id=banglashree.id,
-            field="state",
-            operator="eq",
-            value="West Bengal",
-            weight=0.0,
-            is_hard_rule=True,
-            explanation="State-specific incentive available exclusively for units operating in West Bengal.",
-            rule_version="1.1.0",
-        ),
-        SchemeRule(
-            scheme_id=banglashree.id,
-            field="business_type",
-            operator="in",
-            value="manufacturing,services",
-            weight=0.0,
-            is_hard_rule=True,
-            explanation="Applies to manufacturing and eligible servicing units.",
-            rule_version="1.1.0",
-        ),
-        SchemeRule(
-            scheme_id=banglashree.id,
-            field="has_udyam",
-            operator="boolean_is",
-            value="true",
-            weight=25.0,
-            is_hard_rule=False,
-            explanation="Udyam registration required for single-window state clearance.",
-            rule_version="1.1.0",
-        ),
-    ])
+            for r in validated.rules:
+                db.add(
+                    SchemeRule(
+                        scheme_id=scheme.id,
+                        field=r.field,
+                        operator=r.operator,
+                        value=r.value,
+                        weight=r.weight,
+                        is_hard_rule=r.is_hard_rule,
+                        explanation=r.explanation,
+                        rule_version=r.rule_version,
+                    )
+                )
+        else:
+            # Reconcile existing records with latest verified metadata
+            existing.deadline = validated.deadline
+            existing.verifier = validated.verifier
+            existing.verification_status = validated.verification_status
+            existing.official_url = validated.official_url
+            existing.last_verified_at = validated.last_verified_at
 
     db.commit()
 

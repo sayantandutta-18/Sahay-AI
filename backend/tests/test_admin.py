@@ -4,6 +4,7 @@ from fastapi.testclient import TestClient
 from app.main import app
 from app.database.session import SessionLocal
 from app.services.user_service import get_user_by_phone, promote_user_to_admin
+from app.models.scheme import Scheme
 
 client = TestClient(app)
 
@@ -91,3 +92,10 @@ def test_admin_create_scheme_and_audit_trail():
     logs = audit_res.json()
     assert len(logs) > 0
     assert any(l["action"] == "SCHEME_CREATED" for l in logs)
+
+    # Clean up test-created scheme to ensure test isolation
+    with SessionLocal() as db:
+        test_scheme = db.query(Scheme).filter(Scheme.slug == "micro-equipment-grant").first()
+        if test_scheme:
+            db.delete(test_scheme)
+            db.commit()

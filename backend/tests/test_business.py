@@ -93,3 +93,118 @@ def test_enterprise_cash_flow_and_health_grade():
     data_d = res_deficit.json()
     assert data_d["net_surplus_after_debt"] == -25000.0
     assert "Grade D" in data_d["business_health_grade"]
+
+
+def test_checkpoint6_readiness_radar_assessment_and_disclaimer():
+    """Verify Checkpoint 6 5-dimension readiness assessment and prominent disclaimer."""
+    payload = {
+        "annual_turnover": 800000.0,
+        "monthly_revenue": 80000.0,
+        "monthly_expense": 45000.0,
+        "existing_loans": 5000.0,
+        "months_in_operation": 18,
+        "has_udyam": True,
+        "has_pan": True,
+        "has_gst": False,
+        "has_bank_account": True,
+        "has_aadhaar": True,
+        "record_keeping_type": "bank_recorded",
+    }
+    res = client.post("/api/v1/business/readiness", json=payload)
+    assert res.status_code == 200
+    data = res.json()
+
+    # Must state clearly that it is an estimated readiness indicator, not official
+    assert data["is_official_decision"] is False
+    assert "estimated micro-business readiness indicator" in data["disclaimer"].lower()
+    assert 0 <= data["overall_readiness_score"] <= 100
+
+    # Exactly 5 dimensions
+    dims = {d["dimension_key"]: d for d in data["dimensions"]}
+    expected_keys = {"capital", "documents", "vintage", "income", "record_keeping"}
+    assert set(dims.keys()) == expected_keys
+
+    # Check that each dimension has an explicit explanation and valid score
+    for key in expected_keys:
+        dim = dims[key]
+        assert 0 <= dim["score"] <= 100
+        assert len(dim["formula_explanation"]) > 10
+        assert len(dim["assessment_tier"]) > 2
+
+    # Detailed dimension assertions:
+    # 1. Capital: Net surplus = 80000 - 45000 - 5000 = 30000. Margin = 30000/80000 = 37.5% (> 25% -> 100 pts)
+    assert dims["capital"]["score"] == 100
+    assert "Strong Reserves" in dims["capital"]["assessment_tier"]
+
+    # 2. Documents: 4 of 5 verified (Aadhaar, PAN, Bank, Udyam) -> 80 pts
+    assert dims["documents"]["score"] == 80
+    assert "80/100" in dims["documents"]["formula_explanation"]
+
+    # 3. Vintage: 18 months (12-24 months -> 75 pts)
+    assert dims["vintage"]["score"] == 75
+    assert "18 months" in dims["vintage"]["formula_explanation"]
+
+    # 4. Income: Turnover 800k (200k - 1M -> 70 pts)
+    assert dims["income"]["score"] == 70
+
+    # 5. Record-keeping: Udyam + Bank -> 75 pts
+    assert dims["record_keeping"]["score"] == 75
+
+
+def test_checkpoint6_readiness_edge_cases_and_formalization():
+    """Verify minimal zero-input edge cases and fully formal maximum scores."""
+    # Minimal / zero input
+    res_zero = client.post(
+        "/api/v1/business/readiness",
+        json={
+            "annual_turnover": 0.0,
+            "monthly_revenue": 0.0,
+            "monthly_expense": 0.0,
+            "existing_loans": 0.0,
+            "months_in_operation": 2,
+            "has_udyam": False,
+            "has_pan": False,
+            "has_gst": False,
+            "has_bank_account": False,
+            "has_aadhaar": False,
+            "record_keeping_type": "informal",
+        },
+    )
+    assert res_zero.status_code == 200
+    data_z = res_zero.json()
+    dims_z = {d["dimension_key"]: d for d in data_z["dimensions"]}
+
+    assert dims_z["capital"]["score"] == 0
+    assert dims_z["documents"]["score"] == 0
+    assert dims_z["vintage"]["score"] == 20
+    assert dims_z["income"]["score"] == 15
+    assert dims_z["record_keeping"]["score"] == 20
+    assert data_z["overall_readiness_score"] == round((0 + 0 + 20 + 15 + 20) / 5)
+
+    # Fully formalized enterprise
+    res_formal = client.post(
+        "/api/v1/business/readiness",
+        json={
+            "annual_turnover": 3500000.0,
+            "monthly_revenue": 300000.0,
+            "monthly_expense": 180000.0,
+            "existing_loans": 20000.0,
+            "months_in_operation": 36,
+            "has_udyam": True,
+            "has_pan": True,
+            "has_gst": True,
+            "has_bank_account": True,
+            "has_aadhaar": True,
+            "record_keeping_type": "formal_accounting",
+        },
+    )
+    assert res_formal.status_code == 200
+    data_f = res_formal.json()
+    dims_f = {d["dimension_key"]: d for d in data_f["dimensions"]}
+
+    assert dims_f["capital"]["score"] == 100
+    assert dims_f["documents"]["score"] == 100
+    assert dims_f["vintage"]["score"] == 100
+    assert dims_f["income"]["score"] == 100
+    assert dims_f["record_keeping"]["score"] == 100
+    assert data_f["overall_readiness_score"] == 100

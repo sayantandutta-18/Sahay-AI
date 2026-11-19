@@ -57,3 +57,36 @@ class CashFlowCalculationResponse(BaseModel):
     business_health_grade: str  # Excellent (A), Good (B), Vulnerable (C), Critical (D)
     recommendation: str
     authority: str = "Sahay Deterministic Micro-Enterprise Health Scorecard"
+
+
+class BusinessReadinessRequest(BaseModel):
+    annual_turnover: float = Field(default=0.0, ge=0.0, description="Annual gross sales/turnover in INR")
+    monthly_revenue: float = Field(default=0.0, ge=0.0, description="Gross monthly revenue in INR")
+    monthly_expense: float = Field(default=0.0, ge=0.0, description="Monthly business operational expenses in INR")
+    existing_loans: float = Field(default=0.0, ge=0.0, description="Existing monthly debt or EMI commitments in INR")
+    months_in_operation: int = Field(default=12, ge=0, le=600, description="Active months in business operation")
+    has_udyam: bool = Field(default=False, description="Possesses Udyam MSME registration")
+    has_pan: bool = Field(default=False, description="Possesses business or proprietor PAN")
+    has_gst: bool = Field(default=False, description="Possesses GSTIN certificate")
+    has_bank_account: bool = Field(default=False, description="Maintains active business bank account")
+    has_aadhaar: bool = Field(default=False, description="Possesses Aadhaar credential")
+    record_keeping_type: str = Field(default="informal", description="Record-keeping practice: informal, bank_recorded, formal_accounting")
+
+
+class ReadinessDimensionScore(BaseModel):
+    dimension_key: str  # capital, documents, vintage, income, record_keeping
+    dimension_name: str
+    score: int = Field(..., ge=0, le=100)
+    formula_explanation: str
+    assessment_tier: str
+
+
+class BusinessReadinessReportResponse(BaseModel):
+    overall_readiness_score: int = Field(..., ge=0, le=100)
+    is_official_decision: bool = False
+    disclaimer: str = (
+        "This score is an estimated micro-business readiness indicator, "
+        "not an official government or institutional eligibility decision."
+    )
+    dimensions: List[ReadinessDimensionScore]
+    authority: str = "Sahay Deterministic 5-Dimension Readiness Model"

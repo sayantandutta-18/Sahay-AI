@@ -14,10 +14,10 @@ def reconcile_database_schema(target_engine: Engine, metadata: MetaData) -> dict
     This guarantees that new model columns are automatically synchronized without destructive table drops.
     """
     results = {"tables_inspected": 0, "columns_added": []}
-    inspector = inspect(target_engine)
-    existing_tables = set(inspector.get_table_names())
 
     with target_engine.connect() as conn:
+        inspector = inspect(conn)
+        existing_tables = set(inspector.get_table_names())
         for table_name, table in metadata.tables.items():
             if table_name not in existing_tables:
                 continue

@@ -31,6 +31,7 @@ VALID_STATUSES: Set[str] = {
     "ready_to_submit",
     "submitted",
     "in_review",
+    "under_review",
     "action_required",
     "approved",
     "rejected",
@@ -45,35 +46,101 @@ STATUS_PROGRESS_MAP: Dict[str, int] = {
     "ready_to_submit": 50,
     "submitted": 80,
     "in_review": 85,
+    "under_review": 85,
     "action_required": 60,
     "approved": 100,
     "rejected": 100,
     "withdrawn": 0,
 }
 
-# Permitted state transitions (or backwards revisions)
+# Permitted state transitions (supports core 5 statuses: draft, submitted, in_review, approved, withdrawn)
 ALLOWED_TRANSITIONS: Dict[str, Set[str]] = {
-    "draft": {"documents_needed", "ready_to_submit", "submitted", "in_progress", "withdrawn"},
-    "documents_needed": {"ready_to_submit", "submitted", "draft", "in_progress", "withdrawn"},
-    "in_progress": {"documents_needed", "ready_to_submit", "submitted", "withdrawn"},
-    "ready_to_submit": {"submitted", "documents_needed", "in_progress", "withdrawn"},
-    "submitted": {"in_review", "action_required", "withdrawn"},
-    "in_review": {"action_required", "approved", "rejected", "withdrawn"},
-    "action_required": {"in_review", "ready_to_submit", "documents_needed", "withdrawn"},
-    "approved": set(),
-    "rejected": set(),
-    "withdrawn": set(),
+    "draft": {
+        "documents_needed",
+        "ready_to_submit",
+        "submitted",
+        "in_progress",
+        "withdrawn",
+    },
+    "documents_needed": {
+        "ready_to_submit",
+        "submitted",
+        "draft",
+        "in_progress",
+        "withdrawn",
+    },
+    "in_progress": {
+        "documents_needed",
+        "ready_to_submit",
+        "submitted",
+        "draft",
+        "withdrawn",
+    },
+    "ready_to_submit": {
+        "submitted",
+        "documents_needed",
+        "in_progress",
+        "draft",
+        "withdrawn",
+    },
+    "submitted": {
+        "in_review",
+        "under_review",
+        "action_required",
+        "draft",
+        "withdrawn",
+    },
+    "in_review": {
+        "action_required",
+        "approved",
+        "rejected",
+        "submitted",
+        "draft",
+        "withdrawn",
+    },
+    "under_review": {
+        "action_required",
+        "approved",
+        "rejected",
+        "submitted",
+        "draft",
+        "withdrawn",
+    },
+    "action_required": {
+        "in_review",
+        "under_review",
+        "ready_to_submit",
+        "documents_needed",
+        "submitted",
+        "withdrawn",
+    },
+    "approved": {"in_review", "under_review", "withdrawn"},
+    "rejected": {"draft", "in_review", "under_review", "withdrawn"},
+    "withdrawn": {"draft", "submitted", "in_review", "under_review"},
 }
 
 
 
 def get_user_applications(
-    db: Session, user_id: str, status_filter: Optional[str] = None
+    db: Session,
+    user_id: str,
+    status_filter: Optional[str] = None,
+    sort_by: Optional[str] = None,
 ) -> List[Application]:
-    """Retrieve all scheme applications belonging to a user, optionally filtered by status."""
+    """Retrieve all scheme applications belonging to a user, optionally filtered and sorted."""
     query = db.query(Application).filter(Application.user_id == user_id)
     if status_filter:
-        query = query.filter(Application.status == status_filter)
+        norm_filter = "in_review" if status_filter in ("under_review", "under review") else status_filter
+        query = query.filter(Application.status == norm_filter)
+
+    if sort_by in ("deadline", "due_date"):
+        # Put applications with non-null due_date first, ordered ascending by deadline, then created_at desc
+        return query.order_by(
+            Application.due_date.is_(None),
+            Application.due_date.asc(),
+            Application.created_at.desc(),
+        ).all()
+
     return query.order_by(Application.created_at.desc()).all()
 
 
@@ -109,12 +176,21 @@ def create_application(
     initial_status = "documents_needed" if has_mandatory_docs else "ready_to_submit"
     initial_progress = STATUS_PROGRESS_MAP[initial_status]
 
+    due_date = app_in.due_date
+    if not due_date and getattr(scheme, "deadline", None):
+        try:
+            due_date = datetime.fromisoformat(scheme.deadline.replace("Z", "+00:00"))
+            if due_date.tzinfo is None:
+                due_date = due_date.replace(tzinfo=timezone.utc)
+        except Exception:
+            due_date = None
+
     app = Application(
         user_id=user_id,
         scheme_id=app_in.scheme_id,
         status=initial_status,
         progress_percentage=initial_progress,
-        due_date=app_in.due_date,
+        due_date=due_date,
         next_action="Upload required checklist documents" if has_mandatory_docs else "Review and submit application",
         notes=app_in.notes or "",
     )
@@ -163,6 +239,9 @@ def update_application_status(
         return None
 
     target_status = update_in.status.lower()
+    if target_status in ("under_review", "under review"):
+        target_status = "in_review"
+
     if target_status not in VALID_STATUSES:
         raise ValueError(f"Invalid status '{target_status}'. Allowed: {', '.join(VALID_STATUSES)}")
 

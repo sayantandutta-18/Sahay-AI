@@ -103,6 +103,80 @@ export default function ApplicationsPage() {
   // Transition & delete states
   const [transitioningAppId, setTransitioningAppId] = useState<string | null>(null);
   const [deletingAppId, setDeletingAppId] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<"deadline" | "created">("deadline");
+  const [currentTimestamp, setCurrentTimestamp] = useState<number | null>(null);
+
+  useEffect(() => {
+    setCurrentTimestamp(Date.now());
+  }, []);
+
+  const getDeadlineUrgency = (dueDateStr?: string | null) => {
+    if (!dueDateStr) {
+      return { isUrgent: false, isOverdue: false, daysRemaining: null, displayText: "No deadline specified" };
+    }
+    const due = new Date(dueDateStr).getTime();
+    if (isNaN(due)) {
+      return { isUrgent: false, isOverdue: false, daysRemaining: null, displayText: dueDateStr };
+    }
+    // Defer dynamic date difference during SSR prerender
+    if (currentTimestamp === null) {
+      return {
+        isUrgent: false,
+        isOverdue: false,
+        daysRemaining: null,
+        displayText: `Due: ${dueDateStr.slice(0, 10)}`,
+      };
+    }
+    const diffDays = Math.ceil((due - currentTimestamp) / (1000 * 60 * 60 * 24));
+    if (diffDays < 0) {
+      return { isUrgent: true, isOverdue: true, daysRemaining: diffDays, displayText: t.applications.overdue };
+    }
+    if (diffDays === 0) {
+      return { isUrgent: true, isOverdue: false, daysRemaining: 0, displayText: t.applications.dueToday };
+    }
+    if (diffDays <= 7) {
+      return {
+        isUrgent: true,
+        isOverdue: false,
+        daysRemaining: diffDays,
+        displayText: t.applications.dueInDays.replace("{days}", String(diffDays)),
+      };
+    }
+    return {
+      isUrgent: false,
+      isOverdue: false,
+      daysRemaining: diffDays,
+      displayText: `Due: ${new Date(dueDateStr).toLocaleDateString()}`,
+    };
+  };
+
+  const sortedApplications = React.useMemo(() => {
+    if (sortBy === "created") {
+      return [...applications].sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+    }
+    // Default: sort by deadline ascending (nearest first, nulls at bottom)
+    return [...applications].sort((a, b) => {
+      if (!a.due_date && !b.due_date) {
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      }
+      if (!a.due_date) return 1;
+      if (!b.due_date) return -1;
+      return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
+    });
+  }, [applications, sortBy]);
+
+  const urgentAppsCount = React.useMemo(() => {
+    if (currentTimestamp === null) return 0;
+    return applications.filter((app) => {
+      if (!app.due_date || app.status === "approved" || app.status === "withdrawn") return false;
+      const due = new Date(app.due_date).getTime();
+      if (isNaN(due)) return false;
+      const diffDays = Math.ceil((due - currentTimestamp) / (1000 * 60 * 60 * 24));
+      return diffDays <= 7;
+    }).length;
+  }, [applications, currentTimestamp]);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -115,7 +189,7 @@ export default function ApplicationsPage() {
           // Continue to attempt fetch
         }
       }
-      const [apps, allSchemes, docs] = await Promise.all([
+      let [apps, allSchemes, docs] = await Promise.all([
         getApplications(),
         getSchemes().catch(() => []),
         getUserDocuments().catch(() => []),
@@ -130,12 +204,24 @@ export default function ApplicationsPage() {
         const schemeIdParam = params.get("scheme_id");
         if (schemeIdParam) {
           setSelectedSchemeId(schemeIdParam);
-          // If no existing application for this scheme, prompt new modal
-          const existing = apps.find((a) => a.scheme_id === schemeIdParam);
-          if (existing) {
-            setExpandedChecklistAppId(existing.id);
-          } else {
-            setIsNewAppModalOpen(true);
+          let targetApp = apps.find((a) => a.scheme_id === schemeIdParam);
+          if (!targetApp) {
+            try {
+              targetApp = await createApplication(schemeIdParam);
+              apps = [targetApp, ...apps.filter((a) => a.id !== targetApp!.id)];
+              setApplications(apps);
+            } catch {
+              setIsNewAppModalOpen(true);
+            }
+          }
+          if (targetApp) {
+            setExpandedChecklistAppId(targetApp.id);
+            try {
+              const items = await getApplicationChecklist(targetApp.id);
+              setChecklists((prev) => ({ ...prev, [targetApp!.id]: items }));
+            } catch {
+              // Ignore checklist prefetch error
+            }
           }
         }
       }
@@ -143,7 +229,7 @@ export default function ApplicationsPage() {
       if (err && typeof err === "object" && "statusCode" in err && (err as { statusCode: number }).statusCode === 401) {
         try {
           await authDemoLogin();
-          const [apps, allSchemes, docs] = await Promise.all([
+          let [apps, allSchemes, docs] = await Promise.all([
             getApplications(),
             getSchemes().catch(() => []),
             getUserDocuments().catch(() => []),
@@ -151,6 +237,33 @@ export default function ApplicationsPage() {
           setApplications(apps);
           setSchemes(allSchemes);
           setVaultDocs(docs);
+
+          if (typeof window !== "undefined") {
+            const params = new URLSearchParams(window.location.search);
+            const schemeIdParam = params.get("scheme_id");
+            if (schemeIdParam) {
+              setSelectedSchemeId(schemeIdParam);
+              let targetApp = apps.find((a) => a.scheme_id === schemeIdParam);
+              if (!targetApp) {
+                try {
+                  targetApp = await createApplication(schemeIdParam);
+                  apps = [targetApp, ...apps.filter((a) => a.id !== targetApp!.id)];
+                  setApplications(apps);
+                } catch {
+                  setIsNewAppModalOpen(true);
+                }
+              }
+              if (targetApp) {
+                setExpandedChecklistAppId(targetApp.id);
+                try {
+                  const items = await getApplicationChecklist(targetApp.id);
+                  setChecklists((prev) => ({ ...prev, [targetApp!.id]: items }));
+                } catch {
+                  // Ignore checklist prefetch error
+                }
+              }
+            }
+          }
           return;
         } catch {
           // Fall through
@@ -330,10 +443,13 @@ export default function ApplicationsPage() {
 
   const getStatusBadge = (status: string) => {
     const s = status.toLowerCase();
-    if (s === "approved") return <Badge variant="success">Approved</Badge>;
-    if (s === "submitted" || s === "under_review") return <Badge variant="info">Submitted</Badge>;
-    if (s === "rejected" || s === "withdrawn") return <Badge variant="neutral">Closed</Badge>;
-    return <Badge variant="warning">In Progress</Badge>;
+    if (s === "approved") return <Badge variant="success">{t.statuses.approved}</Badge>;
+    if (s === "submitted") return <Badge variant="info">{t.statuses.submitted}</Badge>;
+    if (s === "in_review" || s === "under_review") return <Badge variant="brand">{t.statuses.in_review}</Badge>;
+    if (s === "draft") return <Badge variant="neutral">{t.statuses.draft}</Badge>;
+    if (s === "withdrawn") return <Badge variant="neutral">{t.statuses.withdrawn}</Badge>;
+    if (s === "rejected") return <Badge variant="danger">{t.statuses.rejected}</Badge>;
+    return <Badge variant="warning">{t.statuses.in_progress}</Badge>;
   };
 
   return (
@@ -426,7 +542,44 @@ export default function ApplicationsPage() {
           />
         ) : (
           <div className="space-y-4">
-            {applications.map((app) => {
+            {/* Watchlist & Deadline Sorting Controls (Checkpoint 7) */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-semibold text-slate-900 dark:text-white flex items-center gap-1.5">
+                  <Clock className="w-4 h-4 text-emerald-600" />
+                  {t.applications.watchlistTitle}:
+                </span>
+                <Badge variant="brand" size="sm">
+                  {applications.length} Total
+                </Badge>
+                {urgentAppsCount > 0 && (
+                  <Badge variant="warning" size="sm" className="font-bold">
+                    ⚡ {urgentAppsCount} Urgent (≤ 7 Days)
+                  </Badge>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-slate-500">Order:</span>
+                <Button
+                  size="sm"
+                  variant={sortBy === "deadline" ? "primary" : "outline"}
+                  onClick={() => setSortBy("deadline")}
+                  className="text-xs h-7 px-2.5"
+                >
+                  {t.applications.sortByDeadline}
+                </Button>
+                <Button
+                  size="sm"
+                  variant={sortBy === "created" ? "primary" : "outline"}
+                  onClick={() => setSortBy("created")}
+                  className="text-xs h-7 px-2.5"
+                >
+                  {t.applications.sortByCreated}
+                </Button>
+              </div>
+            </div>
+
+            {sortedApplications.map((app) => {
               const allowedNext = ALLOWED_STATUS_MAP[app.status] || [];
               const items = checklists[app.id] || [];
               const isExpanded = expandedChecklistAppId === app.id;
@@ -435,7 +588,7 @@ export default function ApplicationsPage() {
               return (
                 <Card key={app.id}>
                   <CardHeader>
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
                       <div>
                         <CardTitle className="text-base">{app.scheme_name || "Scheme Application"}</CardTitle>
                         <CardDescription className="flex items-center gap-2 mt-0.5 text-xs">
@@ -445,7 +598,29 @@ export default function ApplicationsPage() {
                           )}
                         </CardDescription>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {app.due_date && (() => {
+                          const urgency = getDeadlineUrgency(app.due_date);
+                          return (
+                            <div
+                              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold ${
+                                urgency.isOverdue
+                                  ? "bg-rose-100 text-rose-800 border border-rose-300 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800"
+                                  : urgency.isUrgent
+                                  ? "bg-amber-100 text-amber-900 border border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800"
+                                  : "bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300"
+                              }`}
+                            >
+                              <Clock className="w-3.5 h-3.5 shrink-0" />
+                              <span>{urgency.displayText}</span>
+                              {urgency.isUrgent && (
+                                <span className="ml-1 px-1.5 py-0.2 rounded text-[10px] uppercase font-bold bg-amber-500 text-white">
+                                  {t.applications.urgentBadge}
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })()}
                         {getStatusBadge(app.status)}
                         <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
                           {app.progress_percentage}%
@@ -589,29 +764,40 @@ export default function ApplicationsPage() {
                       </div>
                     )}
 
-                    {/* Next Action & Status Progression Bar */}
-                    {allowedNext.length > 0 && (
-                      <div className="p-3 bg-slate-50 dark:bg-slate-900 rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs">
-                        <span className="text-slate-600 dark:text-slate-400">
-                          Next Available Status Actions:
-                        </span>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          {allowedNext.map((statusKey) => (
-                            <Button
-                              key={statusKey}
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleStatusTransition(app.id, statusKey)}
-                              isLoading={transitioningAppId === app.id}
-                              className="text-xs h-7 px-2.5"
+                    {/* Interactive 5-Status Switcher (Checkpoint 7) */}
+                    <div className="p-3 bg-slate-50 dark:bg-slate-900 rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs border border-slate-100 dark:border-slate-800">
+                      <span className="font-semibold text-slate-700 dark:text-slate-300">
+                        {t.applications.changeStatus}:
+                      </span>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {[
+                          { key: "draft", label: t.statuses.draft },
+                          { key: "submitted", label: t.statuses.submitted },
+                          { key: "in_review", label: t.statuses.in_review },
+                          { key: "approved", label: t.statuses.approved },
+                          { key: "withdrawn", label: t.statuses.withdrawn },
+                        ].map((s) => {
+                          const isCurrent =
+                            app.status === s.key ||
+                            (s.key === "in_review" && (app.status === "under_review" || app.status === "in_review"));
+                          return (
+                            <button
+                              key={s.key}
+                              type="button"
+                              disabled={isCurrent || transitioningAppId === app.id}
+                              onClick={() => handleStatusTransition(app.id, s.key)}
+                              className={`px-2.5 py-1 rounded text-xs font-medium transition-all ${
+                                isCurrent
+                                  ? "bg-emerald-600 text-white font-bold cursor-default shadow-xs"
+                                  : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 hover:text-emerald-600 cursor-pointer"
+                              }`}
                             >
-                              <ArrowRight className="w-3 h-3 mr-1" />
-                              Move to {statusKey.replace(/_/g, " ")}
-                            </Button>
-                          ))}
-                        </div>
+                              {s.label}
+                            </button>
+                          );
+                        })}
                       </div>
-                    )}
+                    </div>
                   </CardContent>
 
                   <CardFooter className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">

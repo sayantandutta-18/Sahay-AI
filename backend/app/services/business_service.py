@@ -13,6 +13,9 @@ from app.schemas.business import (
     PricingCalculationResponse,
     CashFlowCalculationRequest,
     CashFlowCalculationResponse,
+    BusinessReadinessRequest,
+    ReadinessDimensionScore,
+    BusinessReadinessReportResponse,
 )
 
 
@@ -121,4 +124,192 @@ def calculate_cash_flow(request: CashFlowCalculationRequest) -> CashFlowCalculat
         debt_service_coverage_ratio=dscr,
         business_health_grade=health_grade,
         recommendation=recommendation,
+    )
+
+
+def evaluate_business_readiness(request: BusinessReadinessRequest) -> BusinessReadinessReportResponse:
+    """Evaluate 5-dimension business readiness using deterministic scoring rules.
+
+    Dimensions:
+    1. capital: Financial buffer, net operating surplus, debt burden
+    2. documents: Aadhaar, PAN, Bank, Udyam, GST (20 pts each)
+    3. vintage: Months in active operation (0-100)
+    4. income: Turnover volume & revenue recurring strength
+    5. record_keeping: Transition from cash-only to verified digital/formal bookkeeping
+    """
+    dimensions = []
+
+    # 1. Capital & Financial Buffer
+    rev = request.monthly_revenue
+    exp = request.monthly_expense
+    debt = request.existing_loans
+    net_surplus = round(rev - exp - debt, 2)
+
+    if rev <= 0:
+        cap_score = 0
+        cap_tier = "Zero Revenue"
+        cap_exp = "Zero monthly operational revenue recorded; unable to assess operational surplus."
+    elif net_surplus < 0:
+        cap_score = max(5, round(30 * (1.0 + net_surplus / (exp + debt + 1.0))))
+        cap_tier = "Deficit"
+        cap_exp = "Monthly operational expenses and debt exceed monthly receipts (operating deficit)."
+    else:
+        margin = net_surplus / rev
+        if margin < 0.10:
+            cap_score = 40
+            cap_tier = "Tight Buffer"
+            cap_exp = f"Net monthly surplus is positive but under 10% ({round(margin * 100, 1)}%) of revenue."
+        elif margin < 0.25:
+            cap_score = 70
+            cap_tier = "Healthy Buffer"
+            cap_exp = f"Net monthly surplus is healthy between 10% and 25% ({round(margin * 100, 1)}%) of revenue."
+        else:
+            cap_score = 100
+            cap_tier = "Strong Reserves"
+            cap_exp = f"Robust operational margin ({round(margin * 100, 1)}%) providing strong cash cushion for debt service."
+
+    dimensions.append(
+        ReadinessDimensionScore(
+            dimension_key="capital",
+            dimension_name="Capital & Financial Buffer",
+            score=min(100, max(0, cap_score)),
+            formula_explanation=cap_exp,
+            assessment_tier=cap_tier,
+        )
+    )
+
+    # 2. Document Readiness (20 points per credential)
+    doc_flags = [
+        request.has_aadhaar,
+        request.has_pan,
+        request.has_bank_account,
+        request.has_udyam,
+        request.has_gst,
+    ]
+    verified_count = sum(1 for f in doc_flags if f)
+    doc_score = verified_count * 20
+    if doc_score == 100:
+        doc_tier = "Fully Documented"
+        doc_exp = "All 5 core micro-enterprise credentials (Aadhaar, PAN, Bank, Udyam, GST) verified (20 pts each)."
+    elif doc_score >= 60:
+        doc_tier = "Substantially Documented"
+        doc_exp = f"{verified_count} of 5 core credentials verified (20 pts each: {doc_score}/100)."
+    elif doc_score >= 20:
+        doc_tier = "Partially Documented"
+        doc_exp = f"Only {verified_count} core credential verified (20 pts each: {doc_score}/100)."
+    else:
+        doc_tier = "Undocumented"
+        doc_exp = "No core enterprise registration or banking credentials verified (0/100)."
+
+    dimensions.append(
+        ReadinessDimensionScore(
+            dimension_key="documents",
+            dimension_name="Document Readiness",
+            score=doc_score,
+            formula_explanation=doc_exp,
+            assessment_tier=doc_tier,
+        )
+    )
+
+    # 3. Business Vintage & Stability
+    months = request.months_in_operation
+    if months < 6:
+        vin_score = 20
+        vin_tier = "Seed / Early Inception"
+        vin_exp = f"{months} months in operation (under 6 months benchmark for institutional lending)."
+    elif months < 12:
+        vin_score = 45
+        vin_tier = "Early Stabilization"
+        vin_exp = f"{months} months in operation (established preliminary operational baseline)."
+    elif months < 24:
+        vin_score = 75
+        vin_tier = "Established Micro"
+        vin_exp = f"{months} months in operation (over 1 year of consistent trading history)."
+    else:
+        vin_score = 100
+        vin_tier = "Mature Operation"
+        vin_exp = f"{months} months in operation (2+ years track record meeting formal banking tenure standards)."
+
+    dimensions.append(
+        ReadinessDimensionScore(
+            dimension_key="vintage",
+            dimension_name="Business Vintage & Stability",
+            score=vin_score,
+            formula_explanation=vin_exp,
+            assessment_tier=vin_tier,
+        )
+    )
+
+    # 4. Regular Income & Turnover
+    effective_turnover = max(request.annual_turnover, rev * 12.0)
+    if effective_turnover < 50_000:
+        inc_score = 15
+        inc_tier = "Subsistence Micro"
+        inc_exp = f"Annual turnover (~₹{int(effective_turnover):,}) under ₹50,000 threshold."
+    elif effective_turnover < 200_000:
+        inc_score = 40
+        inc_tier = "Emerging Enterprise"
+        inc_exp = f"Annual turnover (~₹{int(effective_turnover):,}) between ₹50k and ₹2 Lakhs."
+    elif effective_turnover < 1_000_000:
+        inc_score = 70
+        inc_tier = "Commercial Micro"
+        inc_exp = f"Annual turnover (~₹{int(effective_turnover):,}) between ₹2 Lakhs and ₹10 Lakhs."
+    elif effective_turnover < 2_500_000:
+        inc_score = 85
+        inc_tier = "Growth Enterprise"
+        inc_exp = f"Annual turnover (~₹{int(effective_turnover):,}) between ₹10 Lakhs and ₹25 Lakhs."
+    else:
+        inc_score = 100
+        inc_tier = "High Turnover"
+        inc_exp = f"Annual turnover (~₹{int(effective_turnover):,}) meets or exceeds ₹25 Lakhs benchmark."
+
+    dimensions.append(
+        ReadinessDimensionScore(
+            dimension_key="income",
+            dimension_name="Regular Income & Turnover",
+            score=inc_score,
+            formula_explanation=inc_exp,
+            assessment_tier=inc_tier,
+        )
+    )
+
+    # 5. Record-Keeping & Formalization
+    rk_type = request.record_keeping_type.lower()
+    if rk_type == "formal_accounting" or (request.has_gst and request.has_bank_account and request.has_udyam):
+        rec_score = 100
+        rec_tier = "Auditable Digital Books"
+        rec_exp = "Digital records with bank integration, active Udyam MSME, and GST returns."
+    elif request.has_udyam and request.has_bank_account:
+        rec_score = 75
+        rec_tier = "Bank-Linked Formal"
+        rec_exp = "Operating bank account verified with formal Udyam enterprise registration."
+    elif request.has_bank_account or rk_type == "bank_recorded":
+        rec_score = 50
+        rec_tier = "Basic Bank Account"
+        rec_exp = "Commercial bank account exists, but lacks formal MSME registration filings."
+    else:
+        rec_score = 20
+        rec_tier = "Informal Cash Records"
+        rec_exp = "Informal cash transactions without auditable institutional bank or tax trails."
+
+    dimensions.append(
+        ReadinessDimensionScore(
+            dimension_key="record_keeping",
+            dimension_name="Record-Keeping & Formalization",
+            score=rec_score,
+            formula_explanation=rec_exp,
+            assessment_tier=rec_tier,
+        )
+    )
+
+    overall_score = round(sum(d.score for d in dimensions) / len(dimensions))
+
+    return BusinessReadinessReportResponse(
+        overall_readiness_score=overall_score,
+        is_official_decision=False,
+        disclaimer=(
+            "This score is an estimated micro-business readiness indicator, "
+            "not an official government or institutional eligibility decision."
+        ),
+        dimensions=dimensions,
     )

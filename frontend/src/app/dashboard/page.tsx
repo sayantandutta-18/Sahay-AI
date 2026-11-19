@@ -6,6 +6,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { HealthIndicator } from "@/components/ui/HealthIndicator";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { VerificationBadge } from "@/components/ui/VerificationBadge";
 import { Button } from "@/components/ui/Button";
 import {
   getCurrentUser,
@@ -184,7 +185,17 @@ export default function DashboardPage() {
                   </h4>
                   <p className="text-xs text-slate-500">Up to 35% subsidy on ₹25 Lakhs project</p>
                 </div>
-                <Badge variant="success">95% Fit</Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant="success">95% Fit</Badge>
+                  <VerificationBadge
+                    status="verified"
+                    lastVerifiedAt="2026-03-01"
+                    officialUrl="https://www.kviconline.gov.in"
+                    verifier="KVIC, Ministry of MSME"
+                    schemeName="PMEGP"
+                    size="sm"
+                  />
+                </div>
               </div>
 
               <div className="p-3 rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex items-center justify-between">
@@ -194,7 +205,17 @@ export default function DashboardPage() {
                   </h4>
                   <p className="text-xs text-slate-500">Collateral-free credit up to ₹10 Lakhs</p>
                 </div>
-                <Badge variant="success">90% Fit</Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant="success">90% Fit</Badge>
+                  <VerificationBadge
+                    status="verified"
+                    lastVerifiedAt="2026-03-01"
+                    officialUrl="https://www.mudra.org.in"
+                    verifier="MUDRA, DFS, Ministry of Finance"
+                    schemeName="Pradhan Mantri Mudra Yojana (Tarun)"
+                    size="sm"
+                  />
+                </div>
               </div>
 
               <div className="pt-2">

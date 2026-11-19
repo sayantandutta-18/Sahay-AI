@@ -17,6 +17,8 @@ import {
   EmiCalculationResult,
   PricingCalculationResult,
   CashFlowCalculationResult,
+  BusinessReadinessInput,
+  BusinessReadinessReport,
   AdminStats,
   AuditLogItem,
   ChatResponse,
@@ -282,6 +284,18 @@ export async function authDemoLogin(): Promise<AuthToken> {
   }
 }
 
+export async function ensureAuthenticatedSession(): Promise<string | null> {
+  if (typeof window === "undefined") return null;
+  const existingToken = localStorage.getItem("sahay_access_token");
+  if (existingToken) return existingToken;
+  try {
+    const auth = await authDemoLogin();
+    return auth.access_token;
+  } catch {
+    return null;
+  }
+}
+
 // ==========================================
 // Business Profile APIs
 // ==========================================
@@ -351,11 +365,19 @@ export async function getMyMatches(): Promise<EligibilitySummaryResponse> {
 // Applications & Documents APIs
 // ==========================================
 
-export async function getApplications(): Promise<ApplicationResponse[]> {
-  return fetchApi<ApplicationResponse[]>("/api/v1/applications");
+export async function getApplications(
+  statusFilter?: string,
+  sortBy?: string
+): Promise<ApplicationResponse[]> {
+  const params = new URLSearchParams();
+  if (statusFilter) params.append("status_filter", statusFilter);
+  if (sortBy) params.append("sort_by", sortBy);
+  const qs = params.toString();
+  return fetchApi<ApplicationResponse[]>(`/api/v1/applications${qs ? `?${qs}` : ""}`);
 }
 
 export async function createApplication(schemeId: string, notes?: string): Promise<ApplicationResponse> {
+  await ensureAuthenticatedSession();
   return fetchApi<ApplicationResponse>("/api/v1/applications", {
     method: "POST",
     body: JSON.stringify({ scheme_id: schemeId, notes: notes || "" }),
@@ -526,6 +548,15 @@ export async function calculateCashFlow(data: {
   existing_debt_emi?: number;
 }): Promise<CashFlowCalculationResult> {
   return fetchApi<CashFlowCalculationResult>("/api/v1/business/cash-flow", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function assessBusinessReadiness(
+  data: BusinessReadinessInput
+): Promise<BusinessReadinessReport> {
+  return fetchApi<BusinessReadinessReport>("/api/v1/business/readiness", {
     method: "POST",
     body: JSON.stringify(data),
   });

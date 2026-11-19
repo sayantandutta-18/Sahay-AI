@@ -114,12 +114,25 @@ export interface Scheme {
   target_sectors: string;
   official_url: string;
   last_verified_at: string;
+  deadline?: string;
+  verifier?: string;
+  verification_status?: "verified" | "unverified" | "outdated" | string;
   is_active?: boolean;
   documents: SchemeDocumentRequirement[];
   rules: SchemeRule[];
 }
 
 // Eligibility
+export interface RuleEvaluationDetail {
+  field: string;
+  operator: string;
+  expected_value: string;
+  actual_value?: string | null;
+  status: "met" | "not_met" | "missing_information" | string;
+  explanation: string;
+  is_hard_rule: boolean;
+}
+
 export interface SchemeMatchResult {
   scheme_id: string;
   scheme_name: string;
@@ -129,19 +142,28 @@ export interface SchemeMatchResult {
   max_amount: number;
   official_url: string;
   is_eligible: boolean;
+  eligibility_verdict?: "eligible" | "not_eligible" | "more_information_needed";
   match_score: number; // 0 to 100
   passed_hard_rules: string[];
   failed_hard_rules: string[];
+  missing_info_rules?: string[];
+  evaluated_rules?: RuleEvaluationDetail[];
   soft_rule_breakdown: { rule: string; points: number; awarded: boolean }[];
   missing_requirements: string[];
   near_miss_unlock_path?: string | null;
   rule_version: string;
+  deadline?: string;
+  verifier?: string;
+  verification_status?: string;
+  last_verified_at?: string;
+  documents?: SchemeDocumentRequirement[];
 }
 
 export interface EligibilitySummaryResponse {
   evaluated_schemes_count: number;
   eligible_count: number;
   near_match_count: number;
+  more_info_needed_count?: number;
   evaluated_at: string;
   rule_authority: string;
   matches: SchemeMatchResult[];
@@ -217,6 +239,8 @@ export interface ApplicationResponse {
   scheme_name?: string | null;
   status: "not_started" | "in_progress" | "documents_needed" | "submitted" | "under_review" | "approved" | "rejected" | string;
   progress_percentage: number;
+  due_date?: string | null;
+  next_action?: string;
   lender_consent_granted: boolean;
   consent_granted_at?: string | null;
   submitted_at?: string | null;
@@ -433,6 +457,36 @@ export interface CashFlowCalculationResult {
   debt_service_coverage_ratio: number;
   business_health_grade: string;
   recommendation: string;
+  authority: string;
+}
+
+export interface BusinessReadinessInput {
+  annual_turnover: number;
+  monthly_revenue: number;
+  monthly_expense: number;
+  existing_loans: number;
+  months_in_operation: number;
+  has_udyam: boolean;
+  has_pan: boolean;
+  has_gst: boolean;
+  has_bank_account: boolean;
+  has_aadhaar: boolean;
+  record_keeping_type: string;
+}
+
+export interface ReadinessDimensionScore {
+  dimension_key: string;
+  dimension_name: string;
+  score: number;
+  formula_explanation: string;
+  assessment_tier: string;
+}
+
+export interface BusinessReadinessReport {
+  overall_readiness_score: number;
+  is_official_decision: boolean;
+  disclaimer: string;
+  dimensions: ReadinessDimensionScore[];
   authority: string;
 }
 

@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { User, Building2, FileCheck2, ArrowRight, ArrowLeft } from "lucide-react";
-import { updateBusinessProfile } from "@/lib/api";
+import { updateBusinessProfile, ensureAuthenticatedSession } from "@/lib/api";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -34,6 +34,10 @@ export default function OnboardingPage() {
   const handleComplete = async () => {
     setIsSubmitting(true);
     try {
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("sahay_onboarding_answers", JSON.stringify(formData));
+      }
+      await ensureAuthenticatedSession();
       await updateBusinessProfile({
         business_name: formData.businessName,
         business_type: formData.businessType,
@@ -48,7 +52,7 @@ export default function OnboardingPage() {
       // Offline fallback
     } finally {
       setIsSubmitting(false);
-      router.push("/matches");
+      router.push("/matches?from=onboarding");
     }
   };
 

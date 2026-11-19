@@ -14,11 +14,10 @@ logger = logging.getLogger("sahay.database")
 
 @event.listens_for(Engine, "connect")
 def _set_sqlite_pragma(dbapi_connection, connection_record):
-    """Enforce WAL mode, foreign keys, and busy timeout for concurrent SQLite operations."""
+    """Enforce foreign keys, synchronous=NORMAL, and busy timeout for concurrent SQLite operations."""
     if isinstance(dbapi_connection, SQLite3Connection):
         cursor = dbapi_connection.cursor()
         try:
-            cursor.execute("PRAGMA journal_mode=WAL")
             cursor.execute("PRAGMA synchronous=NORMAL")
             cursor.execute("PRAGMA busy_timeout=10000")
             cursor.execute("PRAGMA foreign_keys=ON")
@@ -94,10 +93,10 @@ def check_db_health() -> dict:
                 jm_res = connection.execute(text("PRAGMA journal_mode")).scalar()
                 journal_mode = str(jm_res).lower() if jm_res else None
 
-        latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
+            inspector = inspect(connection)
+            table_count = len(inspector.get_table_names())
 
-        inspector = inspect(engine)
-        table_count = len(inspector.get_table_names())
+        latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
 
         raw_url = str(engine.url)
         if "@" in raw_url:

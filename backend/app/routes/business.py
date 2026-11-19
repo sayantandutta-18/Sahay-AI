@@ -8,11 +8,14 @@ from app.schemas.business import (
     PricingCalculationResponse,
     CashFlowCalculationRequest,
     CashFlowCalculationResponse,
+    BusinessReadinessRequest,
+    BusinessReadinessReportResponse,
 )
 from app.services.business_service import (
     calculate_loan_emi,
     calculate_product_pricing,
     calculate_cash_flow,
+    evaluate_business_readiness,
 )
 
 router = APIRouter(prefix="/business", tags=["Business Advisor"])
@@ -34,3 +37,9 @@ def compute_pricing_margin(request: PricingCalculationRequest):
 def evaluate_enterprise_cash_flow(request: CashFlowCalculationRequest):
     """Compute net operating surplus, debt coverage ratio, and business health grade."""
     return calculate_cash_flow(request)
+
+
+@router.post("/readiness", response_model=BusinessReadinessReportResponse)
+def assess_business_readiness(request: BusinessReadinessRequest):
+    """Assess 5-dimension enterprise readiness with deterministic scoring and explanations."""
+    return evaluate_business_readiness(request)

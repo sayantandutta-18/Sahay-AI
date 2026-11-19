@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { calculateEmi, calculatePricing, calculateCashFlow } from "@/lib/api";
+import { ReadinessRadar } from "@/components/ui/ReadinessRadar";
 import {
   EmiCalculationResult,
   PricingCalculationResult,
@@ -89,6 +90,16 @@ export default function BusinessAdvisorPage() {
             <ShieldCheck className="w-3.5 h-3.5 mr-1" /> Auditable Algorithms
           </Badge>
         </div>
+
+        {/* Checkpoint 6: 5-Dimension Business Readiness Radar with Explanations */}
+        <ReadinessRadar
+          initialInput={{
+            monthly_revenue: revenue,
+            monthly_expense: expense,
+            existing_loans: existingEmi,
+            annual_turnover: revenue * 12,
+          }}
+        />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* EMI Calculator */}

@@ -34,6 +34,11 @@ class Scheme(Base):
     )  # Comma-separated: "manufacturing,services"
     official_url: Mapped[str] = mapped_column(String(500), nullable=False)
     last_verified_at: Mapped[str] = mapped_column(String(30), nullable=False)  # ISO Date YYYY-MM-DD
+    deadline: Mapped[str] = mapped_column(String(100), default="Ongoing (Open year-round)", nullable=False)
+    verifier: Mapped[str] = mapped_column(String(200), default="Sahay Verification Team", nullable=False)
+    verification_status: Mapped[str] = mapped_column(
+        String(30), default="verified", nullable=False
+    )  # verified, unverified, outdated
     language_coverage: Mapped[str] = mapped_column(
         String(100), default="en,hi,bn", nullable=False
     )

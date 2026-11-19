@@ -35,11 +35,12 @@ router = APIRouter(prefix="/applications", tags=["Applications"])
 @router.get("", response_model=List[ApplicationResponse])
 def list_applications(
     status_filter: Optional[str] = Query(None, description="Filter by status: draft, documents_needed, submitted, etc."),
+    sort_by: Optional[str] = Query(None, description="Sort order: deadline or created_at"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Retrieve all applications created by the authenticated entrepreneur, optionally filtered."""
-    apps = get_user_applications(db, current_user.id, status_filter=status_filter)
+    """Retrieve all applications created by the authenticated entrepreneur, optionally filtered and sorted."""
+    apps = get_user_applications(db, current_user.id, status_filter=status_filter, sort_by=sort_by)
     return [
         ApplicationResponse(
             id=a.id,

@@ -54,6 +54,14 @@ export interface TranslationDictionary {
     submitApplication: string;
     withdrawApplication: string;
     noApplications: string;
+    watchlistTitle: string;
+    sortByDeadline: string;
+    sortByCreated: string;
+    urgentBadge: string;
+    dueInDays: string;
+    dueToday: string;
+    overdue: string;
+    changeStatus: string;
   };
   vault: {
     title: string;
@@ -101,6 +109,7 @@ export interface TranslationDictionary {
     verified: string;
     eligible: string;
     notEligible: string;
+    moreInfoNeeded: string;
     searchPlaceholder: string;
     success: string;
     error: string;
@@ -111,6 +120,64 @@ export interface TranslationDictionary {
     sebiNotice: string;
     deterministicGuarantee: string;
     disclaimer: string;
+  };
+  verification: {
+    verified: string;
+    unverified: string;
+    outdated: string;
+    verifiedBadge: string;
+    unverifiedBadge: string;
+    outdatedBadge: string;
+    officialSource: string;
+    lastVerifiedDate: string;
+    verifiedBy: string;
+    dialogTitle: string;
+    verifiedDesc: string;
+    unverifiedDesc: string;
+    outdatedDesc: string;
+    openPortal: string;
+    close: string;
+  };
+  checklist: {
+    title: string;
+    completed: string;
+    allCompleted: string;
+    requiredDocs: string;
+    unmetRules: string;
+    missingParams: string;
+    nextStepAction: string;
+    acquired: string;
+    missing: string;
+    mandatory: string;
+    optional: string;
+    getDoc: string;
+    applyPortal: string;
+  };
+  readiness: {
+    title: string;
+    subtitle: string;
+    estimatedWarning: string;
+    overallScore: string;
+    outOf100: string;
+    dimensionsTitle: string;
+    formulaLabel: string;
+    capital: string;
+    documents: string;
+    vintage: string;
+    income: string;
+    records: string;
+    recalculate: string;
+    adjustParameters: string;
+    monthlyRevenue: string;
+    monthlyExpense: string;
+    existingDebt: string;
+    turnover: string;
+    vintageMonths: string;
+    recordKeeping: string;
+    informal: string;
+    bankRecorded: string;
+    formalBooks: string;
+    credentialsTitle: string;
   };
 }
 
@@ -160,6 +227,14 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       submitApplication: "Submit for Official Review",
       withdrawApplication: "Withdraw Application",
       noApplications: "No active scheme applications. Explore verified schemes to begin.",
+      watchlistTitle: "Deadline Watchlist & Tracker",
+      sortByDeadline: "Sort by Deadline",
+      sortByCreated: "Sort by Created Date",
+      urgentBadge: "URGENT",
+      dueInDays: "Due in {days} days",
+      dueToday: "Due Today",
+      overdue: "Deadline Passed",
+      changeStatus: "Change Status",
     },
     vault: {
       title: "Document Vault & Metadata Store",
@@ -207,6 +282,7 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       verified: "Government Verified",
       eligible: "Eligible",
       notEligible: "Not Eligible",
+      moreInfoNeeded: "More Info Needed",
       searchPlaceholder: "Search schemes, subsidies, loans...",
       success: "Operation successful",
       error: "Something went wrong",
@@ -219,6 +295,64 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       deterministicGuarantee:
         "All calculations and eligibility matches are deterministically evaluated by verified backend rules.",
       disclaimer: "Sahay is an independent private application and is not affiliated with any government portal.",
+    },
+    verification: {
+      verified: "Verified",
+      unverified: "Unverified",
+      outdated: "Outdated",
+      verifiedBadge: "VERIFIED",
+      unverifiedBadge: "UNVERIFIED",
+      outdatedBadge: "OUTDATED",
+      officialSource: "Official Source Portal",
+      lastVerifiedDate: "Last Verified Date",
+      verifiedBy: "Verifying Authority",
+      dialogTitle: "Official Verification Status",
+      verifiedDesc: "This scheme was verified against the official government gazette / portal notification.",
+      unverifiedDesc: "Caution: This information has not yet been verified against a primary government portal.",
+      outdatedDesc: "Notice: This scheme was last checked >180 days ago. Requirements or financial limits may have changed.",
+      openPortal: "Visit Official Portal",
+      close: "Close",
+    },
+    checklist: {
+      title: "What's Still Missing & Action Checklist",
+      completed: "Completed",
+      allCompleted: "All requirements fulfilled! You are ready to apply on the official portal.",
+      requiredDocs: "Required Application Documents",
+      unmetRules: "Unmet Criteria to Address",
+      missingParams: "Missing Profile Information Needed",
+      nextStepAction: "Recommended Action to Unlock",
+      acquired: "Acquired",
+      missing: "Missing",
+      mandatory: "Mandatory",
+      optional: "Optional",
+      getDoc: "Official Source Portal",
+      applyPortal: "Proceed to Official Application Portal",
+    },
+    readiness: {
+      title: "Micro-Business Readiness Radar",
+      subtitle: "5-dimension auditable readiness assessment based on deterministic formulas.",
+      estimatedWarning: "Warning: This score is an estimated micro-business readiness indicator, not an official government or institutional eligibility decision.",
+      overallScore: "Overall Enterprise Readiness",
+      outOf100: "out of 100",
+      dimensionsTitle: "Readiness Dimension Breakdown & Formulas",
+      formulaLabel: "Calculation Rule",
+      capital: "Capital & Financial Buffer",
+      documents: "Document Readiness",
+      vintage: "Business Vintage & Stability",
+      income: "Regular Income & Turnover",
+      records: "Record-Keeping & Formalization",
+      recalculate: "Recalculate Readiness",
+      adjustParameters: "Interactive Business Parameters",
+      monthlyRevenue: "Monthly Revenue (₹)",
+      monthlyExpense: "Monthly Operational Expense (₹)",
+      existingDebt: "Existing Monthly Debt / EMI (₹)",
+      turnover: "Annual Gross Turnover (₹)",
+      vintageMonths: "Months in Operation",
+      recordKeeping: "Accounting / Record Method",
+      informal: "Informal Cash Records",
+      bankRecorded: "Active Bank Records",
+      formalBooks: "Auditable Digital Books & GST",
+      credentialsTitle: "Verified Credentials",
     },
   },
   hi: {
@@ -266,6 +400,14 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       submitApplication: "अंतिम समीक्षा हेतु जमा करें",
       withdrawApplication: "आवेदन वापस लें",
       noApplications: "कोई सक्रिय आवेदन नहीं है। शुरू करने के लिए योजनाओं का अन्वेषण करें।",
+      watchlistTitle: "समय-सीमा वॉचलिस्ट और ट्रैकर",
+      sortByDeadline: "समय-सीमा अनुसार क्रमबद्ध करें",
+      sortByCreated: "निर्माण तिथि अनुसार क्रमबद्ध करें",
+      urgentBadge: "अति आवश्यक",
+      dueInDays: "{days} दिनों में देय",
+      dueToday: "आज ही देय",
+      overdue: "समय-सीमा समाप्त",
+      changeStatus: "स्थिति बदलें",
     },
     vault: {
       title: "दस्तावेज़ वॉल्ट एवं डेटा स्टोर",
@@ -313,6 +455,7 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       verified: "सरकारी सत्यापित",
       eligible: "पात्र",
       notEligible: "अपात्र",
+      moreInfoNeeded: "अधिक जानकारी आवश्यक",
       searchPlaceholder: "योजनाएं, सब्सिडी या ऋण खोजें...",
       success: "कार्य सफलतापूर्वक संपन्न हुआ",
       error: "कुछ त्रुटि हुई",
@@ -325,6 +468,64 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       deterministicGuarantee:
         "सभी वित्तीय गणनाएं और पात्रता मानदंड आधिकारिक नियमों द्वारा निर्धारित किए जाते हैं।",
       disclaimer: "सहाय एक स्वतंत्र निजी एप्लिकेशन है और किसी भी सरकारी पोर्टल से संबद्ध नहीं है।",
+    },
+    verification: {
+      verified: "सत्यापित",
+      unverified: "असत्यापित",
+      outdated: "पुराना (समीक्षा लंबित)",
+      verifiedBadge: "सत्यापित",
+      unverifiedBadge: "असत्यापित",
+      outdatedBadge: "पुराना",
+      officialSource: "आधिकारिक पोर्टल स्रोत",
+      lastVerifiedDate: "अंतिम सत्यापन तिथि",
+      verifiedBy: "सत्यापन प्राधिकरण",
+      dialogTitle: "आधिकारिक सत्यापन स्थिति",
+      verifiedDesc: "इस योजना को आधिकारिक सरकारी गजट/पोर्टल अधिसूचना से सत्यापित किया गया है।",
+      unverifiedDesc: "सावधानी: इस जानकारी को अभी तक किसी प्राथमिक सरकारी पोर्टल से सत्यापित नहीं किया गया है।",
+      outdatedDesc: "सूचना: इस योजना की अंतिम जांच 180 दिन से पहले हुई थी। नियम या वित्तीय सीमाएं बदल सकती हैं।",
+      openPortal: "आधिकारिक पोर्टल पर जाएं",
+      close: "बंद करें",
+    },
+    checklist: {
+      title: "क्या अभी भी बाकी है और कार्य चेकलिस्ट",
+      completed: "पूर्ण",
+      allCompleted: "सभी आवश्यकताएं पूरी हुईं! आप आधिकारिक पोर्टल पर आवेदन करने के लिए तैयार हैं।",
+      requiredDocs: "आवश्यक आवेदन दस्तावेज़",
+      unmetRules: "समाधान के लिए अपूर्ण मानदंड",
+      missingParams: "आवश्यक अपूर्ण प्रोफ़ाइल विवरण",
+      nextStepAction: "पात्रता अनलॉक करने के लिए अगला कदम",
+      acquired: "प्राप्त",
+      missing: "बाकी",
+      mandatory: "अनिवार्य",
+      optional: "वैकल्पिक",
+      getDoc: "आधिकारिक स्रोत पोर्टल",
+      applyPortal: "आधिकारिक आवेदन पोर्टल पर जाएं",
+    },
+    readiness: {
+      title: "सूक्ष्म-व्यवसाय तत्परता रडार",
+      subtitle: "निश्चित गणितीय नियमों पर आधारित 5-आयामी सत्यापन योग्य तत्परता मूल्यांकन।",
+      estimatedWarning: "चेतावनी: यह स्कोर एक अनुमानित सूक्ष्म-व्यवसाय तत्परता संकेतक है, आधिकारिक सरकारी या संस्थागत पात्रता निर्णय नहीं।",
+      overallScore: "कुल उद्यम तत्परता",
+      outOf100: "100 में से",
+      dimensionsTitle: "तत्परता आयाम विवरण और गणना सूत्र",
+      formulaLabel: "गणना नियम",
+      capital: "पूंजी और वित्तीय बफर",
+      documents: "दस्तावेज़ तत्परता",
+      vintage: "व्यापारिक अनुभव और स्थिरता",
+      income: "नियमित आय और कारोबार",
+      records: "रिकॉर्ड-रखरखाव और औपचारिकता",
+      recalculate: "पुनः गणना करें",
+      adjustParameters: "इंटरएक्टिव व्यापार पैरामीटर",
+      monthlyRevenue: "मासिक राजस्व (₹)",
+      monthlyExpense: "मासिक परिचालन व्यय (₹)",
+      existingDebt: "मौजूदा मासिक ऋण / ईएमआई (₹)",
+      turnover: "वार्षिक सकल कारोबार (₹)",
+      vintageMonths: "संचालन के महीने",
+      recordKeeping: "लेखा / रिकॉर्ड विधि",
+      informal: "अनौपचारिक नकद रिकॉर्ड",
+      bankRecorded: "सक्रिय बैंक रिकॉर्ड",
+      formalBooks: "सत्यापन योग्य डिजिटल बहीखाता और जीएसटी",
+      credentialsTitle: "सत्यापित क्रेडेंशियल",
     },
   },
   bn: {
@@ -372,6 +573,14 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       submitApplication: "চূড়ান্ত পর্যালোচনার জন্য জমা দিন",
       withdrawApplication: "আবেদন প্রত্যাহার করুন",
       noApplications: "কোনো সক্রিয় আবেদন নেই। শুরু করতে সরকারি প্রকল্পগুলো দেখুন।",
+      watchlistTitle: "সময়সীমা নজরতালিকা ও ট্র্যাকার",
+      sortByDeadline: "সময়সীমা অনুযায়ী সাজান",
+      sortByCreated: "তৈরির তারিখ অনুযায়ী সাজান",
+      urgentBadge: "জরুরি",
+      dueInDays: "{days} দিনের মধ্যে জমা দিতে হবে",
+      dueToday: "আজই শেষ দিন",
+      overdue: "সময়সীমা অতিক্রান্ত",
+      changeStatus: "অবস্থা পরিবর্তন করুন",
     },
     vault: {
       title: "নথিপত্র ভল্ট ও মেটাডেটা স্টোর",
@@ -419,6 +628,7 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       verified: "সরকারিভাবে যাচাইকৃত",
       eligible: "যোগ্য",
       notEligible: "অযোগ্য",
+      moreInfoNeeded: "আরও তথ্য প্রয়োজন",
       searchPlaceholder: "প্রকল্প, ভর্তুকি বা ঋণ অনুসন্ধান করুন...",
       success: "কাজটি সফলভাবে সম্পন্ন হয়েছে",
       error: "কিছু সমস্যা হয়েছে",
@@ -431,6 +641,64 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       deterministicGuarantee:
         "সমস্ত আর্থিক হিসাব এবং যোগ্যতা সরকারি নিয়মাবলীর মাধ্যমে নিশ্চিত করা হয়।",
       disclaimer: "সহায় একটি স্বাধীন ব্যক্তিগত প্ল্যাটফর্ম এবং কোনো সরকারি পোর্টালের সাথে যুক্ত নয়।",
+    },
+    verification: {
+      verified: "যাচাইকৃত",
+      unverified: "অযাচাইকৃত",
+      outdated: "মেয়াদোত্তীর্ণ (পুনঃযাচাই বাকি)",
+      verifiedBadge: "যাচাইকৃত",
+      unverifiedBadge: "অযাচাইকৃত",
+      outdatedBadge: "মেয়াদোত্তীর্ণ",
+      officialSource: "অফিসিয়াল পোর্টাল উৎস",
+      lastVerifiedDate: "সর্বশেষ যাচাইয়ের তারিখ",
+      verifiedBy: "যাচাইকারী কর্তৃপক্ষ",
+      dialogTitle: "অফিসিয়াল যাচাইকরণ স্থিতি",
+      verifiedDesc: "এই প্রকল্পটি সরাসরি সরকারি গেজেট বা পোর্টাল বিজ্ঞপ্তি থেকে যাচাই করা হয়েছে।",
+      unverifiedDesc: "সতর্কতা: এই তথ্যটি এখনও কোনো প্রাথমিক সরকারি পোর্টাল থেকে যাচাই করা হয়নি।",
+      outdatedDesc: "বিজ্ঞপ্তি: এই প্রকল্পটি ১৮০ দিনেরও বেশি আগে যাচাই করা হয়েছিল। নিয়ম বা অনুদান সীমা পরিবর্তিত হতে পারে।",
+      openPortal: "অফিসিয়াল পোর্টালে যান",
+      close: "বন্ধ করুন",
+    },
+    checklist: {
+      title: "কী এখনও বাকি আছে এবং অ্যাকশন চেকলিস্ট",
+      completed: "সম্পূর্ণ",
+      allCompleted: "সমস্ত প্রয়োজনীয়তা পূরণ হয়েছে! আপনি অফিসিয়াল পোর্টালে আবেদনের জন্য প্রস্তুত।",
+      requiredDocs: "প্রয়োজনীয় আবেদনপত্র ও নথি",
+      unmetRules: "সমাধানযোগ্য অপূর্ণ শর্তাবলী",
+      missingParams: "প্রয়োজনীয় অনুপস্থিত প্রোফাইল তথ্য",
+      nextStepAction: "যোগ্যতা বৃদ্ধির প্রস্তাবিত পদক্ষেপ",
+      acquired: "সংগৃহীত",
+      missing: "বাকি",
+      mandatory: "বাধ্যতামূলক",
+      optional: "ঐচ্ছিক",
+      getDoc: "অফিসিয়াল পোর্টাল উৎস",
+      applyPortal: "অফিসিয়াল আবেদন পোর্টালে যান",
+    },
+    readiness: {
+      title: "ক্ষুদ্র-ব্যবসা প্রস্তুতি রাডার",
+      subtitle: "নির্দিষ্ট নিয়মের ওপর ভিত্তি করে ৫-মাত্রিক যাচাইযোগ্য প্রস্তুতি মূল্যায়ন।",
+      estimatedWarning: "সতর্কতা: এই স্কোরটি একটি আনুমানিক ব্যবসায়িক প্রস্তুতির সূচক, কোনো সরকারি বা প্রাতিষ্ঠানিক আনুষ্ঠানিক যোগ্যতার সিদ্ধান্ত নয়।",
+      overallScore: "সামগ্রিক ব্যবসায়িক প্রস্তুতি",
+      outOf100: "১০০ এর মধ্যে",
+      dimensionsTitle: "প্রস্তুতি মাত্রা বিশ্লেষণ ও গণনার নিয়ম",
+      formulaLabel: "গণনার নিয়ম",
+      capital: "মূলধন ও আর্থিক সুরক্ষা",
+      documents: "নথিপত্র প্রস্তুতি",
+      vintage: "ব্যবসার বয়স ও স্থায়িত্ব",
+      income: "নিয়মিত আয় ও টার্নওভার",
+      records: "হিসাবরক্ষণ ও আনুষ্ঠানিকতা",
+      recalculate: "পুনরায় হিসাব করুন",
+      adjustParameters: "ইন্টারেক্টিভ ব্যবসায়িক পরামিতি",
+      monthlyRevenue: "মাসিক আয় (₹)",
+      monthlyExpense: "মাসিক পরিচালন খরচ (₹)",
+      existingDebt: "বিদ্যমান মাসিক ঋণ / ইএমআই (₹)",
+      turnover: "বার্ষিক মোট টার্নওভার (₹)",
+      vintageMonths: "পরিচালনার মাস",
+      recordKeeping: "হিসাবরক্ষণ পদ্ধতি",
+      informal: "অনানুষ্ঠানিক নগদ হিসাব",
+      bankRecorded: "সক্রিয় ব্যাংক লেনদেন",
+      formalBooks: "যাচাইযোগ্য ডিজিটাল হিসাব ও জিএসটি",
+      credentialsTitle: "যাচাইকৃত প্রশংসাপত্র",
     },
   },
 };
