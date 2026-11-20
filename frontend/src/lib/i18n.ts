@@ -227,6 +227,22 @@ export interface TranslationDictionary {
     resultsFound: string;
     showingAll: string;
   };
+  stateMap: {
+    title: string;
+    subtitle: string;
+    mapView: string;
+    listView: string;
+    selectedState: string;
+    allIndia: string;
+    clearStateFilter: string;
+    schemesAvailable: string;
+    svgFallbackNotice: string;
+    searchStatePlaceholder: string;
+    filterByState: string;
+    statesAndUTs: string;
+    westBengalNotice: string;
+    selectStatePrompt: string;
+  };
 }
 
 export const translations: Record<SupportedLanguage, TranslationDictionary> = {
@@ -450,6 +466,22 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       resultsFound: "Found {count} matching verified schemes",
       showingAll: "Showing all verified schemes",
     },
+    stateMap: {
+      title: "State-Level Scheme Directory",
+      subtitle: "Click any state or Union Territory on the map to see available Central and State government schemes.",
+      mapView: "Interactive Map",
+      listView: "Accessible State List",
+      selectedState: "Selected State: {state}",
+      allIndia: "All India (Pan-India)",
+      clearStateFilter: "Reset State Filter",
+      schemesAvailable: "{count} schemes available",
+      svgFallbackNotice: "Map view is optimized for modern browsers. You can also use the accessible state list below.",
+      searchStatePlaceholder: "Search state or Union Territory (e.g., West Bengal, Maharashtra)...",
+      filterByState: "Filter by State",
+      statesAndUTs: "All 28 States & 8 Union Territories",
+      westBengalNotice: "Showing Central & West Bengal State MSME schemes (including Banglashree).",
+      selectStatePrompt: "Select a state to filter regional and state-specific programs.",
+    },
   },
   hi: {
     appName: "सहाय",
@@ -671,6 +703,22 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       resultsFound: "{count} सत्यापित योजनाएं मिलीं",
       showingAll: "सभी सत्यापित योजनाएं प्रदर्शित हैं",
     },
+    stateMap: {
+      title: "राज्य-स्तरीय योजना निर्देशिका",
+      subtitle: "उपलब्ध केंद्रीय और राज्य सरकार की योजनाओं को देखने के लिए मानचित्र पर किसी भी राज्य या केंद्र शासित प्रदेश पर क्लिक करें।",
+      mapView: "इंटरएक्टिव मानचित्र",
+      listView: "सुलभ राज्य सूची",
+      selectedState: "चयनित राज्य: {state}",
+      allIndia: "अखिल भारतीय (पैन-इंडिया)",
+      clearStateFilter: "राज्य फ़िल्टर हटाएं",
+      schemesAvailable: "{count} योजनाएं उपलब्ध",
+      svgFallbackNotice: "मानचित्र दृश्य आधुनिक ब्राउज़रों के लिए अनुकूलित है। आप नीचे दी गई सुलभ राज्य सूची का भी उपयोग कर सकते हैं।",
+      searchStatePlaceholder: "राज्य या केंद्र शासित प्रदेश खोजें (जैसे पश्चिम बंगाल, महाराष्ट्र)...",
+      filterByState: "राज्य अनुसार फ़िल्टर करें",
+      statesAndUTs: "सभी 28 राज्य और 8 केंद्र शासित प्रदेश",
+      westBengalNotice: "केंद्रीय और पश्चिम बंगाल राज्य एमएसएमई योजनाएं (बांग्लाश्री सहित) प्रदर्शित हैं।",
+      selectStatePrompt: "क्षेत्रीय और राज्य-विशिष्ट कार्यक्रमों को फ़िल्टर करने के लिए कोई राज्य चुनें।",
+    },
   },
   bn: {
     appName: "সহায়",
@@ -891,6 +939,22 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       clearSearch: "ফিল্টার ও অনুসন্ধান মুছুন",
       resultsFound: "{count} টি যাচাইকৃত স্কিম পাওয়া গেছে",
       showingAll: "সকল যাচাইকৃত স্কিম দেখানো হচ্ছে",
+    },
+    stateMap: {
+      title: "রাজ্য-ভিত্তিক সরকারি প্রকল্প নির্দেশিকা",
+      subtitle: "উপলব্ধ কেন্দ্রীয় ও রাজ্য সরকারি প্রকল্পগুলি দেখতে মানচিত্রে যেকোনো রাজ্য বা কেন্দ্রশাসিত অঞ্চলে ক্লিক করুন।",
+      mapView: "ইন্টারেক্টিভ মানচিত্র",
+      listView: "সহজগম্য রাজ্য তালিকা",
+      selectedState: "নির্বাচিত রাজ্য: {state}",
+      allIndia: "সমগ্র ভারত (প্যান-ইন্ডিয়া)",
+      clearStateFilter: "রাজ্য ফিল্টার মুছুন",
+      schemesAvailable: "{count} টি প্রকল্প উপলব্ধ",
+      svgFallbackNotice: "মানচিত্র দৃশ্যটি আধুনিক ব্রাউজারের জন্য অপ্টিমাইজ করা হয়েছে। আপনি নীচের সহজগম্য রাজ্য তালিকাটিও ব্যবহার করতে পারেন।",
+      searchStatePlaceholder: "রাজ্য বা কেন্দ্রশাসিত অঞ্চল খুঁজুন (যেমন পশ্চিমবঙ্গ, মহারাষ্ট্র)...",
+      filterByState: "রাজ্য অনুযায়ী ফিল্টার করুন",
+      statesAndUTs: "সকল ২৮টি রাজ্য ও ৮টি কেন্দ্রশাসিত অঞ্চল",
+      westBengalNotice: "কেন্দ্রীয় ও পশ্চিমবঙ্গ রাজ্য এমএসএমই প্রকল্প (বাংলাশ্রী সহ) দেখানো হচ্ছে।",
+      selectStatePrompt: "আঞ্চলিক ও রাজ্য-নির্দিষ্ট প্রকল্পগুলি ফিল্টার করতে একটি রাজ্য নির্বাচন করুন।",
     },
   },
 };

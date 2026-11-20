@@ -10,10 +10,12 @@ import { VerificationBadge } from "@/components/ui/VerificationBadge";
 import { CardSkeleton } from "@/components/ui/Loading";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { SchemeComparisonTable } from "@/components/ui/SchemeComparisonTable";
+import { IndiaStateMap } from "@/components/ui/IndiaStateMap";
 import { getSchemes } from "@/lib/api";
 import { Scheme } from "@/types";
 import { useLanguage, formatCurrencyINR } from "@/lib/i18n";
 import { SCHEME_PRESETS } from "@/lib/search";
+import { countSchemesForState } from "@/lib/states";
 import {
   Search,
   ExternalLink,
@@ -32,6 +34,8 @@ import {
   Store,
   RotateCcw,
   Tag,
+  MapPin,
+  Globe,
 } from "lucide-react";
 
 function SchemesContent() {
@@ -43,21 +47,32 @@ function SchemesContent() {
   const [typeFilter, setTypeFilter] = useState("all");
   const [activePreset, setActivePreset] = useState<string>("all");
 
+  // Checkpoint 10: State-level map & state filter
+  const [selectedState, setSelectedState] = useState<string | null>(null);
+  const [isStateMapExpanded, setIsStateMapExpanded] = useState<boolean>(false);
+
   // Checkpoint 8: Scheme comparison up to 6
   const [selectedSchemeIds, setSelectedSchemeIds] = useState<string[]>([]);
   const [isComparisonView, setIsComparisonView] = useState<boolean>(false);
   const [warningMessage, setWarningMessage] = useState<string | null>(null);
   const [hasInitializedFromUrl, setHasInitializedFromUrl] = useState<boolean>(false);
 
-  const loadSchemes = async (overrideSearch?: string, overrideType?: string) => {
+  const loadSchemes = async (
+    overrideSearch?: string,
+    overrideType?: string,
+    overrideState?: string | null
+  ) => {
     setIsLoading(true);
     setError(null);
     const searchParam = overrideSearch !== undefined ? overrideSearch : searchTerm;
     const typeParam = overrideType !== undefined ? overrideType : typeFilter;
+    const stateParam = overrideState !== undefined ? overrideState : selectedState;
+
     try {
       const data = await getSchemes({
         scheme_type: typeParam,
         search: searchParam,
+        state: stateParam || undefined,
       });
       setSchemes(data);
     } catch (err) {
@@ -105,6 +120,14 @@ function SchemesContent() {
         }
       }
 
+      // Checkpoint 10: handle initial state query param
+      const stateQ = searchParams.get("state");
+      if (stateQ) {
+        setSelectedState(stateQ);
+        setIsStateMapExpanded(true);
+        loadSchemes(undefined, typeFilter, stateQ);
+      }
+
       // Checkpoint 9: handle initial search or preset query params
       const searchQ = searchParams.get("search");
       const presetQ = searchParams.get("preset");
@@ -112,7 +135,7 @@ function SchemesContent() {
         handlePresetClick(presetQ);
       } else if (searchQ) {
         setSearchTerm(searchQ);
-        loadSchemes(searchQ, typeFilter);
+        loadSchemes(searchQ, typeFilter, stateQ);
       }
     } catch {
       // URL parsing fallback
@@ -121,7 +144,7 @@ function SchemesContent() {
     }
   }, [schemes, hasInitializedFromUrl]);
 
-  // Update URL search parameters when selection changes
+  // Update URL search parameters when comparison selection changes
   const updateUrlParam = (ids: string[]) => {
     if (typeof window === "undefined") return;
     try {
@@ -141,6 +164,38 @@ function SchemesContent() {
     } catch {
       // Silently catch any history state error
     }
+  };
+
+  // Update State in URL query params
+  const updateStateUrlParam = (stateName: string | null) => {
+    if (typeof window === "undefined") return;
+    try {
+      const url = new URL(window.location.href);
+      if (stateName && stateName !== "ALL") {
+        url.searchParams.set("state", stateName);
+      } else {
+        url.searchParams.delete("state");
+      }
+      window.history.replaceState(null, "", url.toString());
+    } catch {
+      // Silently catch
+    }
+  };
+
+  const handleSelectState = (stateName: string) => {
+    if (selectedState === stateName) {
+      handleClearState();
+      return;
+    }
+    setSelectedState(stateName);
+    loadSchemes(searchTerm, typeFilter, stateName);
+    updateStateUrlParam(stateName);
+  };
+
+  const handleClearState = () => {
+    setSelectedState(null);
+    loadSchemes(searchTerm, typeFilter, "ALL");
+    updateStateUrlParam(null);
   };
 
   const handleToggleSelectScheme = (schemeId: string) => {
@@ -183,14 +238,14 @@ function SchemesContent() {
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setActivePreset("custom");
-    loadSchemes(searchTerm, typeFilter);
+    loadSchemes(searchTerm, typeFilter, selectedState);
   };
 
   const handleClearSearch = () => {
     setSearchTerm("");
     setTypeFilter("all");
     setActivePreset("all");
-    loadSchemes("", "all");
+    loadSchemes("", "all", selectedState);
   };
 
   const handlePresetClick = (presetId: string) => {
@@ -210,11 +265,11 @@ function SchemesContent() {
     if (preset.schemeType) {
       setSearchTerm("");
       setTypeFilter(preset.schemeType);
-      loadSchemes("", preset.schemeType);
+      loadSchemes("", preset.schemeType, selectedState);
     } else if (preset.searchKeyword) {
       setSearchTerm(preset.searchKeyword);
       setTypeFilter("all");
-      loadSchemes(preset.searchKeyword, "all");
+      loadSchemes(preset.searchKeyword, "all", selectedState);
     }
   };
 
@@ -253,11 +308,29 @@ function SchemesContent() {
           </p>
         </div>
 
-        {/* View Switcher Tabs */}
-        <div className="flex items-center gap-2">
+        {/* View Switcher Tabs & State Map Toggle */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Checkpoint 10: State Map Toggle Button */}
+          <button
+            type="button"
+            onClick={() => setIsStateMapExpanded(!isStateMapExpanded)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer ${
+              isStateMapExpanded || (selectedState && selectedState !== "ALL")
+                ? "bg-emerald-600 text-white shadow-xs"
+                : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
+            }`}
+          >
+            <MapPin className="w-3.5 h-3.5" />
+            <span>
+              {selectedState && selectedState !== "ALL"
+                ? `State: ${selectedState}`
+                : t.stateMap.filterByState}
+            </span>
+          </button>
+
           <button
             onClick={() => setIsComparisonView(false)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer ${
               !isComparisonView
                 ? "bg-emerald-600 text-white shadow-xs"
                 : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
@@ -269,7 +342,7 @@ function SchemesContent() {
 
           <button
             onClick={() => setIsComparisonView(true)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 relative ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 relative cursor-pointer ${
               isComparisonView
                 ? "bg-emerald-600 text-white shadow-xs"
                 : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
@@ -298,6 +371,43 @@ function SchemesContent() {
             className="text-amber-700 hover:text-amber-900 dark:text-amber-300 p-1"
           >
             <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {/* Checkpoint 10: India State SVG Map & Accessible List Section */}
+      {isStateMapExpanded && !isComparisonView && (
+        <div className="animate-in fade-in slide-in-from-top-3">
+          <IndiaStateMap
+            selectedState={selectedState}
+            onSelectState={handleSelectState}
+            onClearState={handleClearState}
+            schemes={schemes}
+          />
+        </div>
+      )}
+
+      {/* Active State Filter Notice */}
+      {selectedState && selectedState !== "ALL" && !isComparisonView && (
+        <div className="flex items-center justify-between p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-xl text-xs text-emerald-800 dark:text-emerald-200 animate-in fade-in">
+          <div className="flex items-center gap-2">
+            <MapPin className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>
+              Showing programs available in <strong>{selectedState}</strong> (
+              {countSchemesForState(selectedState, schemes)} schemes available)
+            </span>
+            {selectedState === "West Bengal" && (
+              <Badge variant="success" size="sm">
+                Includes Banglashree MSME
+              </Badge>
+            )}
+          </div>
+          <button
+            onClick={handleClearState}
+            className="text-emerald-700 hover:text-emerald-900 dark:text-emerald-300 font-semibold flex items-center gap-1 cursor-pointer"
+          >
+            <X className="w-3.5 h-3.5" />
+            <span>{t.stateMap.clearStateFilter}</span>
           </button>
         </div>
       )}
@@ -378,14 +488,17 @@ function SchemesContent() {
                 );
               })}
 
-              {(searchTerm || typeFilter !== "all" || activePreset !== "all") && (
+              {(searchTerm || typeFilter !== "all" || activePreset !== "all" || selectedState) && (
                 <button
                   type="button"
-                  onClick={handleClearSearch}
-                  className="inline-flex items-center gap-1 text-[11px] text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 px-2 py-1 transition-colors shrink-0"
+                  onClick={() => {
+                    handleClearSearch();
+                    handleClearState();
+                  }}
+                  className="inline-flex items-center gap-1 text-[11px] text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 px-2 py-1 transition-colors shrink-0 cursor-pointer"
                 >
                   <RotateCcw className="w-3 h-3" />
-                  <span>Reset</span>
+                  <span>Reset All</span>
                 </button>
               )}
             </div>
@@ -394,15 +507,22 @@ function SchemesContent() {
           {/* Results Summary Status */}
           <div className="flex items-center justify-between text-xs text-slate-500 pt-1">
             <span>
-              {searchTerm || typeFilter !== "all" || activePreset !== "all"
+              {searchTerm || typeFilter !== "all" || activePreset !== "all" || selectedState
                 ? t.search.resultsFound.replace("{count}", String(schemes.length))
                 : t.search.showingAll}
             </span>
-            {searchTerm && (
-              <span className="font-medium text-emerald-600 dark:text-emerald-400">
-                Keyword: &ldquo;{searchTerm}&rdquo;
-              </span>
-            )}
+            <div className="flex items-center gap-2">
+              {selectedState && (
+                <span className="font-medium text-emerald-600 dark:text-emerald-400">
+                  State: {selectedState}
+                </span>
+              )}
+              {searchTerm && (
+                <span className="font-medium text-emerald-600 dark:text-emerald-400">
+                  Keyword: &ldquo;{searchTerm}&rdquo;
+                </span>
+              )}
+            </div>
           </div>
 
           {error && (
@@ -421,7 +541,7 @@ function SchemesContent() {
               <CardSkeleton />
             </div>
           ) : schemes.length === 0 ? (
-            /* Checkpoint 9: Clear message with suggestions when no results */
+            /* Checkpoint 9 & 10: Clear message with suggestions when no results */
             <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 sm:p-12 text-center space-y-6 shadow-sm">
               <div className="w-14 h-14 mx-auto rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
                 <Search className="w-7 h-7" />
@@ -447,7 +567,7 @@ function SchemesContent() {
                   <button
                     type="button"
                     onClick={() => handlePresetClick("women")}
-                    className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 text-slate-800 dark:text-slate-200 transition-colors text-left flex items-center gap-1.5"
+                    className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 text-slate-800 dark:text-slate-200 transition-colors text-left flex items-center gap-1.5 cursor-pointer"
                   >
                     <Sparkles className="w-3.5 h-3.5 text-pink-500" />
                     <span>{t.search.suggestionWomen}</span>
@@ -455,18 +575,18 @@ function SchemesContent() {
                   <button
                     type="button"
                     onClick={() => handlePresetClick("subsidies")}
-                    className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 text-slate-800 dark:text-slate-200 transition-colors text-left flex items-center gap-1.5"
+                    className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 text-slate-800 dark:text-slate-200 transition-colors text-left flex items-center gap-1.5 cursor-pointer"
                   >
                     <Tag className="w-3.5 h-3.5 text-emerald-500" />
                     <span>{t.search.suggestionSubsidies}</span>
                   </button>
                   <button
                     type="button"
-                    onClick={() => handlePresetClick("mudra")}
-                    className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 text-slate-800 dark:text-slate-200 transition-colors text-left flex items-center gap-1.5"
+                    onClick={() => handleSelectState("West Bengal")}
+                    className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 text-slate-800 dark:text-slate-200 transition-colors text-left flex items-center gap-1.5 cursor-pointer"
                   >
-                    <Landmark className="w-3.5 h-3.5 text-blue-500" />
-                    <span>{t.search.suggestionLoans}</span>
+                    <MapPin className="w-3.5 h-3.5 text-emerald-500" />
+                    <span>Explore West Bengal Schemes</span>
                   </button>
                 </div>
               </div>
@@ -475,7 +595,10 @@ function SchemesContent() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={handleClearSearch}
+                  onClick={() => {
+                    handleClearSearch();
+                    handleClearState();
+                  }}
                   leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
                 >
                   {t.search.clearSearch}
@@ -486,6 +609,8 @@ function SchemesContent() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {schemes.map((s) => {
                 const isSelected = selectedSchemeIds.includes(s.id);
+                const isWestBengalSpecific = s.states_served === "West Bengal";
+
                 return (
                   <Card
                     key={s.id}
@@ -493,6 +618,8 @@ function SchemesContent() {
                     className={`flex flex-col justify-between transition-all ${
                       isSelected
                         ? "ring-2 ring-emerald-500 border-emerald-500/50 bg-emerald-50/10 dark:bg-emerald-950/10"
+                        : isWestBengalSpecific
+                        ? "border-emerald-300 dark:border-emerald-800"
                         : ""
                     }`}
                   >
@@ -503,6 +630,11 @@ function SchemesContent() {
                             {s.name}
                           </CardTitle>
                           <div className="flex items-center gap-1.5 flex-wrap shrink-0">
+                            {isWestBengalSpecific && (
+                              <Badge variant="brand" size="sm">
+                                West Bengal State
+                              </Badge>
+                            )}
                             <Badge
                               variant={s.scheme_type === "subsidy" ? "success" : "info"}
                               size="sm"
@@ -534,6 +666,17 @@ function SchemesContent() {
                           <span className="text-slate-500 font-medium">{t.comparison.maxLimit}:</span>
                           <span className="font-semibold text-emerald-600 dark:text-emerald-400">
                             {formatCurrencyINR(s.max_amount, lang)}
+                          </span>
+                        </div>
+
+                        {/* State Jurisdiction Marker */}
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-slate-500 font-medium">Jurisdiction:</span>
+                          <span className="font-medium text-slate-700 dark:text-slate-300 flex items-center gap-1">
+                            <Globe className="w-3 h-3 text-blue-500" />
+                            {s.states_served?.toUpperCase() === "ALL"
+                              ? "Pan-India (All States)"
+                              : s.states_served}
                           </span>
                         </div>
 
