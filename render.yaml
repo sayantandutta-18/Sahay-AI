@@ -17,7 +17,7 @@ services:
       - key: PROJECT_NAME
         value: Sahay-AI
       - key: CORS_ORIGINS
-        value: "https://sahay-ai-git-main-sayantandutta444-6280.vercel.app,https://sahay-ai.vercel.app,http://localhost:3000,http://127.0.0.1:3000"
+        value: "https://sahay-ai-beige.vercel.app,https://sahay-ai-git-main-sayantandutta444-6280.vercel.app,https://sahay-ai.vercel.app,http://localhost:3000,http://127.0.0.1:3000"
       - key: CORS_ORIGIN_REGEX
         value: "^https:\/\/(?:[a-zA-Z0-9_-]+\.)*vercel\.app$"
       - key: JWT_SECRET_KEY
