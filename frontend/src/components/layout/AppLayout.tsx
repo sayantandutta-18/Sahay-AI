@@ -3,6 +3,7 @@
 import React from "react";
 import { Navbar } from "./Navbar";
 import { Sidebar } from "./Sidebar";
+import { ColdStartNotice } from "../ui/ColdStartNotice";
 import { useLanguage } from "@/lib/i18n";
 
 export interface AppLayoutProps {
@@ -27,6 +28,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
       </a>
 
       <Navbar />
+      <ColdStartNotice />
       <div className="flex flex-1 max-w-7xl w-full mx-auto">
         {showSidebar && <Sidebar />}
         <main

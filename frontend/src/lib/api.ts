@@ -53,18 +53,32 @@ export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ||
   "http://localhost:8000";
 
+let activePendingCount = 0;
+let coldStartTimer: ReturnType<typeof setTimeout> | null = null;
+
+export function emitColdStartEvent(waking: boolean, detail?: { endpoint?: string }) {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(
+      new CustomEvent("sahay-coldstart", {
+        detail: { waking, ...detail },
+      })
+    );
+  }
+}
+
 interface FetchOptions extends RequestInit {
   timeoutMs?: number;
 }
 
 /**
  * Core typed fetch wrapper with timeouts and structured error handling.
+ * Default timeout increased to 45,000ms to gracefully absorb Render free-tier cold starts.
  */
 export async function fetchApi<T>(
   endpoint: string,
   options: FetchOptions = {}
 ): Promise<T> {
-  const { timeoutMs = 8000, ...fetchOpts } = options;
+  const { timeoutMs = 45000, ...fetchOpts } = options;
   const url = `${API_BASE_URL}${endpoint.startsWith("/") ? "" : "/"}${endpoint}`;
 
   const controller = new AbortController();
@@ -81,6 +95,16 @@ export async function fetchApi<T>(
     if (token && !headers.has("Authorization")) {
       headers.set("Authorization", `Bearer ${token}`);
     }
+  }
+
+  // Cold-start detection for slow requests (> 3s on free-tier Render instances)
+  activePendingCount++;
+  if (!coldStartTimer) {
+    coldStartTimer = setTimeout(() => {
+      if (activePendingCount > 0) {
+        emitColdStartEvent(true, { endpoint });
+      }
+    }, 3000);
   }
 
   try {
@@ -138,6 +162,16 @@ export async function fetchApi<T>(
       message: err instanceof Error ? err.message : "Failed to connect to Sahay API",
       statusCode: 0,
     } as ApiError;
+  } finally {
+    clearTimeout(timeoutId);
+    activePendingCount = Math.max(0, activePendingCount - 1);
+    if (activePendingCount === 0) {
+      if (coldStartTimer) {
+        clearTimeout(coldStartTimer);
+        coldStartTimer = null;
+      }
+      emitColdStartEvent(false, { endpoint });
+    }
   }
 }
 

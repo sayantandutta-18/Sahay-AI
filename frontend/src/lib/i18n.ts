@@ -279,6 +279,12 @@ export interface TranslationDictionary {
     unverifiedStatus: string;
     outdatedStatus: string;
   };
+  coldStart: {
+    title: string;
+    wakingMessage: string;
+    connectedMessage: string;
+    dismiss: string;
+  };
 }
 
 export const translations: Record<SupportedLanguage, TranslationDictionary> = {
@@ -554,6 +560,12 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       unverifiedStatus: "Unverified official data",
       outdatedStatus: "Outdated verification",
     },
+    coldStart: {
+      title: "Cloud Backend Waking Up (Render Free Tier)",
+      wakingMessage: "The backend server is spinning up from idle mode. The initial connection typically takes ~30–45 seconds. Your request will resume automatically.",
+      connectedMessage: "Backend connected! Resuming requests.",
+      dismiss: "Dismiss",
+    },
   },
   hi: {
     appName: "सहाय",
@@ -827,6 +839,12 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       unverifiedStatus: "असत्यापित आधिकारिक डेटा",
       outdatedStatus: "सत्यापन पुराना हो चुका है",
     },
+    coldStart: {
+      title: "क्लाउड बैकएंड शुरू हो रहा है (रेंडर फ्री टियर)",
+      wakingMessage: "बैकएंड सर्वर निष्क्रिय मोड से शुरू हो रहा है। पहली बार कनेक्ट होने में आमतौर पर ~30–45 सेकंड लगते हैं। आपका अनुरोध अपने आप पूरा हो जाएगा।",
+      connectedMessage: "बैकएंड जुड़ गया! अनुरोध पुनः शुरू किए जा रहे हैं।",
+      dismiss: "खारिज करें",
+    },
   },
   bn: {
     appName: "সহায়",
@@ -1099,6 +1117,12 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       verifiedStatus: "সরকারিভাবে সরাসরি যাচাইকৃত",
       unverifiedStatus: "অযাচাইকৃত তথ্য",
       outdatedStatus: "পুরাতন যাচাইকরণ",
+    },
+    coldStart: {
+      title: "ক্লাউড ব্যাকএন্ড চালু হচ্ছে (রেন্ডার ফ্রি টিয়ার)",
+      wakingMessage: "ব্যাকএন্ড সার্ভারটি নিষ্ক্রিয় মোড থেকে চালু হচ্ছে। প্রথম সংযোগ হতে সাধারণত ~৩০-৪৫ সেকেন্ড সময় লাগে। আপনার অনুরোধ স্বয়ংক্রিয়ভাবে পুনরায় শুরু হবে।",
+      connectedMessage: "ব্যাকএন্ড সংযুক্ত হয়েছে! কাজ শুরু হচ্ছে।",
+      dismiss: "বাতিল করুন",
     },
   },
 };
