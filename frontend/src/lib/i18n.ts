@@ -179,6 +179,34 @@ export interface TranslationDictionary {
     formalBooks: string;
     credentialsTitle: string;
   };
+  comparison: {
+    title: string;
+    subtitle: string;
+    selectToCompare: string;
+    selectedToCompare: string;
+    selectedCount: string;
+    maxLimitAlert: string;
+    clearAll: string;
+    viewComparison: string;
+    closeComparison: string;
+    shareLink: string;
+    linkCopied: string;
+    stateCoverage: string;
+    maxLimit: string;
+    schemeType: string;
+    interestSubsidy: string;
+    documents: string;
+    deadline: string;
+    verification: string;
+    provider: string;
+    targetSectors: string;
+    officialPortal: string;
+    remove: string;
+    emptyTitle: string;
+    emptyDesc: string;
+    stickyParameter: string;
+    openInPortal: string;
+  };
 }
 
 export const translations: Record<SupportedLanguage, TranslationDictionary> = {
@@ -354,6 +382,34 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       formalBooks: "Auditable Digital Books & GST",
       credentialsTitle: "Verified Credentials",
     },
+    comparison: {
+      title: "Scheme Comparison",
+      subtitle: "Compare up to 6 government schemes side-by-side to choose the best option for your business.",
+      selectToCompare: "Compare",
+      selectedToCompare: "Selected",
+      selectedCount: "{count} of 6 selected",
+      maxLimitAlert: "You can compare up to 6 schemes at once. Please deselect a scheme to add another.",
+      clearAll: "Clear Selection",
+      viewComparison: "Compare Schemes",
+      closeComparison: "Back to Schemes",
+      shareLink: "Share Comparison",
+      linkCopied: "Comparison link copied to clipboard!",
+      stateCoverage: "State Coverage",
+      maxLimit: "Maximum Financial Limit",
+      schemeType: "Support Type",
+      interestSubsidy: "Interest Subsidy",
+      documents: "Required Documents",
+      deadline: "Application Deadline",
+      verification: "Verification Status",
+      provider: "Ministry / Authority",
+      targetSectors: "Target Sectors",
+      officialPortal: "Official Portal",
+      remove: "Remove",
+      emptyTitle: "No Schemes Selected for Comparison",
+      emptyDesc: "Select up to 6 schemes from the library to compare their coverage, subsidies, documents, and deadlines side-by-side.",
+      stickyParameter: "Comparison Feature",
+      openInPortal: "Open Official Portal",
+    },
   },
   hi: {
     appName: "सहाय",
@@ -527,6 +583,34 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       formalBooks: "सत्यापन योग्य डिजिटल बहीखाता और जीएसटी",
       credentialsTitle: "सत्यापित क्रेडेंशियल",
     },
+    comparison: {
+      title: "योजना तुलना",
+      subtitle: "अपने व्यवसाय के लिए सबसे अच्छा विकल्प चुनने के लिए 6 सरकारी योजनाओं की साथ-साथ तुलना करें।",
+      selectToCompare: "तुलना करें",
+      selectedToCompare: "चयनित",
+      selectedCount: "6 में से {count} चयनित",
+      maxLimitAlert: "आप एक बार में अधिकतम 6 योजनाओं की तुलना कर सकते हैं। दूसरी योजना जोड़ने के लिए कृपया किसी चयनित योजना को हटाएं।",
+      clearAll: "चयन हटाएं",
+      viewComparison: "योजनाओं की तुलना करें",
+      closeComparison: "योजनाओं पर वापस जाएं",
+      shareLink: "तुलना लिंक साझा करें",
+      linkCopied: "तुलना लिंक क्लिपबोर्ड पर कॉपी हो गया!",
+      stateCoverage: "राज्य कवरेज",
+      maxLimit: "अधिकतम वित्तीय सीमा",
+      schemeType: "सहायता का प्रकार",
+      interestSubsidy: "ब्याज सब्सिडी",
+      documents: "आवश्यक दस्तावेज़",
+      deadline: "आवेदन की अंतिम तिथि",
+      verification: "सत्यापन स्थिति",
+      provider: "मंत्रालय / प्राधिकरण",
+      targetSectors: "लक्षित क्षेत्र",
+      officialPortal: "आधिकारिक पोर्टल",
+      remove: "हटाएं",
+      emptyTitle: "तुलना के लिए कोई योजना नहीं चुनी गई",
+      emptyDesc: "कवरेज, सब्सिडी, दस्तावेज़ और समय-सीमा की साथ-साथ तुलना करने के लिए लाइब्रेरी से अधिकतम 6 योजनाओं का चयन करें।",
+      stickyParameter: "तुलना विशेषता",
+      openInPortal: "आधिकारिक पोर्टल खोलें",
+    },
   },
   bn: {
     appName: "সহায়",
@@ -699,6 +783,34 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       bankRecorded: "সক্রিয় ব্যাংক লেনদেন",
       formalBooks: "যাচাইযোগ্য ডিজিটাল হিসাব ও জিএসটি",
       credentialsTitle: "যাচাইকৃত প্রশংসাপত্র",
+    },
+    comparison: {
+      title: "স্কিম তুলনা",
+      subtitle: "আপনার ব্যবসার জন্য সেরা বিকল্পটি বেছে নিতে একসাথে ৬টি সরকারি স্কিমের পাশাপাশি তুলনা করুন।",
+      selectToCompare: "তুলনা করুন",
+      selectedToCompare: "নির্বাচিত",
+      selectedCount: "৬ টির মধ্যে {count} টি নির্বাচিত",
+      maxLimitAlert: "আপনি একসাথে সর্বোচ্চ ৬টি স্কিমের তুলনা করতে পারেন। অন্য স্কিম যোগ করতে অনুগ্রহ করে একটি স্কিম বাদ দিন।",
+      clearAll: "নির্বাচন মুছুন",
+      viewComparison: "স্কিমগুলি তুলনা করুন",
+      closeComparison: "স্কিম তালিকায় ফিরুন",
+      shareLink: "তুলনা লিঙ্ক শেয়ার করুন",
+      linkCopied: "তুলনা লিঙ্ক ক্লিপবোর্ডে কপি করা হয়েছে!",
+      stateCoverage: "রাজ্য কভারেজ",
+      maxLimit: "সর্বোচ্চ আর্থিক সুবিধা",
+      schemeType: "সহায়তার ধরন",
+      interestSubsidy: "সুদ ভর্তুকি",
+      documents: "প্রয়োজনীয় নথিপত্র",
+      deadline: "আবেদনের সময়সীমা",
+      verification: "যাচাইকরণ স্থিতি",
+      provider: "মন্ত্রণালয় / কর্তৃপক্ষ",
+      targetSectors: "লক্ষ্যভিত্তিক খাত",
+      officialPortal: "অফিসিয়াল পোর্টাল",
+      remove: "মুছুন",
+      emptyTitle: "তুলনার জন্য কোনো স্কিম নির্বাচিত হয়নি",
+      emptyDesc: "কভারেজ, ভর্তুকি, নথিপত্র এবং সময়সীমার পাশাপাশি তুলনা করতে লাইব্রেরি থেকে সর্বোচ্চ ৬টি স্কিম বেছে নিন।",
+      stickyParameter: "তুলনা বৈশিষ্ট্য",
+      openInPortal: "অফিসিয়াল পোর্টাল খুলুন",
     },
   },
 };
