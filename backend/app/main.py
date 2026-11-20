@@ -49,6 +49,7 @@ cors_origins = (
 default_trusted_origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "https://sahay-ai-beige.vercel.app",
     "https://sahay-ai-git-main-sayantandutta444-6280.vercel.app",
     "https://sahay-ai.vercel.app",
 ]

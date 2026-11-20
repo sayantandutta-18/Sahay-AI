@@ -4,6 +4,10 @@ const nextConfig: NextConfig = {
   /* config options here */
   cacheComponents: true,
   partialPrefetching: true,
+  experimental: {
+    // @ts-ignore
+    agentUpgrade: "security",
+  },
   turbopack: {
     rules: {
       "*.css": {

@@ -120,3 +120,39 @@ def login(login_in: UserLogin, db: Session = Depends(get_db)):
 def get_me(current_user: User = Depends(get_current_user)):
     """Retrieve profile of authenticated user."""
     return UserResponse.model_validate(current_user)
+
+
+@router.delete("/me", status_code=status.HTTP_200_OK)
+def delete_my_account(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Irrevocably erase user account, uploaded document binaries, and profile data (DPDP Act Right to Erasure)."""
+    from app.services.application_service import get_user_documents, delete_vault_document
+    from app.services.audit_service import log_audit_event
+
+    # 1. Unlink and purge all document binaries from storage
+    user_docs = get_user_documents(db, current_user.id)
+    for doc in user_docs:
+        delete_vault_document(db, doc.id, current_user.id)
+
+    # 2. Log immutable audit entry for compliance records
+    log_audit_event(
+        db=db,
+        user_id=current_user.id,
+        user_email=current_user.phone,
+        actor_role=current_user.role,
+        action="USER_ACCOUNT_PURGED",
+        resource_type="user",
+        resource_id=current_user.id,
+        details="User exercised statutory Right to Erasure: account, documents, and profile permanently purged",
+    )
+
+    # 3. Purge user record (cascades to profile and applications)
+    db.delete(current_user)
+    db.commit()
+
+    return {
+        "status": "success",
+        "message": "User account and all associated documents permanently erased in accordance with Sahay Data Retention Policy.",
+    }
