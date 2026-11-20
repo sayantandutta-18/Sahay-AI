@@ -10,12 +10,14 @@ A multilingual platform that helps Indian micro-entrepreneurs explore scheme inf
 
 [🌐 Live App](https://sahay-ai-beige.vercel.app/) · [⚡ Backend API](https://sahay-ai-5.onrender.com/) · [📚 API Docs](https://sahay-ai-5.onrender.com/docs) · [💻 Source Code](https://github.com/sayantandutta-18/Sahay-AI)
 
-![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white)
-![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
-![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)
-![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
+[![CI](https://github.com/sayantandutta-18/Sahay-AI/actions/workflows/ci.yml/badge.svg)](https://github.com/sayantandutta-18/Sahay-AI/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg)](LICENSE)
+![Next.js](https://img.shields.io/badge/Next.js-16.4.6-000000?style=for-the-badge&logo=next.js&logoColor=white)
+![React](https://img.shields.io/badge/React-19-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688?style=for-the-badge&logo=fastapi&logoColor=white)
 
 </div>
 
@@ -210,36 +212,40 @@ flowchart TD
 
 ```text
 Sahay-AI/
-├── frontend/                  # Next.js web application
-│   ├── public/                # Static assets
-│   ├── scripts/               # Validation and helper scripts (e.g. i18n checks)
+├── .github/
+│   ├── ISSUE_TEMPLATE/        # GitHub defect, feature, & contributor templates
+│   └── workflows/ci.yml       # GitHub Actions automated CI workflow
+│
+├── frontend/                  # Next.js 16.4.6 web application
+│   ├── public/                # Static assets, icons, and SVG maps
+│   ├── scripts/               # Automated audit scripts (i18n, a11y, state map, etc.)
 │   ├── src/
-│   │   ├── app/               # Routes, pages and layouts
-│   │   ├── components/        # Reusable UI components
-│   │   │   └── ui/            # Shared UI elements
-│   │   ├── lib/               # API client, i18n and utilities
-│   │   └── types/             # TypeScript types
+│   │   ├── app/               # Next.js App Router (19 prerendered routes)
+│   │   ├── components/        # UI, Layout, Radar, Map, & Candlestick components
+│   │   ├── lib/               # Typed API client, i18n, search, glossary, & state data
+│   │   └── types/             # TypeScript interfaces and response schemas
 │   └── package.json
 │
-├── backend/                   # FastAPI service
+├── backend/                   # FastAPI Python backend service
 │   ├── app/
-│   │   ├── core/              # Settings and security utilities
-│   │   ├── database/          # Database session and setup
-│   │   ├── models/            # Database models
-│   │   ├── routes/            # API route handlers
-│   │   ├── schemas/           # Request/response schemas
-│   │   ├── services/          # Business logic
-│   │   └── main.py            # Application entry point
-│   ├── tests/                 # Backend tests
+│   │   ├── core/              # Config, CORS, & AES-128-CBC encryption security
+│   │   ├── database/          # Database session, base model, & migrations
+│   │   ├── models/            # SQLAlchemy database entities
+│   │   ├── routes/            # REST API endpoints (schemes, auth, admin, etc.)
+│   │   ├── schemas/           # Pydantic request & response validation models
+│   │   ├── services/          # Pure-function rule engine & AI integrations
+│   │   └── main.py            # FastAPI entry point & lifespan handler
+│   ├── tests/                 # Pytest test suite (113 automated unit tests)
 │   └── requirements.txt
 │
-├── docs/images/               # README screenshots
-├── .env.example               # Safe configuration template
-├── render.yaml                # Render deployment config (if used)
-└── README.md
+├── docs/                      # Security policy, audit documentation, & images
+│   ├── SECURITY_AND_DATA_RETENTION_POLICY.md
+│   └── images/
+│
+├── .env.example               # Root configuration template
+├── LICENSE                    # MIT Open-Source License
+└── README.md                  # Project documentation & release status
 ```
-
-> Confirm exact filenames against the current code; some optional files may differ.
 
 ---
 
@@ -321,11 +327,18 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 **Backend — `backend/.env`**
 
 ```env
-DATABASE_URL=your-database-connection-string
-SECRET_KEY=replace-with-a-long-random-secret
+# Database & Security
+DATABASE_URL=sqlite+aiosqlite:///./sahay.db  # or postgresql+asyncpg://user:pass@host/dbname
+SECRET_KEY=replace-with-a-64-character-random-secret
+DATA_ENCRYPTION_KEY=replace-with-base64-encoded-32-byte-fernet-key
+
+# AI Engine Configuration (Defaults to demo mode if keys are omitted)
+AI_MODE=auto                                 # auto | live | demo
+GEMINI_API_KEY=your-gemini-api-key-here
+OPENAI_API_KEY=your-openai-api-key-here
 ```
 
-Add an AI-provider key only if the backend actually uses that provider.
+Add an AI provider key only if you wish to run live external LLM inference. If omitted, Sahay automatically activates the verified local **Demo Mode**.
 
 **Secret-handling rules**
 
@@ -339,23 +352,54 @@ Add an AI-provider key only if the backend actually uses that provider.
 
 ## 🧪 Testing
 
-**Backend tests**
+Sahay AI maintains extensive automated test coverage across both the backend service and the frontend web application.
+
+### Backend Pytest Suite (113 Tests)
 
 ```bash
-python -m pytest backend/tests -q
+# Run all backend unit and API tests
+python -m pytest backend/tests -v
+
+# Run automated repository secret scanner
+python -m pytest backend/tests/test_secret_scan.py -v
+
+# Run security, privacy, and encryption verification
+python -m pytest backend/tests/test_checkpoint14_security.py -v
 ```
 
-**Localization checks (translation parity and INR formatting)**
+### Frontend Audits & Verification
 
 ```bash
 cd frontend
+
+# 1. Audit 100% i18n translation key parity across English, Hindi, and Bengali
 npm run test:i18n
-```
 
-**Production build**
+# 2. Audit WCAG 2.1 AA keyboard landmarks, skip links, and color-blind dual encoding
+npm run test:a11y
 
-```bash
-cd frontend
+# 3. Test verification badge 3-state classification and 180-day freshness logic
+npm run test:verification
+
+# 4. Test 5-axis Business Readiness Radar dimensional mathematics
+npm run test:readiness
+
+# 5. Test scheme comparison matrix, multi-select chips, and 6-scheme capping
+npm run test:comparison
+
+# 6. Test multilingual search keyword expansion (Bengali, Hindi, English)
+npm run test:search
+
+# 7. Test interactive India SVG state directory and regional filtering
+npm run test:state-map
+
+# 8. Test microfinance glossary auto-highlighting and 3-step onboarding tour
+npm run test:tour
+
+# 9. Test dual AI demo/live mode negotiation and rate-limit fallbacks
+npm run test:ai-mode
+
+# 10. Compile optimized production Next.js build
 npm run build
 ```
 
@@ -397,13 +441,19 @@ npm run build
 
 ## 🤝 Contributing
 
-Bug reports, ideas, and improvements are welcome.
+Contributions from the open-source community are warmly welcomed!
 
-1. Fork the repository.
-2. Create a focused branch (e.g. `feature/application-tracker`, `fix/api-health-check`).
-3. Make your changes and add or update relevant tests.
-4. Run the applicable checks.
-5. Open a pull request describing the change and its impact.
+1. Fork the repository on GitHub.
+2. Check existing issue templates under `.github/ISSUE_TEMPLATE/`:
+   - Use `bug_report.md` to report defects and unexpected behaviors.
+   - Use `feature_request.md` to propose feature enhancements for micro-entrepreneurs.
+   - Look for issues tagged `good-first-issue` for scoped starter tasks.
+3. Create a focused branch (e.g. `feature/application-tracker`, `fix/api-health-check`).
+4. Make your changes and add or update relevant tests.
+5. Ensure all verification checks pass:
+   - Backend: `python -m pytest backend/tests`
+   - Frontend: `cd frontend && npm run test:i18n && npm run test:a11y && npm run build`
+6. Open a pull request describing the change, motivation, and test results.
 
 Please avoid unrelated changes in a PR and never commit credentials or private user data.
 
