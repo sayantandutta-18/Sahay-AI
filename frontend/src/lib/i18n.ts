@@ -243,6 +243,21 @@ export interface TranslationDictionary {
     westBengalNotice: string;
     selectStatePrompt: string;
   };
+  tour: {
+    startTour: string;
+    stepIndicator: string;
+    next: string;
+    prev: string;
+    finish: string;
+    skip: string;
+    step1Title: string;
+    step1Desc: string;
+    step2Title: string;
+    step2Desc: string;
+    step3Title: string;
+    step3Desc: string;
+    tooltipHelp: string;
+  };
 }
 
 export const translations: Record<SupportedLanguage, TranslationDictionary> = {
@@ -482,6 +497,21 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       westBengalNotice: "Showing Central & West Bengal State MSME schemes (including Banglashree).",
       selectStatePrompt: "Select a state to filter regional and state-specific programs.",
     },
+    tour: {
+      startTour: "Quick Tour",
+      stepIndicator: "Step {current} of {total}",
+      next: "Next",
+      prev: "Back",
+      finish: "Finish Tour",
+      skip: "Skip Tour",
+      step1Title: "1. Search & Presets",
+      step1Desc: "Find schemes in English or Bengali by keyword (e.g. 'মহিলা', 'loans', 'subsidies') or click preset chips for instant filtering.",
+      step2Title: "2. State Directory & Map",
+      step2Desc: "Filter schemes by your state or Union Territory using the interactive map or accessible list. View West Bengal and Pan-India programs.",
+      step3Title: "3. Compare Schemes Side-by-Side",
+      step3Desc: "Select up to 6 schemes to compare subsidies, credit limits, documents, and deadlines in a mobile-friendly sticky matrix.",
+      tooltipHelp: "Tap or hover over dotted terms anytime to view technical definitions.",
+    },
   },
   hi: {
     appName: "सहाय",
@@ -719,6 +749,21 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       westBengalNotice: "केंद्रीय और पश्चिम बंगाल राज्य एमएसएमई योजनाएं (बांग्लाश्री सहित) प्रदर्शित हैं।",
       selectStatePrompt: "क्षेत्रीय और राज्य-विशिष्ट कार्यक्रमों को फ़िल्टर करने के लिए कोई राज्य चुनें।",
     },
+    tour: {
+      startTour: "त्वरित टूर",
+      stepIndicator: "चरण {total} में से {current}",
+      next: "अगला",
+      prev: "पीछे",
+      finish: "टूर समाप्त करें",
+      skip: "छोड़ें",
+      step1Title: "1. खोज और त्वरित श्रेणियां",
+      step1Desc: "कीवर्ड (जैसे 'महिला', 'ऋण', 'सब्सिडी') से योजनाएं खोजें या तुरंत फ़िल्टर करने के लिए त्वरित चिप्स पर क्लिक करें।",
+      step2Title: "2. राज्य निर्देशिका और मानचित्र",
+      step2Desc: "इंटरएक्टिव मानचित्र या सुलभ सूची से अपने राज्य की योजनाएं देखें। पश्चिम बंगाल और अखिल भारतीय योजनाएं फ़िल्टर करें।",
+      step3Title: "3. योजनाओं की साथ-साथ तुलना",
+      step3Desc: "मोबाइल-अनुकूल तालिका में सब्सिडी, ऋण सीमा, दस्तावेज़ और समय-सीमा की तुलना करने के लिए अधिकतम 6 योजनाएं चुनें।",
+      tooltipHelp: "तकनीकी परिभाषाएं देखने के लिए कभी भी रेखांकित शब्दों पर टैप या होवर करें।",
+    },
   },
   bn: {
     appName: "সহায়",
@@ -955,6 +1000,21 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       statesAndUTs: "সকল ২৮টি রাজ্য ও ৮টি কেন্দ্রশাসিত অঞ্চল",
       westBengalNotice: "কেন্দ্রীয় ও পশ্চিমবঙ্গ রাজ্য এমএসএমই প্রকল্প (বাংলাশ্রী সহ) দেখানো হচ্ছে।",
       selectStatePrompt: "আঞ্চলিক ও রাজ্য-নির্দিষ্ট প্রকল্পগুলি ফিল্টার করতে একটি রাজ্য নির্বাচন করুন।",
+    },
+    tour: {
+      startTour: "কুইক ট্যুর",
+      stepIndicator: "ধাপ {current} / {total}",
+      next: "পরবর্তী",
+      prev: "পূর্ববর্তী",
+      finish: "ট্যুর শেষ করুন",
+      skip: "বাদ দিন",
+      step1Title: "১. বহুভাষিক অনুসন্ধান ও ফিল্টার",
+      step1Desc: "বাংলা বা ইংরেজিতে কীওয়ার্ড (যেমন 'মহিলা', 'ঋণ', 'ভর্তুকি') দিয়ে খুঁজুন অথবা দ্রুত ফিল্টারের জন্য চিপস ক্লিক করুন।",
+      step2Title: "২. রাজ্য নির্দেশিকা ও মানচিত্র",
+      step2Desc: "মানচিত্র বা সহজগম্য তালিকা ব্যবহার করে আপনার রাজ্যের প্রকল্পগুলি দেখুন। পশ্চিমবঙ্গ ও সমগ্র ভারতের কর্মসূচি ফিল্টার করুন।",
+      step3Title: "৩. পাশাপাশি ৬টি স্কিমের তুলনা",
+      step3Desc: "ভর্তুকি, ঋণের সীমা, প্রয়োজনীয় নথিপত্র এবং সময়সীমা তুলনা করতে একসাথে সর্বোচ্চ ৬টি স্কিম বেছে নিন।",
+      tooltipHelp: "প্রযুক্তিগত সংজ্ঞা দেখতে ডটেড আন্ডারলাইন করা শব্দগুলিতে ট্যাপ বা হোভার করুন।",
     },
   },
 };

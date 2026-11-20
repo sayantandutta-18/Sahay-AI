@@ -6,6 +6,7 @@ import { Scheme } from "@/types";
 import { VerificationBadge } from "@/components/ui/VerificationBadge";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { HighlightGlossaryTerms } from "@/components/ui/GlossaryTooltip";
 import { useLanguage, formatCurrencyINR } from "@/lib/i18n";
 import {
   X,
@@ -161,7 +162,7 @@ export const SchemeComparisonTable: React.FC<SchemeComparisonTableProps> = ({
                   >
                     <div className="flex items-start justify-between gap-2">
                       <span className="font-bold text-sm text-slate-900 dark:text-white leading-snug line-clamp-2">
-                        {s.name}
+                        <HighlightGlossaryTerms text={s.name} />
                       </span>
                       <button
                         onClick={() => onRemoveScheme(s.id)}
@@ -374,7 +375,7 @@ export const SchemeComparisonTable: React.FC<SchemeComparisonTableProps> = ({
                           >
                             <div className="flex items-start gap-1 font-medium text-slate-800 dark:text-slate-200">
                               <CheckCircle2 className="w-3 h-3 text-emerald-600 mt-0.5 shrink-0" />
-                              <span>{doc.title}</span>
+                              <span><HighlightGlossaryTerms text={doc.title} /></span>
                             </div>
                             <div className="flex items-center justify-between text-[10px] pl-4">
                               <span className={doc.mandatory ? "text-rose-600 font-semibold" : "text-slate-400"}>

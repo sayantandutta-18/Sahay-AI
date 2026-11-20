@@ -11,6 +11,8 @@ import { CardSkeleton } from "@/components/ui/Loading";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { SchemeComparisonTable } from "@/components/ui/SchemeComparisonTable";
 import { IndiaStateMap } from "@/components/ui/IndiaStateMap";
+import { GlossaryTooltip, HighlightGlossaryTerms } from "@/components/ui/GlossaryTooltip";
+import { OnboardingTour } from "@/components/ui/OnboardingTour";
 import { getSchemes } from "@/lib/api";
 import { Scheme } from "@/types";
 import { useLanguage, formatCurrencyINR } from "@/lib/i18n";
@@ -36,6 +38,7 @@ import {
   Tag,
   MapPin,
   Globe,
+  HelpCircle,
 } from "lucide-react";
 
 function SchemesContent() {
@@ -56,6 +59,30 @@ function SchemesContent() {
   const [isComparisonView, setIsComparisonView] = useState<boolean>(false);
   const [warningMessage, setWarningMessage] = useState<string | null>(null);
   const [hasInitializedFromUrl, setHasInitializedFromUrl] = useState<boolean>(false);
+
+  // Checkpoint 11: Onboarding Tour & Glossary State
+  const [isTourOpen, setIsTourOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const seen = localStorage.getItem("sahay_tour_seen");
+        if (!seen) {
+          const timer = setTimeout(() => {
+            setIsTourOpen(true);
+          }, 800);
+          return () => clearTimeout(timer);
+        }
+      } catch (e) {
+        // storage disabled
+      }
+    }
+  }, []);
+
+  const handleStartTour = () => {
+    setIsComparisonView(false);
+    setIsTourOpen(true);
+  };
 
   const loadSchemes = async (
     overrideSearch?: string,
@@ -310,9 +337,21 @@ function SchemesContent() {
 
         {/* View Switcher Tabs & State Map Toggle */}
         <div className="flex items-center gap-2 flex-wrap">
+          {/* Checkpoint 11: Quick Tour Button */}
+          <button
+            type="button"
+            onClick={handleStartTour}
+            className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer"
+            title={t.tour.startTour}
+          >
+            <HelpCircle className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+            <span>{t.tour.startTour}</span>
+          </button>
+
           {/* Checkpoint 10: State Map Toggle Button */}
           <button
             type="button"
+            data-tour="state-map"
             onClick={() => setIsStateMapExpanded(!isStateMapExpanded)}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer ${
               isStateMapExpanded || (selectedState && selectedState !== "ALL")
@@ -341,6 +380,7 @@ function SchemesContent() {
           </button>
 
           <button
+            data-tour="scheme-compare"
             onClick={() => setIsComparisonView(true)}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 relative cursor-pointer ${
               isComparisonView
@@ -424,7 +464,7 @@ function SchemesContent() {
           onAddMore={() => setIsComparisonView(false)}
         />
       ) : (
-        <div className="space-y-4">
+        <div data-tour="search-presets" className="space-y-4">
           {/* Checkpoint 9: Multilingual Search Form */}
           <form onSubmit={handleSearchSubmit} className="space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
@@ -627,7 +667,7 @@ function SchemesContent() {
                       <CardHeader>
                         <div className="flex items-start justify-between gap-2">
                           <CardTitle className="text-base font-semibold leading-tight">
-                            {s.name}
+                            <HighlightGlossaryTerms text={s.name} />
                           </CardTitle>
                           <div className="flex items-center gap-1.5 flex-wrap shrink-0">
                             {isWestBengalSpecific && (
@@ -659,7 +699,7 @@ function SchemesContent() {
 
                       <CardContent className="space-y-3">
                         <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
-                          {s.short_description}
+                          <HighlightGlossaryTerms text={s.short_description} />
                         </p>
 
                         <div className="flex items-center justify-between text-xs pt-1">
@@ -801,6 +841,12 @@ function SchemesContent() {
           </div>
         </div>
       )}
+
+      {/* Checkpoint 11: Onboarding Tour Component */}
+      <OnboardingTour
+        isOpen={isTourOpen}
+        onClose={() => setIsTourOpen(false)}
+      />
     </div>
   );
 }
