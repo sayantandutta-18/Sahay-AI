@@ -524,6 +524,7 @@ export interface ChatRequest {
   message: string;
   conversation_id?: string | null;
   language_preference?: string;
+  mode?: "auto" | "demo" | "live";
 }
 
 export interface ChatResponse {
@@ -533,6 +534,9 @@ export interface ChatResponse {
   deterministic_action_taken?: string | null;
   confidence_level: "high" | "medium" | "uncertain" | string;
   compliance_disclaimer: string;
+  mode_used?: "demo" | "live" | "fallback";
+  fallback_reason?: string | null;
+  legal_disclaimer?: string;
 }
 
 // Stock Market Academy

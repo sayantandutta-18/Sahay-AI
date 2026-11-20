@@ -258,6 +258,17 @@ export interface TranslationDictionary {
     step3Desc: string;
     tooltipHelp: string;
   };
+  aiMode: {
+    modeLabel: string;
+    auto: string;
+    demo: string;
+    live: string;
+    liveBadge: string;
+    demoBadge: string;
+    fallbackBadge: string;
+    fallbackNotice: string;
+    disclaimer: string;
+  };
 }
 
 export const translations: Record<SupportedLanguage, TranslationDictionary> = {
@@ -512,6 +523,17 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       step3Desc: "Select up to 6 schemes to compare subsidies, credit limits, documents, and deadlines in a mobile-friendly sticky matrix.",
       tooltipHelp: "Tap or hover over dotted terms anytime to view technical definitions.",
     },
+    aiMode: {
+      modeLabel: "AI Operating Mode",
+      auto: "Auto Mode",
+      demo: "Demo Mode (Offline)",
+      live: "Live AI Mode (Gemini)",
+      liveBadge: "Live AI",
+      demoBadge: "Verified Demo",
+      fallbackBadge: "Offline Fallback",
+      fallbackNotice: "Notice: Live AI unavailable ({reason}). Serving verified offline answer.",
+      disclaimer: "Disclaimer: Sahay AI provides informational guidance based on public government guidelines and deterministic calculations. Answers do not constitute legal, tax, or formal credit approval. Official sanctions are issued solely by respective banks and government nodal agencies.",
+    },
   },
   hi: {
     appName: "सहाय",
@@ -764,6 +786,17 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       step3Desc: "मोबाइल-अनुकूल तालिका में सब्सिडी, ऋण सीमा, दस्तावेज़ और समय-सीमा की तुलना करने के लिए अधिकतम 6 योजनाएं चुनें।",
       tooltipHelp: "तकनीकी परिभाषाएं देखने के लिए कभी भी रेखांकित शब्दों पर टैप या होवर करें।",
     },
+    aiMode: {
+      modeLabel: "एआई ऑपरेटिंग मोड",
+      auto: "स्वचालित (ऑटो)",
+      demo: "डेमो मोड (ऑफलाइन)",
+      live: "लाइव एआई (जेमिनी)",
+      liveBadge: "लाइव एआई",
+      demoBadge: "सत्यापित डेमो",
+      fallbackBadge: "ऑफलाइन फ़ॉलबैक",
+      fallbackNotice: "सूचना: लाइव एआई अनुपलब्ध ({reason})। सुरक्षित सत्यापित ऑफलाइन उत्तर प्रदर्शित किया गया।",
+      disclaimer: "अस्वीकरण: सहाय एआई सार्वजनिक सरकारी दिशानिर्देशों और वित्तीय गणनाओं पर आधारित सूचनात्मक मार्गदर्शन प्रदान करता है। यह उत्तर कानूनी, कर या ऋण स्वीकृति का गठन नहीं करता।",
+    },
   },
   bn: {
     appName: "সহায়",
@@ -1015,6 +1048,17 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       step3Title: "৩. পাশাপাশি ৬টি স্কিমের তুলনা",
       step3Desc: "ভর্তুকি, ঋণের সীমা, প্রয়োজনীয় নথিপত্র এবং সময়সীমা তুলনা করতে একসাথে সর্বোচ্চ ৬টি স্কিম বেছে নিন।",
       tooltipHelp: "প্রযুক্তিগত সংজ্ঞা দেখতে ডটেড আন্ডারলাইন করা শব্দগুলিতে ট্যাপ বা হোভার করুন।",
+    },
+    aiMode: {
+      modeLabel: "এআই অপারেটিং মোড",
+      auto: "স্বয়ংক্রিয় (অটো)",
+      demo: "ডেমো মোড (অফলাইন)",
+      live: "লাইভ এআই (জেমিনি)",
+      liveBadge: "লাইভ এআই",
+      demoBadge: "যাচাইকৃত ডেমো",
+      fallbackBadge: "অফলাইন ফলব্যাক",
+      fallbackNotice: "বিজ্ঞপ্তি: লাইভ এআই অনুপলব্ধ ({reason})। নিরাপদ যাচাইকৃত অফলাইন উত্তর দেখানো হচ্ছে।",
+      disclaimer: "সতর্কবার্তা: সহায় এআই সরকারি নির্দেশিকা ও গাণিতিক হিসাবের ভিত্তিতে তথ্যভিত্তিক সহায়তা প্রদান করে। এটি কোনো আইনি পরামর্শ বা ব্যাংক ঋণ মঞ্জুরিপত্র নয়।",
     },
   },
 };

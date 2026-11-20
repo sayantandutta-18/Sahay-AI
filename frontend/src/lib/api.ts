@@ -581,7 +581,8 @@ export async function getAdminAuditLogs(limit: number = 50): Promise<AuditLogIte
 export async function sendChatMessage(
   message: string,
   conversationId?: string,
-  languagePreference: string = "en"
+  languagePreference: string = "en",
+  mode: "auto" | "demo" | "live" = "auto"
 ): Promise<ChatResponse> {
   return fetchApi<ChatResponse>("/api/v1/chat", {
     method: "POST",
@@ -589,6 +590,7 @@ export async function sendChatMessage(
       message,
       conversation_id: conversationId,
       language_preference: languagePreference,
+      mode,
     }),
   });
 }

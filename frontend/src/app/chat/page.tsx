@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
+import { useLanguage } from "@/lib/i18n";
 import {
   MessageSquare,
   Send,
@@ -21,6 +22,10 @@ import {
   MicOff,
   Volume2,
   VolumeX,
+  Layers,
+  AlertTriangle,
+  Cpu,
+  ShieldAlert,
 } from "lucide-react";
 import { sendChatMessage } from "@/lib/api";
 import { ChatSourceCitation } from "@/types";
@@ -33,10 +38,15 @@ interface ChatMessage {
   intentDetected?: string;
   confidenceLevel?: string;
   deterministicAction?: string | null;
+  modeUsed?: "demo" | "live" | "fallback";
+  fallbackReason?: string | null;
+  legalDisclaimer?: string;
   timestamp: string;
 }
 
 export default function ChatPage() {
+  const { t } = useLanguage();
+  const [mode, setMode] = useState<"auto" | "demo" | "live">("auto");
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "initial-greeting",
@@ -51,6 +61,7 @@ export default function ChatPage() {
         },
       ],
       confidenceLevel: "high",
+      modeUsed: "demo",
       timestamp: "Just now",
     },
   ]);
@@ -167,7 +178,7 @@ export default function ChatPage() {
     setIsLoading(true);
 
     try {
-      const response = await sendChatMessage(userText, undefined, language);
+      const response = await sendChatMessage(userText, undefined, language, mode);
       const assistantMsg: ChatMessage = {
         id: `assistant-${Date.now()}`,
         sender: "assistant",
@@ -176,6 +187,9 @@ export default function ChatPage() {
         intentDetected: response.intent_detected,
         confidenceLevel: response.confidence_level,
         deterministicAction: response.deterministic_action_taken,
+        modeUsed: response.mode_used,
+        fallbackReason: response.fallback_reason,
+        legalDisclaimer: response.legal_disclaimer,
         timestamp: "Just now",
       };
       setMessages((prev) => [...prev, assistantMsg]);
@@ -211,7 +225,22 @@ export default function ChatPage() {
               Grounded RAG retrieval over verified government documentation • Voice enabled • English, हिंदी, বাংলা
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Checkpoint 12: AI Operating Mode Switcher */}
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg text-xs">
+              <Cpu className="w-3.5 h-3.5 text-slate-500" />
+              <select
+                value={mode}
+                onChange={(e) => setMode(e.target.value as "auto" | "demo" | "live")}
+                className="bg-transparent border-none text-slate-700 dark:text-slate-200 text-xs focus:outline-hidden font-medium cursor-pointer"
+                aria-label="Select AI Operating Mode"
+              >
+                <option value="auto">{t.aiMode.auto}</option>
+                <option value="demo">{t.aiMode.demo}</option>
+                <option value="live">{t.aiMode.live}</option>
+              </select>
+            </div>
+
             <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-lg text-xs">
               <Globe className="w-3.5 h-3.5 text-slate-500" />
               <select
@@ -261,6 +290,21 @@ export default function ChatPage() {
                 {m.sender === "assistant" && (
                   <div className="flex items-center justify-between mb-2 pb-2 border-b border-slate-100 dark:border-slate-800 text-[10px]">
                     <div className="flex items-center gap-1.5 flex-wrap">
+                      {/* Checkpoint 12: Mode Badge */}
+                      {m.modeUsed === "live" ? (
+                        <Badge variant="brand" size="sm">
+                          <Sparkles className="w-3 h-3 mr-1 text-emerald-600" /> {t.aiMode.liveBadge}
+                        </Badge>
+                      ) : m.modeUsed === "fallback" ? (
+                        <Badge variant="warning" size="sm">
+                          <AlertTriangle className="w-3 h-3 mr-1 text-amber-600" /> {t.aiMode.fallbackBadge}
+                        </Badge>
+                      ) : (
+                        <Badge variant="neutral" size="sm">
+                          <Layers className="w-3 h-3 mr-1 text-slate-500" /> {t.aiMode.demoBadge}
+                        </Badge>
+                      )}
+
                       {m.intentDetected && (
                         <span className="font-mono px-1.5 py-0.5 rounded-sm bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                           {m.intentDetected}
@@ -301,6 +345,14 @@ export default function ChatPage() {
                         <Volume2 className="w-3.5 h-3.5" />
                       )}
                     </button>
+                  </div>
+                )}
+
+                {/* Checkpoint 12: Fallback Reason Notice */}
+                {m.fallbackReason && (
+                  <div className="mb-2 p-2 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-[11px] text-amber-800 dark:text-amber-200 flex items-start gap-1.5 animate-in fade-in">
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
+                    <span>{m.fallbackReason}</span>
                   </div>
                 )}
 
@@ -422,6 +474,12 @@ export default function ChatPage() {
               Ask
             </Button>
           </form>
+
+          {/* Checkpoint 12: Compliance and Legal Disclaimer Banner */}
+          <div className="p-2.5 bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl text-[10px] text-slate-500 dark:text-slate-400 flex items-start gap-2">
+            <ShieldAlert className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+            <p className="leading-relaxed">{t.aiMode.disclaimer}</p>
+          </div>
         </div>
       </div>
     </AppLayout>

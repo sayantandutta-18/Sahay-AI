@@ -28,6 +28,27 @@ class InMemoryRateLimiter:
         with self._lock:
             self._requests.clear()
 
+    def check_rate_limit(self, request: Request) -> bool:
+        """Evaluate sliding-window rate limit without raising an exception.
+
+        Returns True if rate limit is exceeded (so caller can serve safe fallback),
+        False if within limit (records timestamp).
+        """
+        client_ip = self._get_client_ip(request)
+
+        # Bypass for automated test suites unless specifically testing rate limiter
+        if client_ip in ["testclient", "test"] and not request.headers.get("X-RateLimit-Test"):
+            return False
+
+        now = time.time()
+        with self._lock:
+            timestamps = [t for t in self._requests[client_ip] if now - t < self.seconds]
+            if len(timestamps) >= self.times:
+                return True
+            timestamps.append(now)
+            self._requests[client_ip] = timestamps
+            return False
+
     async def __call__(self, request: Request):
         client_ip = self._get_client_ip(request)
 

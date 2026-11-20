@@ -20,19 +20,26 @@ from app.services.financial_service import (
 logger = logging.getLogger(__name__)
 
 
-def call_llm_service(prompt: str, system_prompt: str = "") -> Optional[str]:
+def call_llm_service(prompt: str, system_prompt: str = "") -> tuple[Optional[str], Optional[str]]:
     """Pluggable LLM invocation helper.
 
-    When LLM_PROVIDER and LLM_API_KEY are configured, dispatches an external
-    API call with strict timeouts. Returns None on failure or if provider is mock,
-    ensuring deterministic replies are preserved.
+    When LLM_PROVIDER and API key are configured, dispatches an external
+    API call with strict timeouts. Returns (reply_text, None) on success,
+    or (None, error_reason) on failure or if mock/none.
     """
-    if not settings.LLM_API_KEY or settings.LLM_PROVIDER in ["mock", "none", ""]:
-        return None
+    api_key = (
+        settings.LLM_API_KEY
+        or getattr(settings, "GEMINI_API_KEY", "")
+        or getattr(settings, "OPENAI_API_KEY", "")
+    )
+    provider = settings.LLM_PROVIDER.lower() if settings.LLM_PROVIDER else "mock"
+
+    if not api_key or provider in ["mock", "none", ""]:
+        return None, "No external LLM API key configured in environment (GEMINI_API_KEY or OPENAI_API_KEY)"
 
     try:
-        if settings.LLM_PROVIDER.lower() == "gemini":
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{settings.LLM_MODEL}:generateContent?key={settings.LLM_API_KEY}"
+        if provider == "gemini":
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{settings.LLM_MODEL}:generateContent?key={api_key}"
             payload = {
                 "contents": [{"parts": [{"text": f"{system_prompt}\n\nUser Question:\n{prompt}"}]}]
             }
@@ -48,8 +55,9 @@ def call_llm_service(prompt: str, system_prompt: str = "") -> Optional[str]:
                 if candidates:
                     parts = candidates[0].get("content", {}).get("parts", [])
                     if parts and "text" in parts[0]:
-                        return parts[0]["text"].strip()
-        elif settings.LLM_PROVIDER.lower() == "openai":
+                        return parts[0]["text"].strip(), None
+                return None, "Gemini returned empty candidate content"
+        elif provider == "openai":
             url = "https://api.openai.com/v1/chat/completions"
             payload = {
                 "model": settings.LLM_MODEL or "gpt-4o-mini",
@@ -64,7 +72,7 @@ def call_llm_service(prompt: str, system_prompt: str = "") -> Optional[str]:
                 data=json.dumps(payload).encode("utf-8"),
                 headers={
                     "Content-Type": "application/json",
-                    "Authorization": f"Bearer {settings.LLM_API_KEY}",
+                    "Authorization": f"Bearer {api_key}",
                 },
                 method="POST",
             )
@@ -72,11 +80,13 @@ def call_llm_service(prompt: str, system_prompt: str = "") -> Optional[str]:
                 data = json.loads(resp.read().decode("utf-8"))
                 choices = data.get("choices", [])
                 if choices:
-                    return choices[0].get("message", {}).get("content", "").strip()
+                    return choices[0].get("message", {}).get("content", "").strip(), None
+                return None, "OpenAI returned empty choices"
+        else:
+            return None, f"Unsupported LLM provider: {provider}"
     except Exception as exc:
         logger.warning("Pluggable LLM invocation failed or timed out: %s", exc)
-        return None
-    return None
+        return None, str(exc)
 
 
 def detect_chat_intent(message: str) -> str:
@@ -103,6 +113,7 @@ def answer_grounded_chat(
     db: Session,
     request: ChatRequest,
     current_user: Optional[User] = None,
+    rate_limited: bool = False,
 ) -> ChatResponse:
     """Provide grounded, uncertainty-aware answers using verified Sahay content."""
     intent = detect_chat_intent(request.message)
@@ -180,18 +191,26 @@ def answer_grounded_chat(
 
             def calculate_scheme_relevance(s: Scheme) -> int:
                 score = 0
-                if s.slug.lower() in msg_lower:
+                s_name_lower = s.name.lower()
+                s_slug_lower = s.slug.lower()
+
+                if s_slug_lower in msg_lower:
                     score += 50
-                if "pmegp" in msg_lower and "pmegp" in s.slug.lower():
+                if "pmegp" in msg_lower and ("pmegp" in s_slug_lower or "pmegp" in s_name_lower):
                     score += 100
-                if "mudra" in msg_lower and "mudra" in s.slug.lower():
+                if ("mudra" in msg_lower or "pmmy" in msg_lower) and ("mudra" in s_name_lower or "pmmy" in s_slug_lower):
                     score += 100
-                if "banglashree" in msg_lower and "banglashree" in s.slug.lower():
+                if "banglashree" in msg_lower and ("banglashree" in s_slug_lower or "banglashree" in s_name_lower):
                     score += 100
-                for token in s.name.lower().split():
+                if ("svanidhi" in msg_lower or "street vendor" in msg_lower) and ("svanidhi" in s_slug_lower or "svanidhi" in s_name_lower):
+                    score += 100
+                if ("stand up" in msg_lower or "standup" in msg_lower) and ("stand-up" in s_slug_lower or "stand-up" in s_name_lower):
+                    score += 100
+
+                for token in s_name_lower.split():
                     if token not in stop_words and len(token) > 2 and token in msg_lower:
                         score += 10
-                    return score
+                return score
 
             scored_schemes = sorted(schemes, key=calculate_scheme_relevance, reverse=True)
             target = scored_schemes[0]
@@ -333,10 +352,84 @@ def answer_grounded_chat(
             "please ask and I will cite verified sources."
         )
 
+    demo_reply = reply
+    requested_mode = (request.mode or getattr(settings, "AI_MODE", "auto")).lower()
+    api_key = (
+        settings.LLM_API_KEY
+        or getattr(settings, "GEMINI_API_KEY", "")
+        or getattr(settings, "OPENAI_API_KEY", "")
+    )
+    has_key = bool(api_key and settings.LLM_PROVIDER not in ["mock", "none", ""])
+
+    mode_used = "demo"
+    fallback_reason: Optional[str] = None
+    final_reply = demo_reply
+
+    if rate_limited:
+        mode_used = "fallback"
+        fallback_reason = "Rate limit reached (too many requests per minute). Showing verified offline response."
+        final_reply = demo_reply
+    elif requested_mode == "demo" or getattr(settings, "AI_MODE", "").lower() == "demo":
+        mode_used = "demo"
+        fallback_reason = None
+        final_reply = demo_reply
+    elif requested_mode == "live":
+        if not has_key:
+            mode_used = "fallback"
+            fallback_reason = "No external AI API key configured in environment (GEMINI_API_KEY or OPENAI_API_KEY). Showing verified offline response."
+            final_reply = demo_reply
+        else:
+            sys_prompt = (
+                "You are Sahay AI, an expert advisory assistant for Indian micro-entrepreneurs. "
+                f"Respond in {request.language_preference or 'English'}. "
+                "Explain schemes and calculations simply and accurately based strictly on official facts. "
+                "Do not hallucinate unsupported benefits or legal approvals."
+            )
+            llm_text, err = call_llm_service(request.message, system_prompt=sys_prompt)
+            if llm_text:
+                mode_used = "live"
+                fallback_reason = None
+                final_reply = llm_text
+            else:
+                mode_used = "fallback"
+                fallback_reason = f"Live AI call failed: {err}. Showing verified offline response."
+                final_reply = demo_reply
+    else:
+        # Auto mode
+        if has_key:
+            sys_prompt = (
+                "You are Sahay AI, an expert advisory assistant for Indian micro-entrepreneurs. "
+                f"Respond in {request.language_preference or 'English'}. "
+                "Explain schemes and calculations simply and accurately based strictly on official facts. "
+                "Do not hallucinate unsupported benefits or legal approvals."
+            )
+            llm_text, err = call_llm_service(request.message, system_prompt=sys_prompt)
+            if llm_text:
+                mode_used = "live"
+                fallback_reason = None
+                final_reply = llm_text
+            else:
+                mode_used = "fallback"
+                fallback_reason = f"Live AI call failed: {err}. Showing verified offline response."
+                final_reply = demo_reply
+        else:
+            mode_used = "demo"
+            fallback_reason = None
+            final_reply = demo_reply
+
+    legal_disclaimer = (
+        "Disclaimer: Sahay AI provides informational guidance based on public government guidelines "
+        "and deterministic calculations. Answers do not constitute legal, tax, or formal credit approval. "
+        "Official sanctions are issued solely by respective banks and government nodal agencies."
+    )
+
     return ChatResponse(
-        reply=reply,
+        reply=final_reply,
         intent_detected=intent,
         sources=sources,
         deterministic_action_taken=deterministic_action,
         confidence_level=confidence,
+        mode_used=mode_used,
+        fallback_reason=fallback_reason,
+        legal_disclaimer=legal_disclaimer,
     )

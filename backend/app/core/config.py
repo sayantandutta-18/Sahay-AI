@@ -86,9 +86,14 @@ class Settings(BaseSettings):
         return v
 
     # LLM Settings (for RAG / AI Chat)
-    LLM_PROVIDER: str = "mock"
+    AI_MODE: str = "auto"  # "auto", "demo", "live"
+    LLM_PROVIDER: str = "mock"  # "mock", "gemini", "openai"
     LLM_API_KEY: str = ""
+    GEMINI_API_KEY: str = ""
+    OPENAI_API_KEY: str = ""
     LLM_MODEL: str = "gemini-2.5-flash"
+    AI_RATE_LIMIT_TIMES: int = 15
+    AI_RATE_LIMIT_SECONDS: int = 60
 
     model_config = SettingsConfigDict(
         env_file=".env",
