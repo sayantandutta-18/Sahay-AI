@@ -3,8 +3,13 @@ from pathlib import Path
 
 _TEST_DB_PATH = Path(__file__).resolve().parent.parent / "sahay_test.db"
 os.environ["DATABASE_URL"] = f"sqlite:///{_TEST_DB_PATH.as_posix()}"
+os.environ["LLM_PROVIDER"] = "mock"
 
 import pytest
+from app.core.config import settings
+
+settings.LLM_PROVIDER = "mock"
+
 from app.database.session import engine, SessionLocal
 from app.database.base import Base
 import app.models  # Register models

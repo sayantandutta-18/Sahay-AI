@@ -37,6 +37,9 @@ def call_llm_service(prompt: str, system_prompt: str = "") -> tuple[Optional[str
     if not api_key or provider in ["mock", "none", ""]:
         return None, "No external LLM API key configured in environment (GEMINI_API_KEY or OPENAI_API_KEY)"
 
+    if os.environ.get("PYTEST_CURRENT_TEST") and not os.environ.get("ENABLE_LIVE_AI_TESTS"):
+        return None, "Test environment active: external LLM network requests simulated"
+
     try:
         if provider == "gemini":
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{settings.LLM_MODEL}:generateContent?key={api_key}"
@@ -369,7 +372,7 @@ def answer_grounded_chat(
         mode_used = "fallback"
         fallback_reason = "Rate limit reached (too many requests per minute). Showing verified offline response."
         final_reply = demo_reply
-    elif requested_mode == "demo" or getattr(settings, "AI_MODE", "").lower() == "demo":
+    elif requested_mode == "demo":
         mode_used = "demo"
         fallback_reason = None
         final_reply = demo_reply

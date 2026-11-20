@@ -54,22 +54,27 @@ export const Modal: React.FC<ModalProps> = ({
 
       {/* Modal Dialog */}
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+        aria-describedby={description ? "modal-desc" : undefined}
         className={`relative w-full ${sizeStyles[size]} rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 shadow-2xl transition-all z-10`}
       >
         <div className="flex items-start justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
           <div>
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+            <h3 id="modal-title" className="text-lg font-semibold text-slate-900 dark:text-white">
               {title}
             </h3>
             {description && (
-              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              <p id="modal-desc" className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                 {description}
               </p>
             )}
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-md transition-colors"
+            aria-label="Close dialog"
+            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-md transition-colors focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
           >
             <X className="w-5 h-5" />
           </button>

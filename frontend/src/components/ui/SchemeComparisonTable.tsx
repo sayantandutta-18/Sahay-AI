@@ -161,19 +161,26 @@ export const SchemeComparisonTable: React.FC<SchemeComparisonTableProps> = ({
                     className="p-3 sm:p-4 align-top min-w-[240px] sm:min-w-[280px] max-w-[320px] border-r last:border-r-0 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <span className="font-bold text-sm text-slate-900 dark:text-white leading-snug line-clamp-2">
+                      <span
+                        className="font-bold text-sm text-slate-900 dark:text-white leading-snug line-clamp-2"
+                        title={s.name}
+                      >
                         <HighlightGlossaryTerms text={s.name} />
                       </span>
                       <button
                         onClick={() => onRemoveScheme(s.id)}
-                        className="p-1 rounded-full text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors shrink-0"
+                        className="p-1 rounded-full text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors shrink-0 focus:outline-hidden focus:ring-1 focus:ring-rose-400"
                         title={t.comparison.remove}
+                        aria-label={`${t.comparison.remove} ${s.name}`}
                       >
                         <X className="w-4 h-4" />
                       </button>
                     </div>
-                    <div className="flex items-center gap-1.5 text-[11px] text-slate-500 mt-1.5 line-clamp-1">
-                      <Building className="w-3.5 h-3.5 shrink-0 text-slate-400" />
+                    <div
+                      className="flex items-center gap-1.5 text-[11px] text-slate-500 mt-1.5 line-clamp-1"
+                      title={s.provider}
+                    >
+                      <Building className="w-3.5 h-3.5 shrink-0 text-slate-400" aria-hidden="true" />
                       <span>{s.provider}</span>
                     </div>
                   </td>

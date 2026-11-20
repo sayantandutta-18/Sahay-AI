@@ -14,7 +14,8 @@
     "test:search": "node scripts/test-search.mjs",
     "test:state-map": "node scripts/test-state-map.mjs",
     "test:tour": "node scripts/test-glossary-tour.mjs",
-    "test:ai-mode": "node scripts/test-ai-mode.mjs"
+    "test:ai-mode": "node scripts/test-ai-mode.mjs",
+    "test:a11y": "node scripts/test-a11y.mjs"
   },
   "dependencies": {
     "lucide-react": "^1.55.0",

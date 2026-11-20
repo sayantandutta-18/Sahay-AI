@@ -443,13 +443,60 @@ export default function ApplicationsPage() {
 
   const getStatusBadge = (status: string) => {
     const s = status.toLowerCase();
-    if (s === "approved") return <Badge variant="success">{t.statuses.approved}</Badge>;
-    if (s === "submitted") return <Badge variant="info">{t.statuses.submitted}</Badge>;
-    if (s === "in_review" || s === "under_review") return <Badge variant="brand">{t.statuses.in_review}</Badge>;
-    if (s === "draft") return <Badge variant="neutral">{t.statuses.draft}</Badge>;
-    if (s === "withdrawn") return <Badge variant="neutral">{t.statuses.withdrawn}</Badge>;
-    if (s === "rejected") return <Badge variant="danger">{t.statuses.rejected}</Badge>;
-    return <Badge variant="warning">{t.statuses.in_progress}</Badge>;
+    if (s === "approved") {
+      return (
+        <Badge variant="success">
+          <CheckCircle2 className="w-3 h-3 mr-1 text-emerald-700 dark:text-emerald-300 shrink-0" aria-hidden="true" />
+          {t.statuses.approved}
+        </Badge>
+      );
+    }
+    if (s === "submitted") {
+      return (
+        <Badge variant="info">
+          <ArrowRight className="w-3 h-3 mr-1 text-sky-700 dark:text-sky-300 shrink-0" aria-hidden="true" />
+          {t.statuses.submitted}
+        </Badge>
+      );
+    }
+    if (s === "in_review" || s === "under_review") {
+      return (
+        <Badge variant="brand">
+          <Clock className="w-3 h-3 mr-1 text-emerald-800 dark:text-emerald-200 shrink-0" aria-hidden="true" />
+          {t.statuses.in_review}
+        </Badge>
+      );
+    }
+    if (s === "draft") {
+      return (
+        <Badge variant="neutral">
+          <FileText className="w-3 h-3 mr-1 text-slate-600 dark:text-slate-400 shrink-0" aria-hidden="true" />
+          {t.statuses.draft}
+        </Badge>
+      );
+    }
+    if (s === "withdrawn") {
+      return (
+        <Badge variant="neutral">
+          <Trash2 className="w-3 h-3 mr-1 text-slate-500 dark:text-slate-400 shrink-0" aria-hidden="true" />
+          {t.statuses.withdrawn}
+        </Badge>
+      );
+    }
+    if (s === "rejected") {
+      return (
+        <Badge variant="danger">
+          <AlertCircle className="w-3 h-3 mr-1 text-rose-700 dark:text-rose-300 shrink-0" aria-hidden="true" />
+          {t.statuses.rejected}
+        </Badge>
+      );
+    }
+    return (
+      <Badge variant="warning">
+        <AlertCircle className="w-3 h-3 mr-1 text-amber-700 dark:text-amber-300 shrink-0" aria-hidden="true" />
+        {t.statuses.in_progress}
+      </Badge>
+    );
   };
 
   return (

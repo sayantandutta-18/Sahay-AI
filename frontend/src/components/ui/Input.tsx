@@ -26,6 +26,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     ref
   ) => {
     const inputId = id || (label ? label.toLowerCase().replace(/\s+/g, "-") : undefined);
+    const errorId = inputId && error ? `${inputId}-error` : undefined;
+    const helperId = inputId && helperText && !error ? `${inputId}-helper` : undefined;
+    const describedBy = errorId || helperId;
 
     return (
       <div className="w-full">
@@ -47,7 +50,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             id={inputId}
             ref={ref}
             disabled={disabled}
-            className={`w-full rounded-lg border bg-white dark:bg-slate-900 text-slate-900 dark:text-white px-3 py-2 text-sm placeholder-slate-400 transition-colors focus:outline-none focus:ring-2 disabled:bg-slate-50 disabled:dark:bg-slate-800 disabled:cursor-not-allowed ${
+            aria-invalid={!!error}
+            aria-describedby={describedBy}
+            className={`w-full rounded-lg border bg-white dark:bg-slate-900 text-slate-900 dark:text-white px-3 py-2 text-sm placeholder-slate-400 transition-colors focus:outline-hidden focus:ring-2 disabled:bg-slate-50 disabled:dark:bg-slate-800 disabled:cursor-not-allowed ${
               leftIcon ? "pl-9" : ""
             } ${rightIcon ? "pr-9" : ""} ${
               error
@@ -62,9 +67,15 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             </div>
           )}
         </div>
-        {error && <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">{error}</p>}
+        {error && (
+          <p id={errorId} className="mt-1 text-xs text-rose-600 dark:text-rose-400" role="alert">
+            {error}
+          </p>
+        )}
         {!error && helperText && (
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{helperText}</p>
+          <p id={helperId} className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+            {helperText}
+          </p>
         )}
       </div>
     );

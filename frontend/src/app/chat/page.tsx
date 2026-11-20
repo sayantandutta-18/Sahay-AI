@@ -443,7 +443,8 @@ export default function ChatPage() {
             <button
               type="button"
               onClick={toggleListening}
-              className={`p-2.5 rounded-xl border transition-colors flex items-center justify-center ${
+              aria-label={isListening ? "Stop voice listening" : "Start voice query in Hindi, Bengali or English"}
+              className={`p-2.5 rounded-xl border transition-colors flex items-center justify-center focus:outline-hidden focus:ring-2 focus:ring-emerald-500 ${
                 isListening
                   ? "bg-rose-500 text-white border-rose-500 animate-pulse"
                   : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-50"

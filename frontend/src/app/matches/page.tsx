@@ -217,11 +217,22 @@ export default function MatchesPage() {
                         }
                         size="md"
                       >
-                        {m.eligibility_verdict === "eligible"
-                          ? `Eligible (${m.match_score}% Fit)`
-                          : m.eligibility_verdict === "more_information_needed"
-                          ? `Info Needed (${m.match_score}%)`
-                          : `Not Eligible (${m.match_score}%)`}
+                        {m.eligibility_verdict === "eligible" ? (
+                          <>
+                            <CheckCircle className="w-3 h-3 mr-1 text-emerald-700 dark:text-emerald-300 shrink-0" aria-hidden="true" />
+                            Eligible ({m.match_score}% Fit)
+                          </>
+                        ) : m.eligibility_verdict === "more_information_needed" ? (
+                          <>
+                            <HelpCircle className="w-3 h-3 mr-1 text-sky-700 dark:text-sky-300 shrink-0" aria-hidden="true" />
+                            Info Needed ({m.match_score}%)
+                          </>
+                        ) : (
+                          <>
+                            <AlertTriangle className="w-3 h-3 mr-1 text-amber-700 dark:text-amber-300 shrink-0" aria-hidden="true" />
+                            Not Eligible ({m.match_score}%)
+                          </>
+                        )}
                       </Badge>
                       <VerificationBadge
                         status={m.verification_status}
@@ -410,11 +421,22 @@ export default function MatchesPage() {
                     size="md"
                     className="mt-1"
                   >
-                    {selectedMatch.eligibility_verdict === "eligible"
-                      ? `Eligible (${selectedMatch.match_score}% Fit)`
-                      : selectedMatch.eligibility_verdict === "more_information_needed"
-                      ? `Info Needed (${selectedMatch.match_score}% Fit)`
-                      : `Not Eligible (${selectedMatch.match_score}% Fit)`}
+                    {selectedMatch.eligibility_verdict === "eligible" ? (
+                      <>
+                        <CheckCircle className="w-3 h-3 mr-1 text-emerald-700 dark:text-emerald-300 shrink-0 inline" aria-hidden="true" />
+                        Eligible ({selectedMatch.match_score}% Fit)
+                      </>
+                    ) : selectedMatch.eligibility_verdict === "more_information_needed" ? (
+                      <>
+                        <HelpCircle className="w-3 h-3 mr-1 text-sky-700 dark:text-sky-300 shrink-0 inline" aria-hidden="true" />
+                        Info Needed ({selectedMatch.match_score}% Fit)
+                      </>
+                    ) : (
+                      <>
+                        <AlertTriangle className="w-3 h-3 mr-1 text-amber-700 dark:text-amber-300 shrink-0 inline" aria-hidden="true" />
+                        Not Eligible ({selectedMatch.match_score}% Fit)
+                      </>
+                    )}
                   </Badge>
                 </div>
                 <div>

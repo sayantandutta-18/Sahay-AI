@@ -81,8 +81,14 @@ def test_chat_demo_mode_serves_prewritten_explanations():
     assert "credit approval" in data["legal_disclaimer"]
 
 
-def test_chat_live_mode_without_api_key_serves_fallback():
+def test_chat_live_mode_without_api_key_serves_fallback(monkeypatch):
     """Step 2 & 6: In Live mode without API key, show the demo answer and explain why."""
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "LLM_API_KEY", None)
+    monkeypatch.setattr(settings, "GEMINI_API_KEY", None)
+    monkeypatch.setattr(settings, "OPENAI_API_KEY", None)
+
     res = client.post(
         "/api/v1/chat",
         json={"message": "Tell me about PMEGP subsidy", "mode": "live"},

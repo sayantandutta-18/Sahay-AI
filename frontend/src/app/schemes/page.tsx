@@ -322,7 +322,7 @@ function SchemesContent() {
   };
 
   return (
-    <div className="space-y-6 pb-24">
+    <div className="space-y-6 pb-36 sm:pb-32">
       {/* Header & Mode Switcher */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -809,12 +809,16 @@ function SchemesContent() {
                 <span
                   key={s.id}
                   className="text-[11px] bg-slate-800 text-slate-200 px-2 py-0.5 rounded-md flex items-center gap-1 shrink-0"
+                  title={s.name}
                 >
-                  <span className="truncate max-w-[90px]">{s.name}</span>
+                  <span className="truncate max-w-[120px] sm:max-w-[200px]" title={s.name}>
+                    {s.name}
+                  </span>
                   <button
                     onClick={() => handleRemoveFromComparison(s.id)}
-                    className="hover:text-rose-400"
+                    className="hover:text-rose-400 p-0.5 rounded focus:outline-hidden focus:ring-1 focus:ring-rose-400"
                     title={t.comparison.remove}
+                    aria-label={`${t.comparison.remove} ${s.name}`}
                   >
                     <X className="w-3 h-3" />
                   </button>

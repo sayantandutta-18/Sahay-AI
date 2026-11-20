@@ -269,6 +269,16 @@ export interface TranslationDictionary {
     fallbackNotice: string;
     disclaimer: string;
   };
+  a11y: {
+    skipToContent: string;
+    closeModal: string;
+    toggleMenu: string;
+    expandDetails: string;
+    collapseDetails: string;
+    verifiedStatus: string;
+    unverifiedStatus: string;
+    outdatedStatus: string;
+  };
 }
 
 export const translations: Record<SupportedLanguage, TranslationDictionary> = {
@@ -534,6 +544,16 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       fallbackNotice: "Notice: Live AI unavailable ({reason}). Serving verified offline answer.",
       disclaimer: "Disclaimer: Sahay AI provides informational guidance based on public government guidelines and deterministic calculations. Answers do not constitute legal, tax, or formal credit approval. Official sanctions are issued solely by respective banks and government nodal agencies.",
     },
+    a11y: {
+      skipToContent: "Skip to main content",
+      closeModal: "Close dialog",
+      toggleMenu: "Toggle navigation menu",
+      expandDetails: "Expand details",
+      collapseDetails: "Collapse details",
+      verifiedStatus: "Government official verified",
+      unverifiedStatus: "Unverified official data",
+      outdatedStatus: "Outdated verification",
+    },
   },
   hi: {
     appName: "सहाय",
@@ -797,6 +817,16 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       fallbackNotice: "सूचना: लाइव एआई अनुपलब्ध ({reason})। सुरक्षित सत्यापित ऑफलाइन उत्तर प्रदर्शित किया गया।",
       disclaimer: "अस्वीकरण: सहाय एआई सार्वजनिक सरकारी दिशानिर्देशों और वित्तीय गणनाओं पर आधारित सूचनात्मक मार्गदर्शन प्रदान करता है। यह उत्तर कानूनी, कर या ऋण स्वीकृति का गठन नहीं करता।",
     },
+    a11y: {
+      skipToContent: "मुख्य सामग्री पर जाएं",
+      closeModal: "डायलॉग बंद करें",
+      toggleMenu: "नेविगेशन मेनू बदलें",
+      expandDetails: "विवरण विस्तार करें",
+      collapseDetails: "विवरण संक्षिप्त करें",
+      verifiedStatus: "सरकारी आधिकारिक सत्यापित",
+      unverifiedStatus: "असत्यापित आधिकारिक डेटा",
+      outdatedStatus: "सत्यापन पुराना हो चुका है",
+    },
   },
   bn: {
     appName: "সহায়",
@@ -1059,6 +1089,16 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       fallbackBadge: "অফলাইন ফলব্যাক",
       fallbackNotice: "বিজ্ঞপ্তি: লাইভ এআই অনুপলব্ধ ({reason})। নিরাপদ যাচাইকৃত অফলাইন উত্তর দেখানো হচ্ছে।",
       disclaimer: "সতর্কবার্তা: সহায় এআই সরকারি নির্দেশিকা ও গাণিতিক হিসাবের ভিত্তিতে তথ্যভিত্তিক সহায়তা প্রদান করে। এটি কোনো আইনি পরামর্শ বা ব্যাংক ঋণ মঞ্জুরিপত্র নয়।",
+    },
+    a11y: {
+      skipToContent: "মূল বিষয়বস্তুতে যান",
+      closeModal: "ডায়ালগ বন্ধ করুন",
+      toggleMenu: "মেনু পরিবর্তন করুন",
+      expandDetails: "বিস্তারিত দেখুন",
+      collapseDetails: "সংক্ষিপ্ত করুন",
+      verifiedStatus: "সরকারিভাবে সরাসরি যাচাইকৃত",
+      unverifiedStatus: "অযাচাইকৃত তথ্য",
+      outdatedStatus: "পুরাতন যাচাইকরণ",
     },
   },
 };

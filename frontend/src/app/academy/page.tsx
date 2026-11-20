@@ -347,7 +347,7 @@ export default function AcademyPage() {
                               {idx + 1}
                             </span>
                           )}
-                          <span className="truncate">{lesson.title}</span>
+                          <span className="truncate" title={lesson.title}>{lesson.title}</span>
                         </div>
                         <ChevronRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                       </button>

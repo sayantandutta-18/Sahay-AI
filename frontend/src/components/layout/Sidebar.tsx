@@ -82,9 +82,10 @@ export const Sidebar: React.FC = () => {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+                  aria-current={isActive ? "page" : undefined}
+                  className={`flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-colors focus:outline-hidden focus:ring-2 focus:ring-emerald-500 focus:ring-offset-1 ${
                     isActive
-                      ? "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 font-semibold"
+                      ? "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 font-bold"
                       : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900"
                   }`}
                 >
