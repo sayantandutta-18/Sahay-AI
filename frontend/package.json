@@ -10,7 +10,8 @@
     "test:i18n": "node scripts/test-i18n.mjs",
     "test:verification": "node scripts/test-verification.mjs",
     "test:readiness": "node scripts/test-readiness.mjs",
-    "test:comparison": "node scripts/test-comparison.mjs"
+    "test:comparison": "node scripts/test-comparison.mjs",
+    "test:search": "node scripts/test-search.mjs"
   },
   "dependencies": {
     "lucide-react": "^1.55.0",

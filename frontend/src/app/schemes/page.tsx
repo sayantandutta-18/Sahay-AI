@@ -8,12 +8,12 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { VerificationBadge } from "@/components/ui/VerificationBadge";
 import { CardSkeleton } from "@/components/ui/Loading";
-import { Empty } from "@/components/ui/Empty";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { SchemeComparisonTable } from "@/components/ui/SchemeComparisonTable";
 import { getSchemes } from "@/lib/api";
 import { Scheme } from "@/types";
 import { useLanguage, formatCurrencyINR } from "@/lib/i18n";
+import { SCHEME_PRESETS } from "@/lib/search";
 import {
   Search,
   ExternalLink,
@@ -27,6 +27,11 @@ import {
   AlertTriangle,
   X,
   Layers,
+  Sparkles,
+  Landmark,
+  Store,
+  RotateCcw,
+  Tag,
 } from "lucide-react";
 
 function SchemesContent() {
@@ -36,6 +41,7 @@ function SchemesContent() {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
+  const [activePreset, setActivePreset] = useState<string>("all");
 
   // Checkpoint 8: Scheme comparison up to 6
   const [selectedSchemeIds, setSelectedSchemeIds] = useState<string[]>([]);
@@ -43,13 +49,15 @@ function SchemesContent() {
   const [warningMessage, setWarningMessage] = useState<string | null>(null);
   const [hasInitializedFromUrl, setHasInitializedFromUrl] = useState<boolean>(false);
 
-  const loadSchemes = async () => {
+  const loadSchemes = async (overrideSearch?: string, overrideType?: string) => {
     setIsLoading(true);
     setError(null);
+    const searchParam = overrideSearch !== undefined ? overrideSearch : searchTerm;
+    const typeParam = overrideType !== undefined ? overrideType : typeFilter;
     try {
       const data = await getSchemes({
-        scheme_type: typeFilter,
-        search: searchTerm,
+        scheme_type: typeParam,
+        search: searchParam,
       });
       setSchemes(data);
     } catch (err) {
@@ -95,6 +103,16 @@ function SchemesContent() {
           setSelectedSchemeIds(matchedIds);
           setIsComparisonView(true);
         }
+      }
+
+      // Checkpoint 9: handle initial search or preset query params
+      const searchQ = searchParams.get("search");
+      const presetQ = searchParams.get("preset");
+      if (presetQ) {
+        handlePresetClick(presetQ);
+      } else if (searchQ) {
+        setSearchTerm(searchQ);
+        loadSchemes(searchQ, typeFilter);
       }
     } catch {
       // URL parsing fallback
@@ -164,10 +182,62 @@ function SchemesContent() {
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    loadSchemes();
+    setActivePreset("custom");
+    loadSchemes(searchTerm, typeFilter);
+  };
+
+  const handleClearSearch = () => {
+    setSearchTerm("");
+    setTypeFilter("all");
+    setActivePreset("all");
+    loadSchemes("", "all");
+  };
+
+  const handlePresetClick = (presetId: string) => {
+    if (activePreset === presetId && presetId !== "all") {
+      // Deselect preset and reset to All
+      handleClearSearch();
+      return;
+    }
+
+    setActivePreset(presetId);
+    const preset = SCHEME_PRESETS.find((p) => p.id === presetId);
+    if (!preset || presetId === "all") {
+      handleClearSearch();
+      return;
+    }
+
+    if (preset.schemeType) {
+      setSearchTerm("");
+      setTypeFilter(preset.schemeType);
+      loadSchemes("", preset.schemeType);
+    } else if (preset.searchKeyword) {
+      setSearchTerm(preset.searchKeyword);
+      setTypeFilter("all");
+      loadSchemes(preset.searchKeyword, "all");
+    }
   };
 
   const comparedSchemes = schemes.filter((s) => selectedSchemeIds.includes(s.id));
+
+  const getPresetIcon = (presetId: string) => {
+    switch (presetId) {
+      case "women":
+        return <Sparkles className="w-3.5 h-3.5 text-pink-500" />;
+      case "startup":
+        return <ArrowRight className="w-3.5 h-3.5 text-indigo-500" />;
+      case "subsidies":
+        return <Tag className="w-3.5 h-3.5 text-emerald-500" />;
+      case "mudra":
+        return <Landmark className="w-3.5 h-3.5 text-blue-500" />;
+      case "svanidhi":
+        return <Store className="w-3.5 h-3.5 text-amber-500" />;
+      case "collateral":
+        return <ShieldCheck className="w-3.5 h-3.5 text-cyan-500" />;
+      default:
+        return <Sparkles className="w-3.5 h-3.5 text-slate-400" />;
+    }
+  };
 
   return (
     <div className="space-y-6 pb-24">
@@ -244,33 +314,102 @@ function SchemesContent() {
           onAddMore={() => setIsComparisonView(false)}
         />
       ) : (
-        <>
-          {/* Search & Filter Controls */}
-          <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="sm:col-span-2">
-              <Input
-                placeholder="Search by scheme title, ministry, or keyword (press Enter)..."
-                leftIcon={<Search className="w-4 h-4" />}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+        <div className="space-y-4">
+          {/* Checkpoint 9: Multilingual Search Form */}
+          <form onSubmit={handleSearchSubmit} className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+              <div className="sm:col-span-3 relative">
+                <Input
+                  placeholder={t.search.placeholder}
+                  leftIcon={<Search className="w-4 h-4" />}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  rightIcon={
+                    searchTerm ? (
+                      <button
+                        type="button"
+                        onClick={handleClearSearch}
+                        className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                        title="Clear search"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    ) : undefined
+                  }
+                />
+              </div>
+
+              <select
+                value={typeFilter}
+                onChange={(e) => {
+                  setTypeFilter(e.target.value);
+                  setActivePreset("custom");
+                }}
+                className="rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-white"
+              >
+                <option value="all">All Support Types</option>
+                <option value="subsidy">Subsidies</option>
+                <option value="loan">Loans & Credit</option>
+              </select>
             </div>
-            <select
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
-              className="rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-white"
-            >
-              <option value="all">All Support Types</option>
-              <option value="subsidy">Subsidies</option>
-              <option value="loan">Loans & Credit</option>
-            </select>
+
+            {/* Checkpoint 9: Preset Filter Chips Bar */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none pt-1">
+              <span className="text-[11px] font-semibold text-slate-500 shrink-0">
+                {t.search.presetsLabel}
+              </span>
+              {SCHEME_PRESETS.map((preset) => {
+                const isActive = activePreset === preset.id;
+                const label = t.search[preset.key];
+                return (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => handlePresetClick(preset.id)}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all shrink-0 cursor-pointer ${
+                      isActive
+                        ? "bg-emerald-600 text-white shadow-xs font-semibold"
+                        : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    }`}
+                  >
+                    {getPresetIcon(preset.id)}
+                    <span>{label}</span>
+                  </button>
+                );
+              })}
+
+              {(searchTerm || typeFilter !== "all" || activePreset !== "all") && (
+                <button
+                  type="button"
+                  onClick={handleClearSearch}
+                  className="inline-flex items-center gap-1 text-[11px] text-slate-500 hover:text-rose-600 dark:text-slate-400 dark:hover:text-rose-400 px-2 py-1 transition-colors shrink-0"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  <span>Reset</span>
+                </button>
+              )}
+            </div>
           </form>
+
+          {/* Results Summary Status */}
+          <div className="flex items-center justify-between text-xs text-slate-500 pt-1">
+            <span>
+              {searchTerm || typeFilter !== "all" || activePreset !== "all"
+                ? t.search.resultsFound.replace("{count}", String(schemes.length))
+                : t.search.showingAll}
+            </span>
+            {searchTerm && (
+              <span className="font-medium text-emerald-600 dark:text-emerald-400">
+                Keyword: &ldquo;{searchTerm}&rdquo;
+              </span>
+            )}
+          </div>
 
           {error && (
             <ErrorBanner
               title="Failed to Load Schemes"
               message={error}
-              onRetry={loadSchemes}
+              onRetry={() => loadSchemes()}
             />
           )}
 
@@ -282,23 +421,67 @@ function SchemesContent() {
               <CardSkeleton />
             </div>
           ) : schemes.length === 0 ? (
-            <Empty
-              title={searchTerm || typeFilter !== "all" ? "No Matching Schemes Found" : "No Verified Schemes in Directory"}
-              description={
-                searchTerm || typeFilter !== "all"
-                  ? "Try clearing your search keyword or switching the support type filter."
-                  : "No verified government schemes are currently active. Please check back later."
-              }
-              actionLabel={searchTerm || typeFilter !== "all" ? "Reset Search" : undefined}
-              onAction={
-                searchTerm || typeFilter !== "all"
-                  ? () => {
-                      setSearchTerm("");
-                      setTypeFilter("all");
-                    }
-                  : undefined
-              }
-            />
+            /* Checkpoint 9: Clear message with suggestions when no results */
+            <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 sm:p-12 text-center space-y-6 shadow-sm">
+              <div className="w-14 h-14 mx-auto rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+                <Search className="w-7 h-7" />
+              </div>
+
+              <div className="max-w-md mx-auto space-y-2">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                  {t.search.noResultsTitle}
+                </h3>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  {searchTerm
+                    ? t.search.noResultsMessage.replace("{query}", searchTerm)
+                    : "No verified government schemes match the selected filters."}
+                </p>
+              </div>
+
+              {/* Suggestions Box */}
+              <div className="max-w-md mx-auto p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 text-left space-y-3">
+                <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  {t.search.suggestionsTitle}
+                </p>
+                <div className="flex flex-col sm:flex-row flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handlePresetClick("women")}
+                    className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 text-slate-800 dark:text-slate-200 transition-colors text-left flex items-center gap-1.5"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-pink-500" />
+                    <span>{t.search.suggestionWomen}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handlePresetClick("subsidies")}
+                    className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 text-slate-800 dark:text-slate-200 transition-colors text-left flex items-center gap-1.5"
+                  >
+                    <Tag className="w-3.5 h-3.5 text-emerald-500" />
+                    <span>{t.search.suggestionSubsidies}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handlePresetClick("mudra")}
+                    className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 text-slate-800 dark:text-slate-200 transition-colors text-left flex items-center gap-1.5"
+                  >
+                    <Landmark className="w-3.5 h-3.5 text-blue-500" />
+                    <span>{t.search.suggestionLoans}</span>
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleClearSearch}
+                  leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
+                >
+                  {t.search.clearSearch}
+                </Button>
+              </div>
+            </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {schemes.map((s) => {
@@ -426,7 +609,7 @@ function SchemesContent() {
               })}
             </div>
           )}
-        </>
+        </div>
       )}
 
       {/* Floating Bottom Comparison Dock (When schemes are selected) */}

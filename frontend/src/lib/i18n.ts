@@ -207,6 +207,26 @@ export interface TranslationDictionary {
     stickyParameter: string;
     openInPortal: string;
   };
+  search: {
+    placeholder: string;
+    presetsLabel: string;
+    allSchemes: string;
+    womenEntrepreneurs: string;
+    startupLoans: string;
+    msmeSubsidies: string;
+    mudraLoans: string;
+    streetVendors: string;
+    collateralFree: string;
+    noResultsTitle: string;
+    noResultsMessage: string;
+    suggestionsTitle: string;
+    suggestionWomen: string;
+    suggestionSubsidies: string;
+    suggestionLoans: string;
+    clearSearch: string;
+    resultsFound: string;
+    showingAll: string;
+  };
 }
 
 export const translations: Record<SupportedLanguage, TranslationDictionary> = {
@@ -410,6 +430,26 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       stickyParameter: "Comparison Feature",
       openInPortal: "Open Official Portal",
     },
+    search: {
+      placeholder: "Search by scheme title, keywords, or purpose (e.g., মহিলা, loans, subsidy)...",
+      presetsLabel: "Quick Presets:",
+      allSchemes: "All Schemes",
+      womenEntrepreneurs: "Women Entrepreneurs",
+      startupLoans: "Startup Loans",
+      msmeSubsidies: "MSME Subsidies",
+      mudraLoans: "MUDRA Microloans",
+      streetVendors: "Street Vendors",
+      collateralFree: "Collateral-Free",
+      noResultsTitle: "No Schemes Found",
+      noResultsMessage: "We couldn't find any verified schemes matching \"{query}\".",
+      suggestionsTitle: "Suggested alternatives to explore:",
+      suggestionWomen: "Explore Women Entrepreneur Schemes (মহিলা)",
+      suggestionSubsidies: "Browse All Capital Subsidies",
+      suggestionLoans: "View MUDRA and Startup Loans",
+      clearSearch: "Clear Filters & Search",
+      resultsFound: "Found {count} matching verified schemes",
+      showingAll: "Showing all verified schemes",
+    },
   },
   hi: {
     appName: "सहाय",
@@ -611,6 +651,26 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       stickyParameter: "तुलना विशेषता",
       openInPortal: "आधिकारिक पोर्टल खोलें",
     },
+    search: {
+      placeholder: "योजना का नाम, कीवर्ड या उद्देश्य खोजें (जैसे महिला, ऋण, सब्सिडी)...",
+      presetsLabel: "त्वरित श्रेणियां:",
+      allSchemes: "सभी योजनाएं",
+      womenEntrepreneurs: "महिला उद्यमी",
+      startupLoans: "स्टार्टअप ऋण",
+      msmeSubsidies: "एमएसएमई सब्सिडी",
+      mudraLoans: "मुद्रा माइक्रो ऋण",
+      streetVendors: "रेहड़ी-पटरी विक्रेता",
+      collateralFree: "बिना गारंटी ऋण",
+      noResultsTitle: "कोई योजना नहीं मिली",
+      noResultsMessage: "\"{query}\" से मेल खाती कोई सत्यापित योजना नहीं मिली।",
+      suggestionsTitle: "सुझाई गई श्रेणियां देखें:",
+      suggestionWomen: "महिला उद्यमी योजनाएं देखें (মহিলা / महिला)",
+      suggestionSubsidies: "सभी पूंजी सब्सिडी देखें",
+      suggestionLoans: "मुद्रा और स्टार्टअप ऋण देखें",
+      clearSearch: "फ़िल्टर और खोज साफ़ करें",
+      resultsFound: "{count} सत्यापित योजनाएं मिलीं",
+      showingAll: "सभी सत्यापित योजनाएं प्रदर्शित हैं",
+    },
   },
   bn: {
     appName: "সহায়",
@@ -811,6 +871,26 @@ export const translations: Record<SupportedLanguage, TranslationDictionary> = {
       emptyDesc: "কভারেজ, ভর্তুকি, নথিপত্র এবং সময়সীমার পাশাপাশি তুলনা করতে লাইব্রেরি থেকে সর্বোচ্চ ৬টি স্কিম বেছে নিন।",
       stickyParameter: "তুলনা বৈশিষ্ট্য",
       openInPortal: "অফিসিয়াল পোর্টাল খুলুন",
+    },
+    search: {
+      placeholder: "স্কিমের নাম, উদ্দেশ্য বা কীওয়ার্ড দিয়ে খুঁজুন (যেমন মহিলা, ঋণ, ভর্তুকি)...",
+      presetsLabel: "দ্রুত ফিল্টার:",
+      allSchemes: "সকল স্কিম",
+      womenEntrepreneurs: "মহিলা উদ্যোক্তা",
+      startupLoans: "স্টার্টআপ ঋণ",
+      msmeSubsidies: "এমএসএমই ভর্তুকি",
+      mudraLoans: "মুদ্রা ক্ষুদ্র ঋণ",
+      streetVendors: "পথ বিক্রেতা",
+      collateralFree: "জামানতহীন ঋণ",
+      noResultsTitle: "কোনো স্কিম পাওয়া যায়নি",
+      noResultsMessage: "\"{query}\" এর সাথে মেলে এমন কোনো যাচাইকৃত স্কিম খুঁজে পাওয়া যায়নি।",
+      suggestionsTitle: "বিকল্প অনুসন্ধান পরামর্শ:",
+      suggestionWomen: "মহিলা উদ্যোক্তা স্কিমগুলি দেখুন (মহিলা)",
+      suggestionSubsidies: "সকল সরকারি ভর্তুকি দেখুন",
+      suggestionLoans: "মুদ্রা ও নতুন ব্যবসার ঋণ দেখুন",
+      clearSearch: "ফিল্টার ও অনুসন্ধান মুছুন",
+      resultsFound: "{count} টি যাচাইকৃত স্কিম পাওয়া গেছে",
+      showingAll: "সকল যাচাইকৃত স্কিম দেখানো হচ্ছে",
     },
   },
 };

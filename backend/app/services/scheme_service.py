@@ -5,6 +5,7 @@ import logging
 from datetime import datetime, date
 from pathlib import Path
 from typing import List, Optional
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from app.models.scheme import Scheme, SchemeDocumentRequirement, SchemeRule
 from app.schemas.scheme import SchemeDataValidationRecord
@@ -127,13 +128,96 @@ def seed_verified_schemes_if_empty(db: Session) -> None:
     db.commit()
 
 
+MULTILINGUAL_SEARCH_SYNONYMS = {
+    # Bengali (বাংলা)
+    "মহিলা": ["women", "woman", "female", "stand-up"],
+    "মহিলারা": ["women", "woman", "female", "stand-up"],
+    "মহিলাদের": ["women", "woman", "female", "stand-up"],
+    "নারী": ["women", "woman", "female"],
+    "নারীদের": ["women", "woman", "female"],
+    "ঋণ": ["loan", "credit", "mudra", "svanidhi"],
+    "ভর্তুকি": ["subsidy", "grant", "pmegp"],
+    "অনুদান": ["grant", "subsidy"],
+    "উদ্যোক্তা": ["entrepreneur", "enterprise", "startup"],
+    "উদ্যোগ": ["enterprise", "venture", "startup"],
+    "ব্যবসা": ["business", "enterprise", "micro"],
+    "কারবার": ["turnover", "enterprise", "business"],
+    "মুদ্রা": ["mudra", "pmmy"],
+    "হকার": ["vendor", "street vendor", "svanidhi"],
+    "পথ বিক্রেতা": ["vendor", "street vendor", "svanidhi"],
+    "দোকান": ["trading", "retail", "vendor"],
+    "স্টার্টআপ": ["startup", "greenfield", "stand-up"],
+    "ক্ষুদ্র": ["micro", "msme"],
+    "জামানত": ["collateral", "guarantee", "cgtmse"],
+    "বিনা জামানত": ["collateral", "guarantee", "cgtmse"],
+    "জামানতহীন": ["collateral", "guarantee", "cgtmse"],
+    # Hindi (हिन्दी)
+    "महिला": ["women", "woman", "female", "stand-up"],
+    "महिलाएं": ["women", "woman", "female", "stand-up"],
+    "महिलाओं": ["women", "woman", "female", "stand-up"],
+    "नारी": ["women", "woman", "female"],
+    "ऋण": ["loan", "credit", "mudra", "svanidhi"],
+    "कर्ज": ["loan", "credit"],
+    "सब्सिडी": ["subsidy", "grant", "pmegp"],
+    "अनुदान": ["grant", "subsidy"],
+    "उद्यमी": ["entrepreneur", "enterprise", "startup"],
+    "उद्यमिता": ["entrepreneur", "enterprise", "startup"],
+    "व्यापार": ["business", "enterprise", "micro"],
+    "व्यवसाय": ["business", "enterprise", "micro"],
+    "मुद्रा": ["mudra", "pmmy"],
+    "विक्रेता": ["vendor", "street vendor", "svanidhi"],
+    "रेहड़ी": ["vendor", "street vendor", "svanidhi"],
+    "पटरी": ["vendor", "street vendor", "svanidhi"],
+    "स्टार्टअप": ["startup", "greenfield", "stand-up"],
+    "सूक्ष्म": ["micro", "msme"],
+    "गारंटी": ["guarantee", "cgtmse"],
+    "बिना गारंटी": ["collateral", "guarantee", "cgtmse"],
+    # English synonyms
+    "women": ["women", "woman", "female", "stand-up"],
+    "female": ["women", "woman", "female", "stand-up"],
+    "woman": ["women", "woman", "female", "stand-up"],
+    "startup": ["startup", "greenfield", "stand-up"],
+    "vendor": ["vendor", "street vendor", "svanidhi"],
+    "subsidies": ["subsidy", "grant", "pmegp"],
+    "subsidy": ["subsidy", "grant", "pmegp"],
+    "loans": ["loan", "credit"],
+    "loan": ["loan", "credit"],
+    "collateral": ["collateral", "guarantee", "cgtmse"],
+}
+
+
+def expand_multilingual_search_terms(raw_search: str) -> List[str]:
+    """Expand search query into multilingual synonyms across English, Bengali, and Hindi."""
+    clean = raw_search.strip().lower()
+    if not clean:
+        return []
+
+    terms = {clean}
+    # Check full phrase match
+    if clean in MULTILINGUAL_SEARCH_SYNONYMS:
+        terms.update(MULTILINGUAL_SEARCH_SYNONYMS[clean])
+
+    # Check word tokens
+    words = clean.split()
+    for w in words:
+        if w in MULTILINGUAL_SEARCH_SYNONYMS:
+            terms.update(MULTILINGUAL_SEARCH_SYNONYMS[w])
+
+    # Also check substring match in synonyms
+    for key, syns in MULTILINGUAL_SEARCH_SYNONYMS.items():
+        if key in clean or clean in key:
+            terms.update(syns)
+
+    return list(terms)
+
+
 def get_all_schemes(
     db: Session,
     scheme_type: Optional[str] = None,
     state: Optional[str] = None,
     search: Optional[str] = None,
 ) -> List[Scheme]:
-    """Retrieve schemes with optional filtering."""
+    """Retrieve schemes with optional multilingual search and preset filtering."""
     seed_verified_schemes_if_empty(db)
     query = db.query(Scheme).filter(Scheme.is_active.is_(True))
 
@@ -144,12 +228,20 @@ def get_all_schemes(
             (Scheme.states_served == "ALL") | (Scheme.states_served.contains(state))
         )
     if search:
-        search_filter = f"%{search}%"
-        query = query.filter(
-            (Scheme.name.ilike(search_filter))
-            | (Scheme.provider.ilike(search_filter))
-            | (Scheme.short_description.ilike(search_filter))
-        )
+        search_terms = expand_multilingual_search_terms(search)
+        filters = []
+        for term in search_terms:
+            t_filter = f"%{term}%"
+            filters.extend([
+                Scheme.name.ilike(t_filter),
+                Scheme.slug.ilike(t_filter),
+                Scheme.provider.ilike(t_filter),
+                Scheme.short_description.ilike(t_filter),
+                Scheme.detailed_benefits.ilike(t_filter),
+                Scheme.target_sectors.ilike(t_filter),
+            ])
+        if filters:
+            query = query.filter(or_(*filters))
 
     return query.all()
 
