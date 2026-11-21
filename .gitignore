@@ -36,6 +36,8 @@ backend/.env
 frontend/.env.local
 
 # IDE & OS
+make_admin.py
+backend/make_admin.py
 .vscode/
 .idea/
 .DS_Store

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
@@ -71,6 +71,11 @@ export default function StockResearchPage() {
   const [loadingCandles, setLoadingCandles] = useState<boolean>(true);
   const [selectedPattern, setSelectedPattern] = useState<CandlestickPatternMatch | null>(null);
   const [patternFilter, setPatternFilter] = useState<"all" | "bullish" | "bearish" | "indecision">("all");
+
+  const handleSelectPattern = useCallback(
+    (pat: CandlestickPatternMatch) => setSelectedPattern(pat),
+    []
+  );
 
   // Load Initial Benchmark & Instrument Lists
   useEffect(() => {
@@ -332,7 +337,7 @@ export default function StockResearchPage() {
                     patterns={analysis.detected_patterns}
                     supportLevel={analysis.technical_indicators.nearest_support}
                     resistanceLevel={analysis.technical_indicators.nearest_resistance}
-                    onSelectPattern={(pat) => setSelectedPattern(pat)}
+                    onSelectPattern={handleSelectPattern}
                     selectedPatternId={selectedPattern?.pattern_id}
                   />
                 </div>

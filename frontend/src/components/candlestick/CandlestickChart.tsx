@@ -47,6 +47,26 @@ export const CandlestickChart: React.FC<CandlestickChartProps> = ({
   const [liveAlert, setLiveAlert] = useState<LivePatternAlert | null>(null);
   const [lastTickDirection, setLastTickDirection] = useState<"up" | "down" | "flat">("flat");
 
+  // Track latest candles and onSelectPattern callback via refs to prevent updater side-effects
+  const candlesRef = useRef<CandleBar[]>(initialCandles);
+  const onSelectRef = useRef(onSelectPattern);
+
+  useEffect(() => {
+    candlesRef.current = candles;
+  }, [candles]);
+
+  useEffect(() => {
+    onSelectRef.current = onSelectPattern;
+  }, [onSelectPattern]);
+
+  // Report detected patterns to parent via dedicated effect outside render
+  const [lastDetected, setLastDetected] = useState<CandlestickPatternMatch | null>(null);
+  useEffect(() => {
+    if (lastDetected && onSelectRef.current) {
+      onSelectRef.current(lastDetected);
+    }
+  }, [lastDetected]);
+
   // Sync when initialCandles change externally (e.g. user selected another ticker)
   useEffect(() => {
     setCandles(initialCandles);
@@ -263,7 +283,7 @@ export const CandlestickChart: React.FC<CandlestickChartProps> = ({
               suggested_target: foundPattern.suggested_target,
               timestamp: new Date().toLocaleTimeString(),
             });
-            if (onSelectPattern) onSelectPattern(foundPattern);
+            onSelectRef.current?.(foundPattern);
           }
 
           // Create new active candle
@@ -288,145 +308,145 @@ export const CandlestickChart: React.FC<CandlestickChartProps> = ({
     }, liveSpeed);
 
     return () => clearInterval(interval);
-  }, [isLiveActive, liveSpeed, tickCounter, candles.length, onSelectPattern]);
+  }, [isLiveActive, liveSpeed, tickCounter, candles.length]);
 
   // Inject classical pattern formation manually for real-time live demonstration
   const injectLivePattern = (type: "hammer" | "bullish_engulfing" | "shooting_star" | "morning_star" | "doji") => {
-    setCandles((prev) => {
-      if (prev.length === 0) return prev;
-      const baseClose = prev[prev.length - 1].close;
-      const now = new Date();
-      const timeStr = (offsetSec: number) => {
-        const d = new Date(now.getTime() + offsetSec * 1000);
-        return d.toTimeString().slice(0, 8);
+    const prev = candlesRef.current;
+    if (prev.length === 0) return;
+    const baseClose = prev[prev.length - 1].close;
+    const now = new Date();
+    const timeStr = (offsetSec: number) => {
+      const d = new Date(now.getTime() + offsetSec * 1000);
+      return d.toTimeString().slice(0, 8);
+    };
+
+    let newBars: CandleBar[] = [];
+    let detected: CandlestickPatternMatch | null = null;
+
+    if (type === "hammer") {
+      const bar: CandleBar = {
+        timestamp: timeStr(0),
+        open: baseClose * 0.998,
+        high: baseClose * 1.002,
+        low: baseClose * 0.985, // Deep lower shadow
+        close: baseClose * 1.001,
+        volume: 2500,
+        change: baseClose * 0.003,
+        change_percent: 0.3,
+        color: "green",
       };
+      newBars = [bar];
+    } else if (type === "bullish_engulfing") {
+      const bar1: CandleBar = {
+        timestamp: timeStr(-10),
+        open: baseClose * 1.005,
+        high: baseClose * 1.007,
+        low: baseClose * 0.997,
+        close: baseClose * 0.998, // Small red
+        volume: 1200,
+        change: -baseClose * 0.007,
+        change_percent: -0.7,
+        color: "red",
+      };
+      const bar2: CandleBar = {
+        timestamp: timeStr(0),
+        open: baseClose * 0.996, // Gaps lower
+        high: baseClose * 1.018,
+        low: baseClose * 0.995,
+        close: baseClose * 1.015, // Huge green engulfing
+        volume: 4800,
+        change: baseClose * 0.019,
+        change_percent: 1.9,
+        color: "green",
+      };
+      newBars = [bar1, bar2];
+    } else if (type === "shooting_star") {
+      const bar: CandleBar = {
+        timestamp: timeStr(0),
+        open: baseClose * 1.002,
+        high: baseClose * 1.025, // Long upper wick
+        low: baseClose * 0.999,
+        close: baseClose * 1.001,
+        volume: 3100,
+        change: -baseClose * 0.001,
+        change_percent: -0.1,
+        color: "red",
+      };
+      newBars = [bar];
+    } else if (type === "morning_star") {
+      const bar1: CandleBar = {
+        timestamp: timeStr(-20),
+        open: baseClose * 1.02,
+        high: baseClose * 1.022,
+        low: baseClose * 0.992,
+        close: baseClose * 0.995, // Long red
+        volume: 2100,
+        change: -baseClose * 0.025,
+        change_percent: -2.5,
+        color: "red",
+      };
+      const bar2: CandleBar = {
+        timestamp: timeStr(-10),
+        open: baseClose * 0.992,
+        high: baseClose * 0.994,
+        low: baseClose * 0.989,
+        close: baseClose * 0.991, // Tiny star
+        volume: 800,
+        change: -baseClose * 0.001,
+        change_percent: -0.1,
+        color: "neutral",
+      };
+      const bar3: CandleBar = {
+        timestamp: timeStr(0),
+        open: baseClose * 0.993,
+        high: baseClose * 1.018,
+        low: baseClose * 0.992,
+        close: baseClose * 1.015, // Strong green
+        volume: 4200,
+        change: baseClose * 0.022,
+        change_percent: 2.2,
+        color: "green",
+      };
+      newBars = [bar1, bar2, bar3];
+    } else {
+      // Doji
+      const bar: CandleBar = {
+        timestamp: timeStr(0),
+        open: baseClose,
+        high: baseClose * 1.008,
+        low: baseClose * 0.992,
+        close: baseClose, // Open equals close
+        volume: 1500,
+        change: 0,
+        change_percent: 0,
+        color: "neutral",
+      };
+      newBars = [bar];
+    }
 
-      let newBars: CandleBar[] = [];
-      let detected: CandlestickPatternMatch | null = null;
+    const mergedCandles = [...prev, ...newBars];
+    const triggerIdx = mergedCandles.length - 1;
+    detected = evaluateCandlePattern(mergedCandles, triggerIdx);
 
-      if (type === "hammer") {
-        const bar: CandleBar = {
-          timestamp: timeStr(0),
-          open: baseClose * 0.998,
-          high: baseClose * 1.002,
-          low: baseClose * 0.985, // Deep lower shadow
-          close: baseClose * 1.001,
-          volume: 2500,
-          change: baseClose * 0.003,
-          change_percent: 0.3,
-          color: "green",
-        };
-        newBars = [bar];
-      } else if (type === "bullish_engulfing") {
-        const bar1: CandleBar = {
-          timestamp: timeStr(-10),
-          open: baseClose * 1.005,
-          high: baseClose * 1.007,
-          low: baseClose * 0.997,
-          close: baseClose * 0.998, // Small red
-          volume: 1200,
-          change: -baseClose * 0.007,
-          change_percent: -0.7,
-          color: "red",
-        };
-        const bar2: CandleBar = {
-          timestamp: timeStr(0),
-          open: baseClose * 0.996, // Gaps lower
-          high: baseClose * 1.018,
-          low: baseClose * 0.995,
-          close: baseClose * 1.015, // Huge green engulfing
-          volume: 4800,
-          change: baseClose * 0.019,
-          change_percent: 1.9,
-          color: "green",
-        };
-        newBars = [bar1, bar2];
-      } else if (type === "shooting_star") {
-        const bar: CandleBar = {
-          timestamp: timeStr(0),
-          open: baseClose * 1.002,
-          high: baseClose * 1.025, // Long upper wick
-          low: baseClose * 0.999,
-          close: baseClose * 1.001,
-          volume: 3100,
-          change: -baseClose * 0.001,
-          change_percent: -0.1,
-          color: "red",
-        };
-        newBars = [bar];
-      } else if (type === "morning_star") {
-        const bar1: CandleBar = {
-          timestamp: timeStr(-20),
-          open: baseClose * 1.02,
-          high: baseClose * 1.022,
-          low: baseClose * 0.992,
-          close: baseClose * 0.995, // Long red
-          volume: 2100,
-          change: -baseClose * 0.025,
-          change_percent: -2.5,
-          color: "red",
-        };
-        const bar2: CandleBar = {
-          timestamp: timeStr(-10),
-          open: baseClose * 0.992,
-          high: baseClose * 0.994,
-          low: baseClose * 0.989,
-          close: baseClose * 0.991, // Tiny star
-          volume: 800,
-          change: -baseClose * 0.001,
-          change_percent: -0.1,
-          color: "neutral",
-        };
-        const bar3: CandleBar = {
-          timestamp: timeStr(0),
-          open: baseClose * 0.993,
-          high: baseClose * 1.018,
-          low: baseClose * 0.992,
-          close: baseClose * 1.015, // Strong green
-          volume: 4200,
-          change: baseClose * 0.022,
-          change_percent: 2.2,
-          color: "green",
-        };
-        newBars = [bar1, bar2, bar3];
-      } else {
-        // Doji
-        const bar: CandleBar = {
-          timestamp: timeStr(0),
-          open: baseClose,
-          high: baseClose * 1.008,
-          low: baseClose * 0.992,
-          close: baseClose, // Open equals close
-          volume: 1500,
-          change: 0,
-          change_percent: 0,
-          color: "neutral",
-        };
-        newBars = [bar];
-      }
+    candlesRef.current = mergedCandles;
+    setCandles(mergedCandles);
 
-      const mergedCandles = [...prev, ...newBars];
-      const triggerIdx = mergedCandles.length - 1;
-      detected = evaluateCandlePattern(mergedCandles, triggerIdx);
-
-      if (detected) {
-        setPatterns((cur) => [...cur, detected!]);
-        setLiveAlert({
-          pattern_name: detected.pattern_name,
-          japanese_name: detected.japanese_name,
-          sentiment: detected.sentiment,
-          reliability: detected.reliability,
-          price: mergedCandles[triggerIdx].close,
-          implication: detected.implication,
-          suggested_stop_loss: detected.suggested_stop_loss,
-          suggested_target: detected.suggested_target,
-          timestamp: new Date().toLocaleTimeString(),
-        });
-        if (onSelectPattern) onSelectPattern(detected);
-      }
-
-      return mergedCandles;
-    });
+    if (detected) {
+      setPatterns((cur) => [...cur, detected]);
+      setLiveAlert({
+        pattern_name: detected.pattern_name,
+        japanese_name: detected.japanese_name,
+        sentiment: detected.sentiment,
+        reliability: detected.reliability,
+        price: mergedCandles[triggerIdx].close,
+        implication: detected.implication,
+        suggested_stop_loss: detected.suggested_stop_loss,
+        suggested_target: detected.suggested_target,
+        timestamp: new Date().toLocaleTimeString(),
+      });
+      setLastDetected(detected);
+    }
   };
 
   // Visible slice
