@@ -1,6 +1,7 @@
 """Government scheme library routes."""
 
-from typing import List, Optional
+import time
+from typing import Any, Dict, List, Optional, Tuple
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from app.database.session import get_db
@@ -10,6 +11,32 @@ from app.services.scheme_service import (
     get_scheme_by_id,
     get_scheme_by_slug,
 )
+
+
+class SchemeCache:
+    """Thread-safe in-memory cache with 60-second TTL for scheme queries."""
+
+    def __init__(self, ttl_seconds: int = 60):
+        self.ttl = ttl_seconds
+        self._cache: Dict[str, Tuple[float, Any]] = {}
+
+    def get(self, key: str) -> Optional[Any]:
+        if key in self._cache:
+            ts, val = self._cache[key]
+            if time.time() - ts < self.ttl:
+                return val
+            del self._cache[key]
+        return None
+
+    def set(self, key: str, val: Any) -> None:
+        self._cache[key] = (time.time(), val)
+
+    def invalidate(self) -> None:
+        """Clear all cached scheme query results."""
+        self._cache.clear()
+
+
+schemes_cache = SchemeCache(ttl_seconds=60)
 
 router = APIRouter(prefix="/schemes", tags=["Schemes"])
 
@@ -21,9 +48,16 @@ def list_schemes(
     search: Optional[str] = Query(None, description="Search keyword in scheme name or description"),
     db: Session = Depends(get_db),
 ):
-    """Retrieve verified government schemes matching optional filters."""
+    """Retrieve verified government schemes matching optional filters with 60s in-memory caching."""
+    cache_key = f"{scheme_type}:{state}:{search}"
+    cached = schemes_cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     schemes = get_all_schemes(db, scheme_type=scheme_type, state=state, search=search)
-    return [SchemeResponse.model_validate(s) for s in schemes]
+    result = [SchemeResponse.model_validate(s) for s in schemes]
+    schemes_cache.set(cache_key, result)
+    return result
 
 
 @router.get("/{scheme_id}", response_model=SchemeResponse)

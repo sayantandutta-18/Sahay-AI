@@ -33,11 +33,13 @@ def grounded_chat(
     - Live Mode: calls Gemini/OpenAI API if keys configured, with automatic fallback.
     - Rate Limiting: serves fallback response without throwing raw 429 errors.
     """
-    is_limited = chat_rate_limiter.check_rate_limit(raw_request)
     current_user = None
     if credentials:
         payload = decode_access_token(credentials.credentials)
         if payload and "sub" in payload:
             current_user = get_user_by_id(db, payload["sub"])
+
+    user_key = f"user:{current_user.id}" if current_user else None
+    is_limited = chat_rate_limiter.check_rate_limit(raw_request, key=user_key)
 
     return answer_grounded_chat(db, chat_req, current_user, rate_limited=is_limited)

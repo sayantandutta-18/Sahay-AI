@@ -1,7 +1,7 @@
 """System health and status routes."""
 
 from datetime import datetime, timezone
-from fastapi import APIRouter
+from fastapi import APIRouter, Response, status
 from app.core.config import settings
 from app.database.session import check_db_health
 from app.schemas.health import HealthResponse, DatabaseHealth
@@ -10,8 +10,10 @@ router = APIRouter(tags=["System"])
 
 
 @router.get("/health", response_model=HealthResponse)
-def get_health() -> HealthResponse:
-    """Return system health, configuration metadata, and database connection state."""
+def get_health(response: Response) -> HealthResponse:
+    """Return system health, configuration metadata, and real database connectivity state.
+    Returns 503 Service Unavailable if database is unreachable.
+    """
     db_result = check_db_health()
     db_health = DatabaseHealth(
         status=db_result.get("status", "disconnected"),
@@ -23,7 +25,11 @@ def get_health() -> HealthResponse:
         journal_mode=db_result.get("journal_mode"),
     )
 
-    overall_status = "healthy" if db_health.status == "connected" else "degraded"
+    if db_health.status != "connected":
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+        overall_status = "degraded"
+    else:
+        overall_status = "healthy"
 
     return HealthResponse(
         status=overall_status,

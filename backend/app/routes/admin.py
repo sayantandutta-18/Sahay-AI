@@ -79,6 +79,10 @@ def admin_create_scheme(
         details=f"Admin created scheme: '{new_scheme.name}' (publication_status={new_scheme.publication_status})",
     )
 
+    # Invalidate public scheme cache
+    from app.routes.schemes import schemes_cache
+    schemes_cache.invalidate()
+
     return SchemeResponse.model_validate(new_scheme)
 
 
@@ -135,5 +139,8 @@ def admin_update_scheme(
         resource_id=scheme.id,
         details=f"Admin updated scheme '{scheme.name}': {', '.join(changes) if changes else 'no-op'}",
     )
+
+    from app.routes.schemes import schemes_cache
+    schemes_cache.invalidate()
 
     return SchemeResponse.model_validate(scheme)

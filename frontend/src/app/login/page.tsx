@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { ErrorBanner } from "@/components/ui/ErrorBanner";
 import { authLogin, authDemoLogin } from "@/lib/api";
-import { Sparkles, Phone, Lock, ArrowRight, UserCheck } from "lucide-react";
+import { Sparkles, Phone, Lock, ArrowRight, UserCheck, AlertTriangle } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -20,6 +20,16 @@ export default function LoginPage() {
   const [otpSent, setOtpSent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sessionExpiredNotice, setSessionExpiredNotice] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("expired") === "1") {
+        setSessionExpiredNotice(true);
+      }
+    }
+  }, []);
 
   const handleDemoLogin = async () => {
     setIsLoading(true);
@@ -111,6 +121,22 @@ export default function LoginPage() {
           </CardHeader>
 
           <CardContent className="space-y-4">
+            {sessionExpiredNotice && (
+              <div className="rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 p-3 text-xs text-amber-800 dark:text-amber-200 flex items-center justify-between shadow-sm">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                  <span>Your session has expired. Please sign in again.</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSessionExpiredNotice(false)}
+                  className="text-amber-600 hover:text-amber-800 font-bold ml-2 cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+
             {error && (
               <ErrorBanner
                 title="Authentication Issue"

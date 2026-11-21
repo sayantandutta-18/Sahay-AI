@@ -38,12 +38,19 @@ def create_access_token(
     claims: Optional[Dict[str, Any]] = None,
     expires_delta: Optional[timedelta] = None,
 ) -> str:
-    """Create a signed JWT access token."""
+    """Create a signed JWT access token.
+    Admin and super_admin tokens expire in 60 minutes.
+    Standard user tokens expire in 120 minutes (settings.ACCESS_TOKEN_EXPIRE_MINUTES).
+    """
     now = datetime.now(timezone.utc)
     if expires_delta:
         expire = now + expires_delta
     else:
-        expire = now + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        role = claims.get("role") if claims else None
+        if role in ["admin", "super_admin"]:
+            expire = now + timedelta(minutes=60)
+        else:
+            expire = now + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
 
     to_encode: Dict[str, Any] = {
         "sub": str(subject),

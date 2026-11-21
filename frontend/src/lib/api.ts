@@ -90,6 +90,7 @@ export async function fetchApi<T>(
   }
 
   // Attach token if present in localStorage in browser environment
+  // TODO: [Security Roadmap] Migrate from localStorage to httpOnly Secure SameSite cookies to mitigate XSS token exfiltration
   if (typeof window !== "undefined") {
     const token = localStorage.getItem("sahay_access_token");
     if (token && !headers.has("Authorization")) {
@@ -117,6 +118,15 @@ export async function fetchApi<T>(
     clearTimeout(timeoutId);
 
     if (!response.ok) {
+      // Automatic session expiry handling on 401 Unauthorized
+      if (response.status === 401 && typeof window !== "undefined") {
+        localStorage.removeItem("sahay_access_token");
+        localStorage.removeItem("sahay_user");
+        if (!window.location.pathname.startsWith("/login")) {
+          window.location.href = "/login?expired=1";
+        }
+      }
+
       let errorBody: unknown;
       try {
         errorBody = await response.json();
@@ -297,10 +307,18 @@ export async function authMe(): Promise<User> {
 }
 export const getCurrentUser = authMe;
 
-export function authLogout(): void {
-  if (typeof window !== "undefined") {
-    localStorage.removeItem("sahay_access_token");
-    localStorage.removeItem("sahay_user");
+export async function authLogout(): Promise<void> {
+  try {
+    await fetchApi<{ status: string; message: string }>("/api/v1/auth/logout", {
+      method: "GET",
+    });
+  } catch {
+    // Ignore network or connection error during logout
+  } finally {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("sahay_access_token");
+      localStorage.removeItem("sahay_user");
+    }
   }
 }
 

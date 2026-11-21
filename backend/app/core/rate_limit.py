@@ -8,11 +8,12 @@ from fastapi import Request, HTTPException, status
 
 
 class InMemoryRateLimiter:
-    """Thread-safe sliding-window in-memory rate limiter per client IP."""
+    """Thread-safe sliding-window in-memory rate limiter per client IP or custom identifier."""
 
-    def __init__(self, times: int = 20, seconds: int = 60):
+    def __init__(self, times: int = 20, seconds: int = 60, detail: Optional[str] = None):
         self.times = times
         self.seconds = seconds
+        self.detail = detail or "Too many requests. Please try again later."
         self._requests: Dict[str, List[float]] = defaultdict(list)
         self._lock = Lock()
 
@@ -28,26 +29,41 @@ class InMemoryRateLimiter:
         with self._lock:
             self._requests.clear()
 
-    def check_rate_limit(self, request: Request) -> bool:
+    def check_rate_limit(self, request: Request, key: Optional[str] = None) -> bool:
         """Evaluate sliding-window rate limit without raising an exception.
 
         Returns True if rate limit is exceeded (so caller can serve safe fallback),
         False if within limit (records timestamp).
         """
-        client_ip = self._get_client_ip(request)
+        identifier = key or self._get_client_ip(request)
 
         # Bypass for automated test suites unless specifically testing rate limiter
-        if client_ip in ["testclient", "test"] and not request.headers.get("X-RateLimit-Test"):
+        if identifier in ["testclient", "test"] and not request.headers.get("X-RateLimit-Test"):
             return False
 
         now = time.time()
         with self._lock:
-            timestamps = [t for t in self._requests[client_ip] if now - t < self.seconds]
+            timestamps = [t for t in self._requests[identifier] if now - t < self.seconds]
             if len(timestamps) >= self.times:
                 return True
             timestamps.append(now)
-            self._requests[client_ip] = timestamps
+            self._requests[identifier] = timestamps
             return False
+
+    def is_rate_limited(self, key: str) -> tuple[bool, int]:
+        """Check and record request timestamp for a custom key (e.g. phone or IP).
+        
+        Returns (is_limited, retry_after_seconds).
+        """
+        now = time.time()
+        with self._lock:
+            timestamps = [t for t in self._requests[key] if now - t < self.seconds]
+            if len(timestamps) >= self.times:
+                retry_after = int(self.seconds - (now - timestamps[0]))
+                return True, max(1, retry_after)
+            timestamps.append(now)
+            self._requests[key] = timestamps
+            return False, 0
 
     async def __call__(self, request: Request):
         client_ip = self._get_client_ip(request)
@@ -64,7 +80,7 @@ class InMemoryRateLimiter:
                 retry_after = int(self.seconds - (now - timestamps[0]))
                 raise HTTPException(
                     status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                    detail=f"Rate limit exceeded. Please try again in {max(1, retry_after)} seconds.",
+                    detail=self.detail,
                     headers={"Retry-After": str(max(1, retry_after))},
                 )
             timestamps.append(now)

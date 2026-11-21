@@ -71,19 +71,25 @@ Sahay AI is in an **active release-ready state** following the completion of all
 
 ### What Works
 - **Eligibility Engine & Questionnaire**: Pure-function deterministic rules engine (`rules_engine.py`) evaluating user inputs against government guidelines without hallucinations.
-- **Verified Scheme Library**: 7 seeded national and state schemes complete with official government portal URLs, categories, eligibility criteria, and required documents.
+- **Verified Scheme Library & Caching**: 7 seeded national and state schemes complete with official government portal URLs, categories, eligibility criteria, required documents, and in-memory 60s TTL caching with automatic invalidation upon administrative updates.
 - **3-State Verification Badging**: Real-time classifications (`Verified`, `Outdated`, `Unverified`) with direct portal links, official circular citations, and 180-day freshness auditing.
 - **Business Readiness Radar**: 5-axis dimensional assessment (Documentation, Banking, Turnover, Compliance, Digital) with interactive, responsive SVG visualization and personalized action items.
-- **Application Tracker & Vault**: Application pipeline tracking with stage progress bars, pending steps, document checklists, and local state persistence.
+- **Application Tracker & Vault**: Application pipeline tracking with stage progress bars, pending steps, document checklists, and local state persistence with strict ownership validation (returning 404 for unowned private resources).
 - **Scheme Comparison Matrix**: Side-by-side comparison matrix with sticky dock, URL state sharing (`?compare=slug1,slug2`), and automatic 6-scheme safety capping.
 - **Multilingual Search & Filter Presets**: Real-time cross-language keyword expansion across English, Hindi, and Bengali (e.g., searching "মহিলা" matches women entrepreneur schemes), plus quick-filter chips.
 - **Interactive State Scheme Directory**: SVG map of India with interactive hover and click selection, state-filtered scheme queries, and keyboard accessibility.
 - **Terminology Glossary & Onboarding Tour**: 3-step interactive onboarding walkthrough with targeted tooltips and auto-highlighted technical terms (`PMEGP`, `margin money`, `collateral-free`, `Udyam`).
-- **Dual AI Operation (Live & Demo Modes)**: Live Gemini / OpenAI integration with graceful, transparent fallback to deterministic demo responses when rate limits are reached or API keys are unconfigured.
+- **Dual AI Operation (Live & Fallback Modes)**: Live Gemini / OpenAI / Groq integration with graceful, transparent fallback to deterministic offline responses when rate limits are reached or API keys are unconfigured.
 - **Accessibility & Contrast**: Full WCAG 2.1 AA keyboard landmarks (`#main-content` skip link), dual-encoded badges (color + icons) for color-blind accessibility, and mobile truncation safety.
-- **Security & DPDP Act 2023 Compliance**: Strict role-based access control (`401`/`403` on `/api/v1/admin`), magic-byte file signature validation on uploads (PDF, PNG, JPEG with 10MB ceiling), AES-128-CBC + HMAC-SHA256 authenticated encryption with automatic PII masking (PAN, Aadhaar, Bank Accounts), statutory Right to Erasure (`DELETE /api/v1/auth/me`), and zero committed secrets.
+- **Production Security, RBAC & DPDP Act Compliance**:
+  - Reusable server-side `require_admin()` dependency checking the live database user role, returning 403 Forbidden for unauthorized users.
+  - Rate limiting & brute-force account lockout: 5 consecutive failed login attempts locks out the phone account for 15 minutes with `Retry-After` headers and generic error messaging.
+  - Shortened session lifetimes: 120 minutes for standard users and 60 minutes for administrative users, paired with an idempotent `GET`/`POST` `/api/v1/auth/logout` endpoint.
+  - Frontend automatic session expiration handling (redirecting to `/login?expired=1` without looping).
+  - Magic-byte file signature validation on uploads (PDF, PNG, JPEG with 10MB ceiling), AES-128-CBC + HMAC-SHA256 authenticated encryption with automatic PII masking (PAN, Aadhaar, Bank Accounts), statutory Right to Erasure (`DELETE /api/v1/auth/me`), and zero committed secrets.
+- **Production Multi-Worker Runtime**: Gunicorn multi-worker ASGI runtime (`gunicorn -k uvicorn.workers.UvicornWorker -w 2`) configured for Render Linux environments, with real database query health checks on `/health` (returning 503 if unreachable).
 - **Render Cold-Start UX Handler**: Proactive status banner detecting Render free-tier cold-starts with localized spin-up notifications in English, Hindi, and Bengali, paired with extended 45s timeouts.
-- **Continuous Integration (CI)**: GitHub Actions workflow (`.github/workflows/ci.yml`) running backend pytest tests, full frontend audit scripts (i18n parity, a11y, verification, comparison, search, state map, tour, AI mode), and production build on every push and PR.
+- **Continuous Integration (CI)**: GitHub Actions workflow (`.github/workflows/ci.yml`) running 132 backend pytest tests, full frontend audit scripts (i18n parity, a11y, verification, comparison, search, state map, tour, AI mode), and Next.js 16 production build on every push and PR.
 
 ### What is Partial
 - **Render Free-Tier Spin-Up Latency**: Because the backend runs on Render's free tier, idle instances take 30–45 seconds on the very first incoming request. This delay is now transparently communicated to users via the localized cold-start banner.
@@ -235,7 +241,7 @@ Sahay-AI/
 │   │   ├── schemas/           # Pydantic request & response validation models
 │   │   ├── services/          # Pure-function rule engine & AI integrations
 │   │   └── main.py            # FastAPI entry point & lifespan handler
-│   ├── tests/                 # Pytest test suite (113 automated unit tests)
+│   ├── tests/                 # Pytest test suite (132 automated unit tests)
 │   └── requirements.txt
 │
 ├── docs/                      # Security policy, audit documentation, & images

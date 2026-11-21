@@ -111,7 +111,7 @@ def test_database_health_fields():
 
 
 def test_database_disconnected_degraded_status(monkeypatch):
-    """Verify that when database is disconnected, API reports degraded status gracefully without crashing."""
+    """Verify that when database is disconnected, API reports degraded status (HTTP 503) gracefully without crashing."""
     from app.routes import health as health_route_module
 
     def mock_broken_db():
@@ -123,7 +123,7 @@ def test_database_disconnected_degraded_status(monkeypatch):
 
     monkeypatch.setattr(health_route_module, "check_db_health", mock_broken_db)
     response = client.get("/health")
-    assert response.status_code == 200
+    assert response.status_code == 503
     data = response.json()
     assert data["status"] == "degraded"
     assert data["database"]["status"] == "disconnected"

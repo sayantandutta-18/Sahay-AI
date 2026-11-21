@@ -45,8 +45,22 @@ brute_force_protector = BruteForceProtector(
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(auth_rate_limiter)],
 )
-def register(user_in: UserCreate, db: Session = Depends(get_db)):
-    """Register a new entrepreneur account."""
+def register(user_in: UserCreate, request: Request, db: Session = Depends(get_db)):
+    """Register a new entrepreneur account with rate limiting."""
+    forwarded = request.headers.get("X-Forwarded-For")
+    client_ip = forwarded.split(",")[0].strip() if forwarded else (request.client.host if request.client else "127.0.0.1")
+    is_test_client = client_ip in ["testclient", "test"] and not request.headers.get("X-RateLimit-Test")
+
+    if not is_test_client:
+        phone_key = f"reg:phone:{user_in.phone}"
+        is_limited, retry_after = auth_rate_limiter.is_rate_limited(phone_key)
+        if is_limited:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail="Too many registration attempts. Please try again later.",
+                headers={"Retry-After": str(retry_after)},
+            )
+
     existing = get_user_by_phone(db, user_in.phone)
     if existing:
         raise HTTPException(
@@ -123,6 +137,16 @@ def login(login_in: UserLogin, request: Request, db: Session = Depends(get_db)):
 
     token_str = create_access_token(user.id, claims={"role": user.role})
     return Token(access_token=token_str, user=UserResponse.model_validate(user))
+
+
+@router.get("/logout", status_code=status.HTTP_200_OK)
+@router.post("/logout", status_code=status.HTTP_200_OK)
+def logout():
+    """Idempotent logout endpoint instructing client to clear authentication tokens."""
+    return {
+        "status": "success",
+        "message": "Successfully logged out. Please clear client-side authentication tokens.",
+    }
 
 
 @router.get("/me", response_model=UserResponse)

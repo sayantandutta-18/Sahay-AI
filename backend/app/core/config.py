@@ -72,7 +72,7 @@ class Settings(BaseSettings):
     # Security Configuration
     JWT_SECRET_KEY: str = "sahay_development_secret_key_at_least_32_characters_long"
     JWT_ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 1 day
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 120  # 2 hours standard session; 60 mins for admin
 
     @field_validator("JWT_SECRET_KEY")
     @classmethod
