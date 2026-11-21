@@ -5,7 +5,7 @@ from collections import defaultdict
 from threading import Lock
 from typing import Dict, List
 from fastapi import Request, HTTPException, status
-
+from typing import Optional
 
 class InMemoryRateLimiter:
     """Thread-safe sliding-window in-memory rate limiter per client IP or custom identifier."""
