@@ -92,6 +92,8 @@ class Settings(BaseSettings):
     LLM_API_KEY: str = ""
     GEMINI_API_KEY: str = ""
     OPENAI_API_KEY: str = ""
+    GROQ_API_KEY: str = ""
+    MARKETAUX_API_KEY: str = ""
     LLM_MODEL: str = "gemini-2.5-flash"
     AI_RATE_LIMIT_TIMES: int = 15
     AI_RATE_LIMIT_SECONDS: int = 60
