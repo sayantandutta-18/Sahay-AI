@@ -5,7 +5,7 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database.session import get_db
-from app.routes.auth import get_current_user
+from app.core.security import require_admin
 from app.models.user import User
 from app.schemas.audit import AuditLogResponse, AdminStatsResponse
 from app.schemas.scheme import SchemeCreate, SchemeUpdate, SchemeResponse
@@ -14,20 +14,13 @@ from app.models.scheme import Scheme
 
 router = APIRouter(prefix="/admin", tags=["Admin & Audit"])
 
-
-def require_admin_role(current_user: User = Depends(get_current_user)) -> User:
-    """RBAC dependency ensuring only authenticated users with admin role proceed."""
-    if current_user.role not in ["admin", "super_admin"]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Administrative privileges required. Access denied.",
-        )
-    return current_user
+# Backward compatibility alias
+require_admin_role = require_admin
 
 
 @router.get("/stats", response_model=AdminStatsResponse)
 def get_stats(
-    admin_user: User = Depends(require_admin_role),
+    admin_user: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     """Retrieve aggregate system metrics and counters."""
@@ -37,7 +30,7 @@ def get_stats(
 @router.get("/audit-logs", response_model=List[AuditLogResponse])
 def list_audit_trail(
     limit: int = 50,
-    admin_user: User = Depends(require_admin_role),
+    admin_user: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     """Retrieve immutable audit ledger records."""
@@ -49,7 +42,7 @@ def list_audit_trail(
 @router.post("/schemes", response_model=SchemeResponse, status_code=status.HTTP_201_CREATED)
 def admin_create_scheme(
     scheme_in: SchemeCreate,
-    admin_user: User = Depends(require_admin_role),
+    admin_user: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     """Create a new verified scheme record and write audit ledger entry."""
@@ -93,7 +86,7 @@ def admin_create_scheme(
 def admin_update_scheme(
     scheme_id: str,
     scheme_in: SchemeUpdate,
-    admin_user: User = Depends(require_admin_role),
+    admin_user: User = Depends(require_admin),
     db: Session = Depends(get_db),
 ):
     """Update scheme metadata, publication status, official URL, and verification state."""

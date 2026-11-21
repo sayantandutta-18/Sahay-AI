@@ -98,6 +98,12 @@ class Settings(BaseSettings):
     AI_RATE_LIMIT_TIMES: int = 15
     AI_RATE_LIMIT_SECONDS: int = 60
 
+    # Rate Limiting & Brute-Force Lockout (Auth)
+    AUTH_RATE_LIMIT_TIMES: int = 10
+    AUTH_RATE_LIMIT_SECONDS: int = 60
+    AUTH_LOCKOUT_MAX_ATTEMPTS: int = 5
+    AUTH_LOCKOUT_DURATION_SECONDS: int = 900  # 15 minutes lockout
+
     model_config = SettingsConfigDict(
         env_file=(".env", "backend/.env"),
         env_file_encoding="utf-8",

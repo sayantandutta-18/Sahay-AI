@@ -328,13 +328,19 @@ def update_fraud_status(
     db: Session = Depends(get_db),
 ):
     """Checkpoint 14: Review and transition fraud anomaly status between new, reviewing, dismissed, user_confirmed."""
-    if not current_user or transaction_id.startswith("demo-"):
+    if transaction_id.startswith("demo-"):
         return {
             "status": "success",
             "transaction_id": transaction_id,
             "review_state": payload.status,
             "notes": "Reviewed in preview/demo mode.",
         }
+
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to modify transaction status.",
+        )
 
     tx = (
         db.query(FinancialTransaction)

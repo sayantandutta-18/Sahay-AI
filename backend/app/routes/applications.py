@@ -96,7 +96,10 @@ def start_application(
             checklist_items=app.checklist_items,
         )
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        msg = str(e)
+        if "Application not found" in msg or "Checklist item not found" in msg:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=msg)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg)
 
 
 @router.get("/{application_id}", response_model=ApplicationResponse)
@@ -166,7 +169,10 @@ def update_status(
             checklist_items=updated.checklist_items,
         )
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        msg = str(e)
+        if "Application not found" in msg or "Checklist item not found" in msg:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=msg)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg)
 
 
 @router.get("/{application_id}/checklist", response_model=List[ApplicationChecklistItemResponse])
@@ -196,7 +202,10 @@ def update_checklist(
         item = update_checklist_item(db, application_id, item_id, current_user.id, update_in)
         return ApplicationChecklistItemResponse.model_validate(item)
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        msg = str(e)
+        if "Application not found" in msg or "Checklist item not found" in msg:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=msg)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg)
 
 
 @router.get("/{application_id}/history", response_model=List[ApplicationStatusHistoryResponse])
@@ -224,7 +233,10 @@ def grant_consent(
         consent = grant_data_sharing_consent(db, current_user.id, consent_in)
         return DataSharingConsentResponse.model_validate(consent)
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        msg = str(e)
+        if "Application not found" in msg or "Checklist item not found" in msg:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=msg)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg)
 
 
 @router.post("/consent/{consent_id}/revoke", response_model=DataSharingConsentResponse)
@@ -253,4 +265,7 @@ def remove_application(
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Application not found")
         return None
     except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        msg = str(e)
+        if "Application not found" in msg or "Checklist item not found" in msg:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=msg)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg)

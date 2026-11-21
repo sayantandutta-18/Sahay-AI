@@ -69,3 +69,54 @@ class InMemoryRateLimiter:
                 )
             timestamps.append(now)
             self._requests[client_ip] = timestamps
+
+
+class BruteForceProtector:
+    """Thread-safe brute-force and credential stuffing protector tracking failed attempts per account."""
+
+    def __init__(self, max_attempts: int = 5, lockout_seconds: int = 900):
+        self.max_attempts = max_attempts
+        self.lockout_seconds = lockout_seconds
+        self._failed_attempts: Dict[str, List[float]] = defaultdict(list)
+        self._lock = Lock()
+
+    def is_locked(self, identifier: str) -> tuple[bool, int]:
+        """Check if identifier (e.g. phone) is currently locked out.
+
+        Returns (is_locked, remaining_seconds).
+        """
+        if not identifier:
+            return False, 0
+        now = time.time()
+        with self._lock:
+            # Purge attempts outside the lockout window
+            attempts = [t for t in self._failed_attempts[identifier] if now - t < self.lockout_seconds]
+            self._failed_attempts[identifier] = attempts
+            if len(attempts) >= self.max_attempts:
+                oldest_in_window = attempts[0]
+                remaining = int(self.lockout_seconds - (now - oldest_in_window))
+                return True, max(1, remaining)
+            return False, 0
+
+    def record_failure(self, identifier: str) -> int:
+        """Record a failed login attempt for an identifier and return current failure count in window."""
+        if not identifier:
+            return 0
+        now = time.time()
+        with self._lock:
+            attempts = [t for t in self._failed_attempts[identifier] if now - t < self.lockout_seconds]
+            attempts.append(now)
+            self._failed_attempts[identifier] = attempts
+            return len(attempts)
+
+    def record_success(self, identifier: str):
+        """Clear failed attempts upon successful login."""
+        if not identifier:
+            return
+        with self._lock:
+            self._failed_attempts.pop(identifier, None)
+
+    def reset(self):
+        """Reset all tracking state (useful for tests)."""
+        with self._lock:
+            self._failed_attempts.clear()
